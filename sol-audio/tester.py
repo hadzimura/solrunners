@@ -11,6 +11,22 @@ from time import sleep
 from scipy.io import wavfile
 from pprint import pprint
 
+from gpiozero import PWMLED
+from time import sleep
+
+led = PWMLED(26)
+
+while True:
+    led.value = 0  # off
+    sleep(1)
+    led.value = 0.5  # half brightness
+    sleep(1)
+    led.value = 1  # full brightness
+    sleep(1)
+
+exit(0)
+
+
 
 anal = '/Users/zero/Develop/github.com/hadzimura/projectsol/sol-audio/sounds/entropy/voice.right.log'
 frames = list()
