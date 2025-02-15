@@ -14,15 +14,13 @@ from pprint import pprint
 from gpiozero import PWMLED
 from time import sleep
 
-led = PWMLED(26)
+from gpiozero import LED
+from signal import pause
 
-while True:
-    led.value = 0  # off
-    sleep(1)
-    led.value = 0.5  # half brightness
-    sleep(1)
-    led.value = 1  # full brightness
-    sleep(1)
+red = LED(26)
+red.blink()
+
+pause()
 
 exit(0)
 
