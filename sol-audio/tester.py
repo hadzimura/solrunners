@@ -18,7 +18,7 @@ from gpiozero import LED
 from signal import pause
 
 red = LED(26)
-red.blink(background=True, on_time=1, off_time=1)
+red.blink(background=True, on_time=0.5, off_time=0.5)
 
 pause()
 
