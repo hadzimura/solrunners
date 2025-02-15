@@ -11,11 +11,6 @@ from glob import glob
 from pprint import pprint
 from random import randint, choice
 
-from modules.Controllers import Effect
-from modules.Controllers import Input
-from modules.Controllers import Control
-from modules.Controllers import Font
-from modules.Controllers import Draw
 
 
 # import numpy as np
@@ -69,6 +64,12 @@ class Configuration(object):
         self.fullscreen = fullscreen
 
         if sol == 'video':
+            from modules.Controllers import Effect
+            from modules.Controllers import Input
+            from modules.Controllers import Control
+            from modules.Controllers import Font
+            from modules.Controllers import Draw
+
             import cv2 as cv
             # Canvas definition
             self.frame_area = {'x': range(0, width), 'y': range(0, height)}
