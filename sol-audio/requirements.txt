@@ -1,11 +1,10 @@
-RPi.GPIO
 gpiozero
-lgpio
 fastapi
 Jinja2
 pyglet==1.5.27
 # 1.5.11
 requests
+scipy
 urllib3
 uvicorn
 pyopengl

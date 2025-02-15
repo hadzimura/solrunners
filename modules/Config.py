@@ -17,8 +17,8 @@ from modules.Controllers import Control
 from modules.Controllers import Font
 from modules.Controllers import Draw
 
-import cv2 as cv
-import numpy as np
+
+# import numpy as np
 
 
 class Configuration(object):
@@ -69,6 +69,7 @@ class Configuration(object):
         self.fullscreen = fullscreen
 
         if sol == 'video':
+            import cv2 as cv
             # Canvas definition
             self.frame_area = {'x': range(0, width), 'y': range(0, height)}
             self.x = 0
