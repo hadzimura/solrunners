@@ -1,0 +1,17 @@
+RPi.GPIO
+gpiozero
+fastapi
+Jinja2
+pyglet
+requests
+urllib3
+uvicorn
+numpy
+opencv-python
+pillow
+# scikit-image
+# scipy
+# skimage
+
+scipy
+matplotlib
