@@ -65,7 +65,7 @@ async def runtime_lifespan(app: FastAPI):
     """ Lifespan of the FastAPI application """
     print('Initializing SoL Runner...')
     app.c = Configuration(sol=str(arg.sol), room=int(arg.room), master=bool(arg.master))
-    app.c.blue.light.blink(background=True, on_time=0.2, off_time=0.2)
+    app.c.blue.light.blink(background=True, on_time=0.1, off_time=0.3)
     app.audio = AudioLibrary(entropy=app.c.entropy_audio)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
     app.templates = Jinja2Templates(directory=app.c.fastapi_templates)
@@ -97,11 +97,16 @@ async def actions():
 async def read_sensors():
     print('Initiating Read Sensors Background Loop...')
     while True:
-        # if app.audio.p is not None:
-        #     app.data =  app.audio.p.time
-        # else:
-        #     app.data = 0
-        await asyncio.sleep(1)
+        try:
+            if app.c.button.red.is_active:
+                app.c.green.light.on(background=True)
+            else:
+                if app.c.green.light.is_active is True:
+                    app.c.green.light.off()
+        except Exception:
+            pass
+        await asyncio.sleep(0.5)
+
 
 @app.get("/")
 async def index(request: Request):
