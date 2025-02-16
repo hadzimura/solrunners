@@ -3,6 +3,7 @@
 from datetime import datetime as dt
 from os import environ
 from pathlib import Path
+from pprint import pprint
 from ruamel.yaml import YAML
 
 from modules.Sensors import Led
@@ -35,8 +36,20 @@ class Configuration(object):
         else:
             print('This is Slave Node')
 
+        # Running Environment location
+        env_var = environ
+        self.project_root = Path(env_var['PWD'])
+        self.media_root = self.project_root / Path('media')
+        self.fonts = self.media_root / Path('fonts')
+        self.fastapi_static = self.media_root / Path('static')
+        self.fastapi_templates = self.media_root / Path('templates')
+        self.entropy_audio = self.media_root / Path('audio/entropy')
+        self.entropy_video = self. media_root / Path('video/entropy')
+        self.sol_sensors = self.project_root / Path('sol.config.yaml')
+
         # Load PINOUT configuration
         self.yaml = YAML()
+        self.yaml.preserve_quotes = True
         self.pinout = dict()
 
         # Possible Sensors
@@ -45,7 +58,8 @@ class Configuration(object):
         self.green = None
         self.button = None
         try:
-            self.pinout = self.yaml.load('sol.config.yaml')
+            self.pinout = self.yaml.load(self.sol_sensors)
+            pprint(self.pinout, indent=4)
             if self.room not in self.pinout:
                 print("No PINOUT config found for Runners of Room '{}'".format(self.room))
             elif self.sol not in self.pinout[self.room]:
@@ -56,15 +70,6 @@ class Configuration(object):
             print('PINOUT Config file not found: {}'.format('sol.config.yaml'))
             exit(1)
 
-        # Running Environment location
-        env_var = environ
-        self.project_root = Path(env_var['PWD'])
-        self.media_root = self.project_root / Path('media')
-        self.fonts = self.media_root / Path('fonts')
-        self.fastapi_static = self.media_root / Path('static')
-        self.fastapi_templates = self.media_root / Path('templates')
-        self.entropy_audio = self.media_root / Path('audio/entropy')
-        self.entropy_video = self. media_root / Path('video/entropy')
 
         # Total beats of the runtime
         self.beats = 0
@@ -131,6 +136,6 @@ class Configuration(object):
             elif input_name == 'green':
                 self.blue = Led(pinout[input_name], input_name)
             elif input_name == 'button':
-                self.button = RedButton(pinout[input_name], input_name)
+                self.button = RedButton(pinout[input_name])
 
 
