@@ -25,15 +25,17 @@ button = Button(2)
 while True:
     if button.is_active:
         blue.blink(background=True, on_time=0.5, off_time=0.5)
-        print("Button is pressed")
+        # print("Button is pressed")
     else:
-        blue.off()
-        print("Button is not pressed")
+        if blue.is_active is True:
+            blue.off()
+        # print("Button is not pressed")
 
-    if pir.is_active:
-        green.blink(background=True, on_time=0.5, off_time=0.5)
-    else:
-        green.off()
+    print(pir.value)
+    # if pir.:
+    #     green.blink(background=True, on_time=0.5, off_time=0.5)
+    # else:
+    #     green.off()
 
 
 # green.blink(background=True, on_time=0.5, off_time=0.5)
