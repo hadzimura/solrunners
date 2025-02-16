@@ -66,12 +66,14 @@ async def runtime_lifespan(app: FastAPI):
     print('Initializing SoL Runner...')
     app.c = Configuration(sol=str(arg.sol), room=int(arg.room), master=bool(arg.master))
     app.c.blue.light.blink(background=True, on_time=0.1, off_time=0.3)
+    app.c.green.light.on()
     app.audio = AudioLibrary(entropy=app.c.entropy_audio)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
     app.templates = Jinja2Templates(directory=app.c.fastapi_templates)
     asyncio.create_task(read_sensors())
     asyncio.create_task(actions())
     app.c.blue.light.blink(background=True, on_time=1, off_time=1)
+    app.c.green.light.off()
     print('SoL Runner lifespan events initialized')
     yield
     # Clean up
