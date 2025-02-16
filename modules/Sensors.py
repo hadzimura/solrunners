@@ -30,21 +30,6 @@ class Led(object):
         self.light = LED(pin_number)
 
 
-class LedLight(object):
-
-    def __init__(self):
-        led = PWMLED(17)
-
-        while True:
-            led.value = 0  # off
-            sleep(1)
-            led.value = 0.5  # half brightness
-            sleep(1)
-            led.value = 1  # full brightness
-            sleep(1)
-
-        led.pulse()
-
 
 
 # class Sensor(object):
