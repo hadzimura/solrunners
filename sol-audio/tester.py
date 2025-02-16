@@ -14,21 +14,26 @@ from pprint import pprint
 from gpiozero import PWMLED
 from time import sleep
 
-from gpiozero import LED, Button
+from gpiozero import LED, Button, MotionSensor
 from signal import pause
 
-red = LED(26)
+blue = LED(26)
 green = LED(19)
-
+pir = MotionSensor(4)
 button = Button(2)
 
 while True:
     if button.is_active:
-        red.blink(background=True, on_time=0.5, off_time=0.5)
+        blue.blink(background=True, on_time=0.5, off_time=0.5)
         print("Button is pressed")
     else:
-        red.off()
+        blue.off()
         print("Button is not pressed")
+
+    if pir.is_active:
+        green.blink(background=True, on_time=0.5, off_time=0.5)
+    else:
+        green.off()
 
 
 # green.blink(background=True, on_time=0.5, off_time=0.5)
