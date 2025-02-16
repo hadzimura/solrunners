@@ -1,35 +1,33 @@
-#!/usr/bin/env python3
-# coding=utf-8
-
 # Springs of Life (2025)
 # rkucera@gmail.com
 
-# https://github.com/thinkrobotics/TUTORIALS/blob/master/Ultrasonic_Distance/Ultrasonic_distance.py
-
-# import RPi.GPIO as GPIO
-from gpiozero import MotionSensor
-from gpiozero import DistanceSensor
-from gpiozero import PWMLED
-from time import sleep
-import logging as log
 from gpiozero import Button
+from gpiozero import DistanceSensor
+from gpiozero import LED
+from gpiozero import MotionSensor
 from subprocess import check_call
 from signal import pause
 
-log.basicConfig(format='%(asctime)s %(message)s')
+class RedButton(object):
+
+    def __init__(self, pin_number):
+
+        print("Initializing Red Button: '{}'".format(pin_number))
+        self.red = Button(pin_number)
 
 
-class Button(object):
+class Pir(object):
 
-    def __init__(self):
+    def __init__(self, pin_number):
 
-        def shutdown():
-            check_call(['sudo', 'poweroff'])
+        print("Initializing PIR sensor: '{}'".format(pin_number))
+        self.sensor = MotionSensor(pin_number)
 
-        shutdown_btn = Button(17, hold_time=2)
-        shutdown_btn.when_held = shutdown
+class Led(object):
 
-        pause()
+    def __init__(self, pin_number, color):
+        print("Initializing LED diode: '{}'".format(pin_number))
+        self.light = LED(pin_number)
 
 
 class LedLight(object):

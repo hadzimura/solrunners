@@ -8,3 +8,4 @@ scipy
 urllib3
 uvicorn
 pyopengl
+ruamel.yaml

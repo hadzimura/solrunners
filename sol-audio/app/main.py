@@ -18,8 +18,9 @@ from os import environ
 from pathlib import Path
 import platform
 import uvicorn
+
 from modules.Audio import AudioLibrary
-from modules.Config import Configuration
+from modules.SolAudio import SolAudioConfig as Configuration
 
 if platform.system() != 'Darwin':
     # Sensors only make sense when running on Raspberry Pi
