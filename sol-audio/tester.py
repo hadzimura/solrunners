@@ -19,7 +19,7 @@ from signal import pause
 
 blue = LED(26)
 green = LED(19)
-pir = MotionSensor(4)
+pir = MotionSensor(15)
 button = Button(2)
 
 while True:
