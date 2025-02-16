@@ -99,13 +99,13 @@ async def read_sensors():
     while True:
         try:
             if app.c.button.red.is_active:
-                app.c.green.light.on(background=True)
+                app.c.green.light.on()
             else:
                 if app.c.green.light.is_active is True:
                     app.c.green.light.off()
         except Exception:
             pass
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
 
 
 @app.get("/")
