@@ -26,7 +26,7 @@ class Pir(object):
 class Led(object):
 
     def __init__(self, pin_number, color):
-        print("Initializing LED diode: '{}'".format(pin_number))
+        print("Initializing LED diode ({}): '{}'".format(color, pin_number))
         self.light = LED(pin_number)
 
 

@@ -134,7 +134,7 @@ class Configuration(object):
             elif input_name == 'blue':
                 self.blue = Led(pinout[input_name], input_name)
             elif input_name == 'green':
-                self.blue = Led(pinout[input_name], input_name)
+                self.green = Led(pinout[input_name], input_name)
             elif input_name == 'button':
                 self.button = RedButton(pinout[input_name])
 
