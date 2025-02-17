@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 # coding=utf-8
-# Springs of Life (2025)# rkucera@gmail.com
+# Springs of Life (2025) / rkucera@gmail.com
 
-# from argparse import ArgumentParser
-# from argparse import ArgumentDefaultsHelpFormatter
-# from argparse import BooleanOptionalAction
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -17,7 +14,6 @@ from fastapi.templating import Jinja2Templates
 import platform
 import uvicorn
 
-from modules.Audio import AudioLibrary
 from modules.SolVideo import SolVideoConfig
 from modules.Config import arg_parser
 from modules.Entro import main

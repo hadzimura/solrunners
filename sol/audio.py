@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # coding=utf-8
-# Springs of Life (2025)# rkucera@gmail.com
+# Springs of Life (2025) / rkucera@gmail.com
 
 import asyncio
 from contextlib import asynccontextmanager

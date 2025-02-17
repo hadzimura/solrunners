@@ -47,8 +47,8 @@ class SolVideoConfig(Configuration):
         # Video acquisition
         self.video = dict()
         self.video_seg = list()
-        self._get_stream(folder='segments')
-        self._get_stream(path='entropy.mov', category='feature')
+        # self._get_stream(folder='segments')
+        self._get_entropy()
         self.playing = {
             0: {'category': str(), 'name': str(), 'frame': int()},
             1: {'category': str(), 'name': str(), 'frame': int()},
@@ -84,44 +84,39 @@ class SolVideoConfig(Configuration):
         metadata['stream'] = stream
         return metadata
 
-    def _get_stream(self, folder=None, path=None, category=None):
+    def _get_entropy(self):
 
-        """ Prepare and categorize all the video streams """
+        """ video stream for Entropy """
 
-        if path is not None and category is not None:
 
-            try:
-                name = path
-                if category not in self.video:
-                    self.video[category] = dict()
-                self.video[category][name] = dict()
-                self.video[category][name] = self._stream_metadata(cv.VideoCapture(path), name, category)
-            except Exception as error:
-                print('Problem acquiring video stream: {}'.format(path))
-                print(error)
-                exit(1)
+        try:
+            self.entropy = self._stream_metadata(cv.VideoCapture(self.entropy_video), 'entropy', 'feature')
+        except Exception as error:
+            print('Problem acquiring video stream: {}'.format(path))
+            print(error)
+            exit(1)
 
-        elif folder is not None:
+        # elif folder is not None:
+        #
+        #     try:
+        #         for filename in glob('{}/*.mov'.format(folder)):
+        #             name = filename.split('/')[-1]
+        #             category = name.split('.')[0][0:len(name.split('.')[0]) - 3]
+        #
+        #             if category not in self.video:
+        #                 self.video[category] = dict()
+        #
+        #             self.video[category][name] = dict()
+        #             self.video[category][name] = self._stream_metadata(cv.VideoCapture(filename), name, category)
+        #             if category not in self.video_seg:
+        #                 self.video_seg.append(category)
+        #
+        #     except Exception as error:
+        #         print('Problem acquiring video stream: {}'.format(path))
+        #         print(error)
+        #         exit(1)
 
-            try:
-                for filename in glob('{}/*.mov'.format(folder)):
-                    name = filename.split('/')[-1]
-                    category = name.split('.')[0][0:len(name.split('.')[0]) - 3]
-
-                    if category not in self.video:
-                        self.video[category] = dict()
-
-                    self.video[category][name] = dict()
-                    self.video[category][name] = self._stream_metadata(cv.VideoCapture(filename), name, category)
-                    if category not in self.video_seg:
-                        self.video_seg.append(category)
-
-            except Exception as error:
-                print('Problem acquiring video stream: {}'.format(path))
-                print(error)
-                exit(1)
-
-    def set_playhead(self, layer=0, category=None, stream=None, start_frame=0):
+    def set_playhead2(self, layer=0, category=None, stream=None, start_frame=0):
 
         """ Set playhead of stream """
 
@@ -152,6 +147,41 @@ class SolVideoConfig(Configuration):
 
         # Set stream into the layer
         self.playing[layer] = self.video[category][stream]
+        self.playing[layer]['frame'] = start_frame
+        self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
+        self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_WIDTH, self.width)
+        self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_HEIGHT, self.height)
+        self.playing[layer]['stream'].set(cv.CAP_PROP_FPS, self.fps)
+
+    def set_playhead(self, layer=0, start_frame=0):
+
+        """ Set playhead of stream """
+        category = 'feature'
+        #     # Set category
+        #     if self.playing[layer]['category'] is None:
+        #         # Set random category
+        #         category = choice(self.video_seg)
+        #     else:
+        #         # Set random category but different from the currently selected
+        #         cats = self.video_seg
+        #         cats.remove(self.playing[layer]['category'])
+        #         category = choice(cats)
+        #     # From selected category get random stream
+        #     stream = choice(list(self.video[category].keys()))
+        #
+        # elif stream is None and category is not None:
+        #     if self.playing[layer]['name'] is None:
+        #         # Set random stream
+        #         stream = choice(list(self.video[category].keys()))
+        #     else:
+        #         # Get random stream from the selected category but different from the currently selected
+        #         pprint(self.playing[layer])
+        #         streams = list(self.video[category].keys())
+        #         streams.remove(self.playing[layer]['filename'])
+        #         stream = choice(streams)
+
+        # Set stream into the layer
+        self.playing[layer] = self.entropy
         self.playing[layer]['frame'] = start_frame
         self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
         self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_WIDTH, self.width)

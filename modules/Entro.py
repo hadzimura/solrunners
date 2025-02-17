@@ -3,16 +3,17 @@
 
 # Springs of Life (2025)
 # rkucera@gmail.com
-
+import asyncio
 import cv2 as cv
 from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter
 from random import choice
+from time import sleep
 
 from modules.SolVideo import Configuration
 
 
-def main(c):
+async def main(c):
 
     entropy = c
     # Parse input arguments
@@ -22,7 +23,8 @@ def main(c):
     # entropy = Configuration(fullscreen=set_fullscreen)
 
     # Initialize Player
-    entropy.set_playhead(layer=0, category='feature', stream='entropy.mov')
+    # entropy.set_playhead(layer=0, category='feature', stream='entropy.mov')
+    entropy.set_playhead()
 
     # Global settings for runtime
     cv.namedWindow('Entropy', cv.WINDOW_NORMAL)
@@ -137,6 +139,7 @@ def main(c):
 
         # Prepare data for next frame processing
         entropy.update()
+        await asyncio.sleep(0.00005)
 
 
     # Release everything

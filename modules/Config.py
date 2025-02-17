@@ -74,7 +74,9 @@ class Configuration(object):
         self.fastapi_static = self.media_root / Path('static')
         self.fastapi_templates = self.media_root / Path('templates')
         self.entropy_audio = self.media_root / Path('audio/entropy')
-        self.entropy_video = self. media_root / Path('video/entropy')
+        self.entropy_video = self. media_root / Path('video/entropy.mov')
+        self.entropy_subtitles = self. media_root / Path('video/entropy.subtitles')
+        self.entropy = None
         self.sol_sensors = self.project_root / Path('sol.config.yaml')
 
         # Load PINOUT configuration
@@ -116,7 +118,7 @@ class Configuration(object):
         # Subtitle acquisition is for both Audio / Video Nodes
         self.sub = dict()
         self.subtitle = None
-        self._load_subtitles(self.entropy_video / Path('entropy.subtitles'))
+        self._load_subtitles(self.entropy_subtitles)
 
         # Presence setup
         self.presence = {
