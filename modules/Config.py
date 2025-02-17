@@ -1,14 +1,16 @@
 # Configuration of the runtime
 
+from platform import system
 from datetime import datetime as dt
 from os import environ
 from pathlib import Path
 from pprint import pprint
 from ruamel.yaml import YAML
 
-from modules.Sensors import Led
-from modules.Sensors import Pir
-from modules.Sensors import RedButton
+if system() != 'Darwin':
+    from modules.Sensors import Led
+    from modules.Sensors import Pir
+    from modules.Sensors import RedButton
 
 class Configuration(object):
 
@@ -65,7 +67,8 @@ class Configuration(object):
             elif self.sol not in self.pinout[self.room]:
                 print("No PINOUT config found for Runner of Room '{}': '{}'".format(self.room, self.sol))
             else:
-                self._init_sensors(self.pinout[self.room][self.sol])
+                if system() != 'Darwin':
+                    self._init_sensors(self.pinout[self.room][self.sol])
         except FileNotFoundError:
             print('PINOUT Config file not found: {}'.format('sol.config.yaml'))
             exit(1)

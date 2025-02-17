@@ -35,7 +35,7 @@ if [[ "${SOL}" == 'audio' && "${ROOM}" -eq 1 ]]; then
   NODE="--master"
   NODE_TYPE="Master"
   echo "Launching the Sol Runner: ${SOL}:${ROOM} as '${NODE_TYPE}' Node"
-  python3 sol-audio/app/main.py --sol "${SOL}" --room "${ROOM}" "${NODE}"
+  python3 audio.py --sol "${SOL}" --room "${ROOM}" "${NODE}"
 
 elif [[ "${SOL}" == 'video' && "${ROOM}" -eq 3 ]]; then
   python3 sol-video/entro.py

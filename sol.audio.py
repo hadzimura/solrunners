@@ -22,10 +22,6 @@ import uvicorn
 from modules.Audio import AudioLibrary
 from modules.SolAudio import SolAudioConfig as Configuration
 
-if platform.system() != 'Darwin':
-    # Sensors only make sense when running on Raspberry Pi
-    from modules.Sensors import MotionSensor
-
 # Parse the runtime arguments to decide 'who we are'
 parser = ArgumentParser(description='Sol Runner',
                         epilog='Author: rkucera@gmail.com',
@@ -47,33 +43,25 @@ parser.add_argument('-m', '--master',
 
 arg = parser.parse_args()
 
-# # Running Environment location
-# env_var = environ
-# project_root = Path(env_var['PWD'])
-# fonts = Path('fonts')
-# static_pages = Path('static')
-# templates_pages = Path('templates')
-# entropy_audio = Path('sounds/entropy')
-#
-# # Development-specific initializations
-
-
-
 # FastApi startup and shutdown procedures
 @asynccontextmanager
 async def runtime_lifespan(app: FastAPI):
     """ Lifespan of the FastAPI application """
     print('Initializing SoL Runner...')
     app.c = Configuration(sol=str(arg.sol), room=int(arg.room), master=bool(arg.master))
-    app.c.blue.light.blink(background=True, on_time=0.1, off_time=0.3)
-    app.c.green.light.on()
+
+    if platform.system() != 'Darwin':
+        app.c.blue.light.blink(background=True, on_time=0.1, off_time=0.3)
+        app.c.green.light.on()
     app.audio = AudioLibrary(entropy=app.c.entropy_audio)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
     app.templates = Jinja2Templates(directory=app.c.fastapi_templates)
     asyncio.create_task(read_sensors())
     asyncio.create_task(actions())
-    app.c.blue.light.blink(background=True, on_time=1, off_time=1)
-    app.c.green.light.off()
+
+    if platform.system() != 'Darwin':
+        app.c.blue.light.blink(background=True, on_time=1, off_time=1)
+        app.c.green.light.off()
     print('SoL Runner lifespan events initialized')
     yield
     # Clean up
@@ -139,4 +127,4 @@ async def seek_audio(request: Request, frame):
 if __name__ == "__main__":
 
     api_port = 8000 + int(arg.room)
-    uvicorn.run("main:app", host="0.0.0.0", port=api_port, reload=False)
+    uvicorn.run("audio:app", host="0.0.0.0", port=api_port, reload=False)
