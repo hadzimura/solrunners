@@ -210,7 +210,7 @@ class AudioLibrary(object):
 
         current_playhead = round(float(self.p.time), 1)
         event = False
-        # app.library.play_id(tn, app.data)
+        # sol.library.play_id(tn, sol.data)
         # await asyncio.sleep(1)
         # if current_playhead in self.timeline:
         if current_playhead in self.script:

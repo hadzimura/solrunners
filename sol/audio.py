@@ -2,9 +2,6 @@
 # coding=utf-8
 # Springs of Life (2025)# rkucera@gmail.com
 
-from argparse import ArgumentParser
-from argparse import ArgumentDefaultsHelpFormatter
-from argparse import BooleanOptionalAction
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -14,45 +11,27 @@ from fastapi import status
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from os import environ
-from pathlib import Path
 import platform
 import uvicorn
 
 from modules.Audio import AudioLibrary
-from modules.SolAudio import SolAudioConfig as Configuration
+from modules.SolAudio import SolAudioConfig
+from modules.Config import arg_parser
 
 # Parse the runtime arguments to decide 'who we are'
-parser = ArgumentParser(description='Sol Runner',
-                        epilog='Author: rkucera@gmail.com',
-                        formatter_class=ArgumentDefaultsHelpFormatter)
-parser.add_argument('-r', '--room',
-                    default=None,
-                    dest='room',
-                    help='Which room is this Runner in?')
-parser.add_argument('-s', '--sol',
-                    default=None,
-                    dest='sol',
-                    choices=['audio', 'video'],
-                    help='Which kind is this Runner of?')
-parser.add_argument('-m', '--master',
-                    action=BooleanOptionalAction,
-                    default=False,
-                    dest='master',
-                    help='Master node?')
-
-arg = parser.parse_args()
+arg = arg_parser()
 
 # FastApi startup and shutdown procedures
 @asynccontextmanager
 async def runtime_lifespan(app: FastAPI):
     """ Lifespan of the FastAPI application """
     print('Initializing SoL Runner...')
-    app.c = Configuration(sol=str(arg.sol), room=int(arg.room), master=bool(arg.master))
+    app.c = SolAudioConfig(sol=str(arg.sol), room=int(arg.room), master=bool(arg.master))
 
     if platform.system() != 'Darwin':
         app.c.blue.light.blink(background=True, on_time=0.1, off_time=0.3)
         app.c.green.light.on()
+
     app.audio = AudioLibrary(entropy=app.c.entropy_audio)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
     app.templates = Jinja2Templates(directory=app.c.fastapi_templates)
@@ -62,6 +41,7 @@ async def runtime_lifespan(app: FastAPI):
     if platform.system() != 'Darwin':
         app.c.blue.light.blink(background=True, on_time=1, off_time=1)
         app.c.green.light.off()
+
     print('SoL Runner lifespan events initialized')
     yield
     # Clean up

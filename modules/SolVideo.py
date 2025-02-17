@@ -1,14 +1,8 @@
 # Configuration of the runtime
 
-from copy import deepcopy
-from datetime import datetime as dt
 from glob import glob
-from os import environ
-from pathlib import Path
-import platform
 from pprint import pprint
-from random import randint, choice
-from ruamel.yaml import YAML
+from random import choice
 
 from modules.Config import Configuration
 import cv2 as cv
@@ -21,10 +15,9 @@ from modules.Controllers import Draw
 
 class SolVideoConfig(Configuration):
 
-
-    def _init_video(self):
+    def init_video(self):
         # Canvas definition
-        self.frame_area = {'x': range(0, width), 'y': range(0, height)}
+        self.frame_area = {'x': range(0, self.width), 'y': range(0, self.height)}
         self.x = 0
         self.y = 0
 

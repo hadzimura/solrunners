@@ -1,5 +1,8 @@
 # Configuration of the runtime
 
+from argparse import ArgumentParser
+from argparse import ArgumentDefaultsHelpFormatter
+from argparse import BooleanOptionalAction
 from platform import system
 from datetime import datetime as dt
 from os import environ
@@ -11,6 +14,31 @@ if system() != 'Darwin':
     from modules.Sensors import Led
     from modules.Sensors import Pir
     from modules.Sensors import RedButton
+
+def arg_parser():
+    # Parse the runtime arguments to decide 'who we are'
+    parser = ArgumentParser(description='Sol Audio Runner',
+                            epilog='Author: rkucera@gmail.com',
+                            formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-r', '--room',
+                        default=None,
+                        dest='room',
+                        help='Which room is this Runner in?')
+    parser.add_argument('-s', '--sol',
+                        default=None,
+                        dest='sol',
+                        choices=['audio', 'video'],
+                        help='Which kind is this Runner of?')
+    parser.add_argument('-m', '--master',
+                        action=BooleanOptionalAction,
+                        default=False,
+                        dest='master',
+                        help='Master node?')
+
+
+    # arg = parser.parse_args()
+    return parser.parse_args()
+
 
 class Configuration(object):
 

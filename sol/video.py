@@ -2,9 +2,9 @@
 # coding=utf-8
 # Springs of Life (2025)# rkucera@gmail.com
 
-from argparse import ArgumentParser
-from argparse import ArgumentDefaultsHelpFormatter
-from argparse import BooleanOptionalAction
+# from argparse import ArgumentParser
+# from argparse import ArgumentDefaultsHelpFormatter
+# from argparse import BooleanOptionalAction
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -14,54 +14,41 @@ from fastapi import status
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from os import environ
-from pathlib import Path
 import platform
 import uvicorn
 
 from modules.Audio import AudioLibrary
-from modules.SolAudio import SolAudioConfig as Configuration
+from modules.SolVideo import SolVideoConfig
+from modules.Config import arg_parser
+from modules.Entro import main
 
 # Parse the runtime arguments to decide 'who we are'
-parser = ArgumentParser(description='Sol Runner',
-                        epilog='Author: rkucera@gmail.com',
-                        formatter_class=ArgumentDefaultsHelpFormatter)
-parser.add_argument('-r', '--room',
-                    default=None,
-                    dest='room',
-                    help='Which room is this Runner in?')
-parser.add_argument('-s', '--sol',
-                    default=None,
-                    dest='sol',
-                    choices=['audio', 'video'],
-                    help='Which kind is this Runner of?')
-parser.add_argument('-m', '--master',
-                    action=BooleanOptionalAction,
-                    default=False,
-                    dest='master',
-                    help='Master node?')
-
-arg = parser.parse_args()
+arg = arg_parser()
 
 # FastApi startup and shutdown procedures
 @asynccontextmanager
 async def runtime_lifespan(app: FastAPI):
     """ Lifespan of the FastAPI application """
-    print('Initializing SoL Runner...')
-    app.c = Configuration(sol=str(arg.sol), room=int(arg.room), master=bool(arg.master))
+    print('Initializing SoL Video Runner...')
+    app.c = SolVideoConfig(sol=str(arg.sol), room=int(arg.room), master=bool(arg.master))
+
+    # Init video configurations
+    app.c.init_video()
 
     if platform.system() != 'Darwin':
         app.c.blue.light.blink(background=True, on_time=0.1, off_time=0.3)
         app.c.green.light.on()
-    app.audio = AudioLibrary(entropy=app.c.entropy_audio)
+
+    # app.audio = AudioLibrary(entropy=app.c.entropy_audio)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
     app.templates = Jinja2Templates(directory=app.c.fastapi_templates)
-    asyncio.create_task(read_sensors())
+    asyncio.create_task(main(app.c))
     asyncio.create_task(actions())
 
     if platform.system() != 'Darwin':
         app.c.blue.light.blink(background=True, on_time=1, off_time=1)
         app.c.green.light.off()
+
     print('SoL Runner lifespan events initialized')
     yield
     # Clean up
@@ -77,24 +64,24 @@ async def actions():
     print('Initializing Runtime Background Loop...')
     tn = 0
     while True:
-        if app.audio.p is not None:
-            try:
-                print(app.audio.p.time)
-            except Exception as e:
-                print(e)
+        # if app.audio.p is not None:
+        #     try:
+        #         print(app.audio.p.time)
+        #     except Exception as e:
+        #         print(e)
         await asyncio.sleep(0.05)
 
 async def read_sensors():
     print('Initiating Read Sensors Background Loop...')
     while True:
-        try:
-            if app.c.button.red.is_active:
-                app.c.green.light.on()
-            else:
-                if app.c.green.light.is_active is True:
-                    app.c.green.light.off()
-        except Exception:
-            pass
+        # try:
+        #     if app.c.button.red.is_active:
+        #         app.c.green.light.on()
+        #     else:
+        #         if app.c.green.light.is_active is True:
+        #             app.c.green.light.off()
+        # except Exception:
+        #     pass
         await asyncio.sleep(0.1)
 
 
@@ -126,5 +113,5 @@ async def seek_audio(request: Request, frame):
 
 if __name__ == "__main__":
 
-    api_port = 8000 + int(arg.room)
-    uvicorn.run("audio:app", host="0.0.0.0", port=api_port, reload=False)
+    api_port = 9000 + int(arg.room)
+    uvicorn.run("video:app", host="0.0.0.0", port=api_port, reload=False)
