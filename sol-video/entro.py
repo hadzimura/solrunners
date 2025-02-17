@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter
 from random import choice
 
-from modules.Config import Configuration
+from modules.SolVideo import Configuration
 
 # Parse input arguments
 set_fullscreen = bool
@@ -26,8 +26,6 @@ entropy = Configuration(fullscreen=set_fullscreen)
 
 # Initialize Player
 entropy.set_playhead(layer=0, category='feature', stream='entropy.mov')
-
-entropy
 
 # Global settings for runtime
 cv.namedWindow('Entropy', cv.WINDOW_NORMAL)

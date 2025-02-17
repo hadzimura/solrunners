@@ -34,10 +34,10 @@ if [[ "${SOL}" == 'audio' && "${ROOM}" -eq 1 ]]; then
   echo "Running as the Master Node"
   NODE="--master"
   NODE_TYPE="Master"
-else
-  echo "Running as the Slave Node"
+  echo "Launching the Sol Runner: ${SOL}:${ROOM} as '${NODE_TYPE}' Node"
+  python3 sol-audio/app/main.py --sol "${SOL}" --room "${ROOM}" "${NODE}"
+
+elif [[ "${SOL}" == 'video' && "${ROOM}" -eq 3 ]]; then
+  python3 sol-video/entro.py
 fi
 
-echo "Launching the Sol Runner: ${SOL}:${ROOM} as '${NODE_TYPE}' Node"
-
-python3 sol-audio/app/main.py --sol "${SOL}" --room "${ROOM}" "${NODE}"
