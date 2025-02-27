@@ -30,7 +30,7 @@ class AudioLibrary(object):
         15.0: False
     }
 
-    def __init__(self, audio_path=None):
+    def __init__(self, audio_path=None, tracks_info=None):
 
         #
         self.catalog = dict()
@@ -43,9 +43,9 @@ class AudioLibrary(object):
         self.timeline = dict()
 
         # Player storage
-        self.p = {'L': None, 'R': None}
-        self.load_media('entropy', audio_path / Path('entropy'))
-        self.load_media('nasa', audio_path / Path('nasa/waves'))
+        self.p = None
+        self.load_media('entropy', audio_path / Path('entropy'), None)
+        self.load_media('nasa', audio_path / Path('nasa/waves'), tracks_info)
         self.swap = False
 
     def analyze(self, wav_file, video_fps=23.98, sampling=44100, generate=False):
@@ -142,62 +142,77 @@ class AudioLibrary(object):
         print('Successfully saved analyse file')
         return seconds_timeline
 
-    def load_media(self, name, library_path):
+    def _lookup(self, track_id):
 
-        print("Importing '{}' audio files: '{}'".format(name, library_path))
+        # self.catalog[album][track][channel]['id']
+        for album, tracks in self.catalog.items():
+            for track, channels in tracks.items():
+                pprint(channels)
+                for channel_name, channel_data in channels.items():
+                    if channel_data['id'] == track_id:
+                        return self.catalog[album][track][channel_name]
 
-        if name == 'entropy':
+    def load_media(self, album, library_path, tracks_info):
+
+        print("Importing '{}' audio files: '{}'".format(album, library_path))
+
+        if album == 'entropy':
+
+            self.catalog[album] = dict()
 
             for file in glob('{}/*.wav'.format(library_path)):
 
                 track = file.split('/')[-1].split('.')[0]
                 channel = file.split('/')[-1].split('.')[1]
 
-                if track not in self.catalog:
-                    self.catalog[track] = dict()
-                if channel not in self.catalog[track]:
-                    self.catalog[track][channel] = dict()
+                if track not in self.catalog[album]:
+                    self.catalog[album][track] = dict()
+                if channel not in self.catalog[album][track]:
+                    self.catalog[album][track][channel] = dict()
 
                 print('Loading file: {}'.format(file))
                 print('Importing track: {} ({})'.format(track, channel))
 
                 self.media.append(pyglet.media.StaticSource(pyglet.media.load(file, streaming=False)))
-                self.catalog[track][channel]['id'] = len(self.media) - 1
-                self.catalog[track][channel]['duration'] = self.media[-1].duration
-                self.catalog[track][channel]['file'] = file
+                self.catalog[album][track][channel]['id'] = len(self.media) - 1
+                self.catalog[album][track][channel]['duration'] = self.media[-1].duration
+                self.catalog[album][track][channel]['file'] = file
 
                 if 'voice.left' in file:
                     print('Analyzing file: {}'.format(file))
-                    # self.catalog[track][channel]['frames'], self.catalog[track][channel]['seconds'] = self.analyze(file)
                     self.timeline = self.analyze(file)
 
-        elif name == 'nasa':
+        elif album == 'nasa':
 
-            nr = 0
-            for file in glob('{}/*.wav'.format(library_path)):
+            self.catalog[album] = dict()
 
-                track = nr
+            for file in sorted(tracks_info[album]):
+
+                info = tracks_info[album][file]
+                filename = '{}/{}'.format(library_path, Path('{}.wav'.format(file)))
                 channel = 'stereo'
+                track = 'nasa-{}'.format(file)
 
-                if track not in self.catalog:
-                    self.catalog[track] = dict()
-                if channel not in self.catalog[track]:
-                    self.catalog[track][channel] = dict()
+                if track not in self.catalog[album]:
+                    self.catalog[album][track] = dict()
+                if channel not in self.catalog[album][track]:
+                    self.catalog[album][track][channel] = dict()
 
-                print('Loading file: {}'.format(file))
+                print('Loading file: {}'.format(filename))
                 print('Importing track: {} ({})'.format(track, channel))
 
-                self.media.append(pyglet.media.StaticSource(pyglet.media.load(file, streaming=False)))
-                self.catalog[track][channel]['id'] = len(self.media) - 1
-                self.catalog[track][channel]['duration'] = self.media[-1].duration
-                self.catalog[track][channel]['file'] = file
-                nr += 1
+                self.media.append(pyglet.media.StaticSource(pyglet.media.load(filename, streaming=False)))
+                self.catalog[album][track][channel]['id'] = len(self.media) - 1
+                self.catalog[album][track][channel]['name'] = info['name']
+                self.catalog[album][track][channel]['tags'] = info['tags']
+                self.catalog[album][track][channel]['duration'] = self.media[-1].duration
+                self.catalog[album][track][channel]['filename'] = filename
 
             # pprint(self.timeline, indent=2)
-            # pprint(self.catalog, indent=2)
+            pprint(self.catalog, indent=2)
             print('Imported all audio')
 
-    def play_stream(self, track, channel, start=None, continuous=True):
+    def play_audio(self, track_id, continuous=True):
 
         """ Play selected track and channel through destined stereo position """
 
@@ -207,14 +222,13 @@ class AudioLibrary(object):
             if continuous is True:
                 continuity_timer = self.p.time
             self.p.pause()
-        self.metadata['track'] = track
-        self.metadata['channel'] = channel
-        self.p = self.media[self.catalog[track][channel]['id']].play()
+        self.metadata = self._lookup(track_id)
+        self.p = self.media[track_id].play()
         if continuous is True:
             self.p.seek(continuity_timer)
-        print('Playing stream {}: {}/{}'.format(self.catalog[track][channel],
-                                                          track,
-                                                          channel))
+        print('Playing track ID {}: {} ({})'.format(self.metadata['id'],
+                                                          self.metadata['name'],
+                                                          str(self.metadata['tags'])))
 
     def seek_stream(self, frame):
         if self.p is None:

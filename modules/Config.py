@@ -84,6 +84,12 @@ class Configuration(object):
         else:
             print('This is Slave Node')
 
+        self.summary = {
+            'sol': self.sol,
+            'room': self.room,
+            'node_type': self.node_type
+        }
+
         # Running Environment location
         env_var = environ
         self.project_root = Path(env_var['PWD'])
@@ -126,6 +132,13 @@ class Configuration(object):
             print('PINOUT Config file not found: {}'.format('sol.config.yaml'))
             exit(1)
 
+        self.tracks = dict()
+        tracks_config = self.project_root / Path('sol.audio.yaml')
+        try:
+            self.tracks = self.yaml.load(tracks_config)
+        except FileNotFoundError:
+            print("Audio tracks config file not found: '{}'".format(tracks_config))
+            exit(1)
 
         # Total beats of the runtime
         self.beats = 0

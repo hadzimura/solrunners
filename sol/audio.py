@@ -32,7 +32,7 @@ async def runtime_lifespan(app: FastAPI):
         app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
         app.c.green.on()
 
-    app.a = AudioLibrary(audio_path=app.c.audio_path)
+    app.a = AudioLibrary(audio_path=app.c.audio_path, tracks_info=app.c.tracks)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
     app.templates = Jinja2Templates(directory=app.c.fastapi_templates)
 
@@ -64,11 +64,11 @@ async def actions():
     print('Initiating Runtime Background Loop...')
     tn = 0
     while True:
-        if app.a.p is not None:
-            try:
-                print(app.a.p.time)
-            except Exception as e:
-                print(e)
+        # if app.a.p is not None:
+        #     try:
+        #         print(app.a.p.time)
+        #     except Exception as e:
+        #         print(e)
         await asyncio.sleep(0.05)
 
 async def read_sensors():
@@ -91,14 +91,14 @@ async def index(request: Request):
             "request": request,
             "playing": app.a.metadata,
             "library": app.a.catalog,
-            "app": app.c,
-            "s": app.s }
+            "config": app.c.summary,
+            "sensors": app.s }
     )
 
-@app.get('/play_audio/{track}/{channel}')
-async def play_audio(request: Request, track, channel):
+@app.get('/play_audio/{track_id}')
+async def play_audio(request: Request, track_id):
     """ Play audio track """
-    app.a.play_stream(track, channel)
+    app.a.play_audio(int(track_id))
     redirect_url = request.url_for('index')
     return RedirectResponse(redirect_url, status_code=status.HTTP_303_SEE_OTHER)
 
