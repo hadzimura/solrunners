@@ -11,15 +11,27 @@ from pprint import pprint
 from ruamel.yaml import YAML
 
 if system() != 'Darwin':
-    from modules.Sensors import Led
-    from modules.Sensors import Pir
-    from modules.Sensors import RedButton
+    from gpiozero import Button
+    from gpiozero import DistanceSensor
+    from gpiozero import LED
+    from gpiozero import MotionSensor
+
 
 def arg_parser():
     # Parse the runtime arguments to decide 'who we are'
     parser = ArgumentParser(description='Sol Audio Runner',
                             epilog='Author: rkucera@gmail.com',
                             formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-a', '--audio',
+                        action=BooleanOptionalAction,
+                        default=False,
+                        dest='audio',
+                        help='Set node as audio runner')
+    parser.add_argument('-m', '--master',
+                        action=BooleanOptionalAction,
+                        default=False,
+                        dest='master',
+                        help='Master node?')
     parser.add_argument('-r', '--room',
                         default=None,
                         dest='room',
@@ -29,27 +41,33 @@ def arg_parser():
                         dest='sol',
                         choices=['audio', 'video'],
                         help='Which kind is this Runner of?')
-    parser.add_argument('-m', '--master',
+    parser.add_argument('-v', '--video',
                         action=BooleanOptionalAction,
                         default=False,
-                        dest='master',
-                        help='Master node?')
+                        dest='video',
+                        help='Set node as video runner')
 
-
-    # arg = parser.parse_args()
     return parser.parse_args()
 
 
 class Configuration(object):
 
-    def __init__(self, sol=None, room=None, master=False, width=1920, height=1080, fps=25, fullscreen=True):
+    def __init__(self, audio=False, video=False, room=None, master=False, width=1920, height=1080, fps=25, fullscreen=True):
 
-        if sol is None:
-            print('One of the types of the SoL Runner must be specified (audio / video)')
+        if audio is True and video is True:
+            print('Only one of the types of the SoL Runner must be specified (--audio | --video)')
             print('Exiting...')
             exit(1)
-        else:
-            self.sol = sol
+        elif audio is False and video is False:
+            print('At least one of the types of the SoL Runner must be specified (--audio | --video)')
+            print('Exiting...')
+            exit(1)
+        elif audio is True:
+            print('Running as the Audio Sol Runner')
+            self.sol = 'audio'
+        elif video is True:
+            print('Running as the Video Sol Runner')
+            self.sol = 'video'
 
         if room is None:
             print('Room needs to be specified, exiting...')
@@ -70,25 +88,30 @@ class Configuration(object):
         env_var = environ
         self.project_root = Path(env_var['PWD'])
         self.media_root = self.project_root / Path('media')
+
         self.fonts = self.media_root / Path('fonts')
         self.fastapi_static = self.media_root / Path('static')
         self.fastapi_templates = self.media_root / Path('templates')
+
+        self.audio_path = self.media_root / Path('audio')
         self.entropy_audio = self.media_root / Path('audio/entropy')
-        self.entropy_video = self. media_root / Path('video/entropy.mov')
-        self.entropy_subtitles = self. media_root / Path('video/entropy.subtitles')
+        self.entropy_video = self.media_root / Path('video/entropy.mov')
+        self.entropy_subtitles = self.media_root / Path('video/entropy.subtitles')
         self.entropy = None
+
         self.sol_sensors = self.project_root / Path('sol.config.yaml')
 
-        # Load PINOUT configuration
+        # Load RPi PINOUT configuration
         self.yaml = YAML()
         self.yaml.preserve_quotes = True
         self.pinout = dict()
 
-        # Possible Sensors
+        # Initialize possible Sensors
         self.pir = None
         self.blue = None
         self.green = None
         self.button = None
+
         try:
             self.pinout = self.yaml.load(self.sol_sensors)
             pprint(self.pinout, indent=4)
@@ -159,16 +182,19 @@ class Configuration(object):
     def _init_sensors(self, pinout):
 
         """ Initialize sensor peripherals """
-
+        print('Initializing Sensors...')
         for input_name in pinout:
-
+            pin = pinout[input_name]
             if input_name == 'pir':
-                self.pir = Pir(pinout[input_name])
+                print('Initializing PIR ({})'.format(pin))
+                self.pir = MotionSensor(pin)
             elif input_name == 'blue':
-                self.blue = Led(pinout[input_name], input_name)
+                print('Initializing Blue LED ({})'.format(pin))
+                self.blue = LED(pin)
             elif input_name == 'green':
-                self.green = Led(pinout[input_name], input_name)
+                print('Initializing Green LED ({})'.format(pin))
+                self.green = LED(pin)
             elif input_name == 'button':
-                self.button = RedButton(pinout[input_name])
-
-
+                print('Initializing Button ({})'.format(pin))
+                self.button = Button(pin)
+        print('Done initializing Sensors')

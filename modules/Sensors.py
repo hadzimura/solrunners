@@ -2,9 +2,9 @@
 # rkucera@gmail.com
 
 from gpiozero import Button
-from gpiozero import DistanceSensor
-from gpiozero import LED
-from gpiozero import MotionSensor
+# from gpiozero import DistanceSensor
+# from gpiozero import LED
+# from gpiozero import MotionSensor
 from subprocess import check_call
 from signal import pause
 

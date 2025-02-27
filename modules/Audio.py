@@ -4,6 +4,7 @@
 
 from glob import glob
 from os.path import isfile
+from pathlib import Path
 from pprint import pprint
 import pyglet
 from random import random, choice
@@ -29,8 +30,9 @@ class AudioLibrary(object):
         15.0: False
     }
 
-    def __init__(self, entropy=None):
+    def __init__(self, audio_path=None):
 
+        #
         self.catalog = dict()
         self.media = list()
 
@@ -41,9 +43,9 @@ class AudioLibrary(object):
         self.timeline = dict()
 
         # Player storage
-        # self.p = {'left': None, 'right': None}
-        self.p = None
-        self.load_media('entropy', entropy)
+        self.p = {'L': None, 'R': None}
+        self.load_media('entropy', audio_path / Path('entropy'))
+        self.load_media('nasa', audio_path / Path('nasa/waves'))
         self.swap = False
 
     def analyze(self, wav_file, video_fps=23.98, sampling=44100, generate=False):
@@ -142,9 +144,9 @@ class AudioLibrary(object):
 
     def load_media(self, name, library_path):
 
-        if name == 'entropy':
+        print("Importing '{}' audio files: '{}'".format(name, library_path))
 
-            print('Importing Entropy audio files: {}/*.wav'.format(library_path))
+        if name == 'entropy':
 
             for file in glob('{}/*.wav'.format(library_path)):
 
@@ -168,6 +170,28 @@ class AudioLibrary(object):
                     print('Analyzing file: {}'.format(file))
                     # self.catalog[track][channel]['frames'], self.catalog[track][channel]['seconds'] = self.analyze(file)
                     self.timeline = self.analyze(file)
+
+        elif name == 'nasa':
+
+            nr = 0
+            for file in glob('{}/*.wav'.format(library_path)):
+
+                track = nr
+                channel = 'stereo'
+
+                if track not in self.catalog:
+                    self.catalog[track] = dict()
+                if channel not in self.catalog[track]:
+                    self.catalog[track][channel] = dict()
+
+                print('Loading file: {}'.format(file))
+                print('Importing track: {} ({})'.format(track, channel))
+
+                self.media.append(pyglet.media.StaticSource(pyglet.media.load(file, streaming=False)))
+                self.catalog[track][channel]['id'] = len(self.media) - 1
+                self.catalog[track][channel]['duration'] = self.media[-1].duration
+                self.catalog[track][channel]['file'] = file
+                nr += 1
 
             # pprint(self.timeline, indent=2)
             # pprint(self.catalog, indent=2)

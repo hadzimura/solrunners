@@ -44,7 +44,7 @@ if [[ "${SOL}" == 'audio' ]]; then
     NODE_TYPE="Master"
   fi
   echo "Launching the Sol Audio Runner: ${SOL}/${ROOM} as '${NODE_TYPE}' Node"
-  python3 sol/audio.py --sol "${SOL}" --room "${ROOM}" "${NODE}"
+  python3 sol/audio.py --audio --room "${ROOM}" "${NODE}"
 
 elif [[ "${SOL}" == 'video' && "${ROOM}" -eq 3 ]]; then
 

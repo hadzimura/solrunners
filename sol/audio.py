@@ -26,40 +26,47 @@ arg = arg_parser()
 async def runtime_lifespan(app: FastAPI):
     """ Lifespan of the FastAPI application """
     print('Initializing SoL Runner...')
-    app.c = SolAudioConfig(sol=str(arg.sol), room=int(arg.room), master=bool(arg.master))
+    app.c = SolAudioConfig(audio=arg.audio, video=arg.video, room=int(arg.room), master=bool(arg.master))
 
     if platform.system() != 'Darwin':
-        app.c.blue.light.blink(background=True, on_time=0.1, off_time=0.3)
-        app.c.green.light.on()
+        app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
+        app.c.green.on()
 
-    app.audio = AudioLibrary(entropy=app.c.entropy_audio)
+    app.a = AudioLibrary(audio_path=app.c.audio_path)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
     app.templates = Jinja2Templates(directory=app.c.fastapi_templates)
+
+    # Create Asyncio Tasks
+    print('Creating background asyncio tasks...')
     asyncio.create_task(read_sensors())
     asyncio.create_task(actions())
+    print('Asyncio background tasks initiated')
 
     if platform.system() != 'Darwin':
-        app.c.blue.light.blink(background=True, on_time=1, off_time=1)
-        app.c.green.light.off()
+        app.c.blue.blink(background=True, on_time=1, off_time=1)
+        app.c.green.off()
 
     print('SoL Runner lifespan events initialized')
     yield
     # Clean up
     pass
 
-# FastAPI runtime class
+# App: FastApi
 app = FastAPI(lifespan=runtime_lifespan)
-app.data = dict()
+# App: AudioLibrary
+app.a = dict()
+# App: Config
 app.c = dict()
-app.audio = dict()
+# App: Sensors
+app.s = dict()
 
 async def actions():
-    print('Initializing Runtime Background Loop...')
+    print('Initiating Runtime Background Loop...')
     tn = 0
     while True:
-        if app.audio.p is not None:
+        if app.a.p is not None:
             try:
-                print(app.audio.p.time)
+                print(app.a.p.time)
             except Exception as e:
                 print(e)
         await asyncio.sleep(0.05)
@@ -68,39 +75,37 @@ async def read_sensors():
     print('Initiating Read Sensors Background Loop...')
     while True:
         try:
-            if app.c.button.red.is_active:
-                app.c.green.light.on()
+            if app.c.button.is_active:
+                app.c.green.on()
             else:
-                if app.c.green.light.is_active is True:
-                    app.c.green.light.off()
+                if app.c.green.is_active is True:
+                    app.c.green.off()
         except Exception:
             pass
         await asyncio.sleep(0.1)
-
-
 @app.get("/")
 async def index(request: Request):
     """ Index page """
     return app.templates.TemplateResponse(
         "index.html", {
             "request": request,
-            "playing": app.audio.metadata,
-            "library": app.audio.catalog,
-            "c": app.c,
-            "s": app.data }
+            "playing": app.a.metadata,
+            "library": app.a.catalog,
+            "app": app.c,
+            "s": app.s }
     )
 
 @app.get('/play_audio/{track}/{channel}')
 async def play_audio(request: Request, track, channel):
     """ Play audio track """
-    app.audio.play_stream(track, channel)
+    app.a.play_stream(track, channel)
     redirect_url = request.url_for('index')
     return RedirectResponse(redirect_url, status_code=status.HTTP_303_SEE_OTHER)
 
 @app.get('/seek/{frame}')
 async def seek_audio(request: Request, frame):
     """ Seek within the audio stream """
-    app.audio.seek_stream(frame)
+    app.a.seek_stream(frame)
     redirect_url = request.url_for('index')
     return RedirectResponse(redirect_url, status_code=status.HTTP_303_SEE_OTHER)
 
