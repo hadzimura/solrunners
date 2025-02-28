@@ -45,7 +45,7 @@ class AudioLibrary(object):
 
         # Player storage
         self.p = None
-        self.load_media('entropy', audio_path / Path('entropy'))
+        # self.load_media('entropy', audio_path / Path('entropy'))
         self.load_media('nasa', audio_path / Path('nasa'))
         self.swap = False
 
