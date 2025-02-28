@@ -147,11 +147,9 @@ class AudioLibrary(object):
 
         # self.catalog[album][track][channel]['id']
         for album, tracks in self.catalog.items():
-            for track, channels in tracks.items():
-                pprint(channels)
-                for channel_name, channel_data in channels.items():
-                    if channel_data['id'] == track_id:
-                        return self.catalog[album][track][channel_name]
+            for track, data in tracks.items():
+                if data['id'] == track_id:
+                    return self.catalog[album][track]
 
     def load_media(self, album, library_path):
 
