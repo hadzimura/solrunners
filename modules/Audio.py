@@ -176,23 +176,36 @@ class AudioLibrary(object):
             #     self.timeline = self.analyze(file)
         # pprint(self.catalog, indent=2)
 
-    def play_audio(self, track_id, continuous=True):
+    def play_audio(self, track_id):
 
         """ Play selected track and channel through destined stereo position """
 
-        continuity_timer = 0
         if self.p is not None:
             print('Stopping current stream')
-            if continuous is True:
-                continuity_timer = self.p.time
             self.p.pause()
         self.metadata = self._lookup(track_id)
         self.p = self.media[track_id].play()
-        if continuous is True:
-            self.p.seek(continuity_timer)
         print('Playing track ID {}: {} ({})'.format(self.metadata['id'],
                                                           self.metadata['name'],
                                                           str(self.metadata['tags'])))
+
+    # def play_audio(self, track_id, continuous=True):
+    #
+    #     """ Play selected track and channel through destined stereo position """
+    #
+    #     continuity_timer = 0
+    #     if self.p is not None:
+    #         print('Stopping current stream')
+    #         if continuous is True:
+    #             continuity_timer = self.p.time
+    #         self.p.pause()
+    #     self.metadata = self._lookup(track_id)
+    #     self.p = self.media[track_id].play()
+    #     if continuous is True:
+    #         self.p.seek(continuity_timer)
+    #     print('Playing track ID {}: {} ({})'.format(self.metadata['id'],
+    #                                                       self.metadata['name'],
+    #                                                       str(self.metadata['tags'])))
 
     def seek_stream(self, frame):
         if self.p is None:
