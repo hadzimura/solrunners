@@ -28,9 +28,9 @@ async def runtime_lifespan(app: FastAPI):
     print('Initializing SoL Runner...')
     app.c = SolAudioConfig(audio=arg.audio, video=arg.video, room=int(arg.room), master=bool(arg.master))
 
+    # Application startup: blue blinx
     if platform.system() != 'Darwin':
         app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
-        app.c.green.on()
 
     app.a = AudioLibrary(audio_path=app.c.audio_path, tracks_info=app.c.tracks)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
@@ -43,8 +43,7 @@ async def runtime_lifespan(app: FastAPI):
     print('Asyncio background tasks initiated')
 
     if platform.system() != 'Darwin':
-        app.c.blue.blink(background=True, on_time=1, off_time=1)
-        app.c.green.off()
+        app.c.blue.off()
 
     print('SoL Runner lifespan events initialized')
     yield
