@@ -64,7 +64,6 @@ app.presence = False
 
 async def actions():
     print('Initiating Runtime Background Loop...')
-    tn = 0
     while True:
         if app.presence is True:
             if app.a.p is None:
@@ -95,10 +94,12 @@ async def read_sensors():
             if app.c.pir.is_active and app.on is True:
                 app.c.green.blink(background=True, on_time=0.5, off_time=0.5)
                 app.presence = True
+            elif app.c.pir.is_active:
+                print('PIR tick')
         except Exception:
             pass
 
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.05)
 @app.get("/")
 async def index(request: Request):
     """ Index page """
