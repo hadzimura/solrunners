@@ -42,8 +42,9 @@ async def runtime_lifespan(app: FastAPI):
     asyncio.create_task(actions())
     print('Asyncio background tasks initiated')
 
+    # Blue light means we are ready
     if platform.system() != 'Darwin':
-        app.c.blue.off()
+        app.c.blue.on()
 
     print('SoL Runner lifespan events initialized')
     yield
@@ -58,35 +59,42 @@ app.a = dict()
 app.c = dict()
 # App: Sensors
 app.s = dict()
+app.on = False
+app.presence = False
 
 async def actions():
     print('Initiating Runtime Background Loop...')
     tn = 0
     while True:
-        # if app.a.p is not None:
-        #     try:
-        #         print(app.a.p.time)
-        #     except Exception as e:
-        #         print(e)
+        if app.presence is True:
+            if app.a.p is None:
+                try:
+                    app.a.play_audio(6)
+                except Exception as e:
+                    print(e)
         await asyncio.sleep(0.05)
 
 async def read_sensors():
     print('Initiating Read Sensors Background Loop...')
     while True:
         try:
+            # Push the button to prime the system
             if app.c.button.is_active:
-                app.c.green.on()
-            else:
-                if app.c.green.is_active is True:
-                    app.c.green.off()
+                if app.status is False:
+                    app.c.green.on()
+                    app.on = True
+                    print('System active')
+                else:
+                    app.c.green.of()
+                    app.on = False
+                    print('System disabled')
         except Exception:
             pass
 
         try:
-            if app.c.pir.is_active and not app.c.green.is_active:
-                app.c.green.on()
-            else:
-                app.c.green.off()
+            if app.c.pir.is_active and app.on is True:
+                app.c.green.blink(background=True, on_time=0.5, off_time=0.5)
+                app.presence = True
         except Exception:
             pass
 
