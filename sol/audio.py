@@ -82,6 +82,15 @@ async def read_sensors():
                     app.c.green.off()
         except Exception:
             pass
+
+        try:
+            if app.c.pir.is_active and not app.c.green.is_active:
+                app.c.green.blink(background=True, on_time=0.1, off_time=0.3)
+            else:
+                app.c.green.off()
+        except Exception:
+            pass
+
         await asyncio.sleep(0.1)
 @app.get("/")
 async def index(request: Request):
