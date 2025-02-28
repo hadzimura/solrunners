@@ -85,7 +85,7 @@ async def read_sensors():
 
         try:
             if app.c.pir.is_active and not app.c.green.is_active:
-                app.c.green.blink(background=True, on_time=0.1, off_time=0.3)
+                app.c.green.on()
             else:
                 app.c.green.off()
         except Exception:
