@@ -79,12 +79,12 @@ async def read_sensors():
         try:
             # Push the button to prime the system
             if app.c.button.is_active:
-                if app.status is False:
+                if app.on is False:
                     app.c.green.on()
                     app.on = True
                     print('System active')
                 else:
-                    app.c.green.of()
+                    app.c.green.off()
                     app.on = False
                     print('System disabled')
         except Exception:
