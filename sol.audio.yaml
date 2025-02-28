@@ -1,46 +1,78 @@
+entropy:
+  1:
+    name: Entropy - music
+    channel: left
+    tags:
+  2:
+    name: Entropy - music
+    channel: right
+    tags:
+  3:
+    name: Entropy - vocals
+    channel: left
+    tags:
+  4:
+    name: Entropy - vocals
+    channel: right
+    tags:
 nasa:
   1:
     name: Apollo 11 - We Have a Lift-Off
+    channel: stereo
     tags:
   2:
     name: Cassini - Saturn Radio Emissions 1
+    channel: stereo
     tags:
   3:
     name: Cassini - Saturn Radio Emissions 2
+    channel: stereo
     tags:
   4:
     name: Chorus Radio Waves within Earth’s Atmosphere
+    channel: stereo
     tags:
   5:
     name: Discovery – STS-26 Liftoff
+    channel: stereo
     tags:
   6:
     name: Discovery – Vector transfer
+    channel: stereo
     tags:
   7:
     name: JFK - We Choose the Moon
+    channel: stereo
     tags:
   8:
     name: Mercury 4 - Clock Started
+    channel: stereo
     tags:
   9:
     name: Mercury 6 - God Speed
+    channel: stereo
     tags:
   10:
     name: Quindar - Sound 1
+    channel: stereo
     tags:
   11:
     name: Quindar - Sound 2
+    channel: stereo
     tags:
   12:
     name: SLS Test Fire
+    channel: stereo
     tags:
   13:
    name: SOFIA Takeoff Audio
+   channel: stereo
    tags:
   14:
     name: STS-135 - Countdown to Launch
+    channel: stereo
     tags:
   15:
     name: Sputnik - Beep
+    channel: stereo
     tags:

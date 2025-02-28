@@ -65,8 +65,8 @@ exit(0)
 print(platform.system())
 
 
-# audio_file = '/home/zero/sol-audio/sounds/entropy/music.left.wav'
-audio_file = 'source/sounds/entropy/music.left.wav'
+# audio_file = '/home/zero/sol-audio/sounds/entropy/1.wav'
+audio_file = 'source/sounds/entropy/1.wav'
 source = pyglet.media.StaticSource(pyglet.media.load(audio_file, streaming=False))
 
 print(source.duration)
