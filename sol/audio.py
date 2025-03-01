@@ -90,14 +90,14 @@ async def read_sensors():
                 app.on = None
                 print('System disabled: {}'.format(current_time))
 
-        try:
-            if app.c.pir.is_active and app.on is True:
-                app.c.green.blink(background=True, on_time=0.5, off_time=0.5)
-                app.presence = True
-            elif app.c.pir.is_active:
-                print('PIR tick')
-        except Exception:
-            pass
+        # try:
+        #     if app.c.pir.is_active and app.on is True:
+        #         app.c.green.blink(background=True, on_time=0.5, off_time=0.5)
+        #         app.presence = True
+        #     elif app.c.pir.is_active:
+        #         print('PIR tick')
+        # except Exception:
+        #     pass
 
         await asyncio.sleep(0.05)
 @app.get("/")
