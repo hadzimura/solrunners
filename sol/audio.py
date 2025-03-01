@@ -4,6 +4,7 @@
 
 import asyncio
 from contextlib import asynccontextmanager
+from datetime import datetime as dt
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import status
@@ -59,7 +60,7 @@ app.a = dict()
 app.c = dict()
 # App: Sensors
 app.s = dict()
-app.on = False
+app.on = None
 app.presence = False
 
 async def actions():
@@ -76,19 +77,18 @@ async def actions():
 async def read_sensors():
     print('Initiating Read Sensors Background Loop...')
     while True:
-        try:
-            # Push the button to prime the system
-            if app.c.button.is_active:
-                if app.on is False:
-                    app.c.green.on()
-                    app.on = True
-                    print('System active')
-                else:
-                    app.c.green.off()
-                    app.on = False
-                    print('System disabled')
-        except Exception:
-            pass
+
+        current_time = dt.now()
+        # STANDBY / READY
+        if app.c.button.is_active:
+            if app.on is None:
+                app.c.green.on()
+                app.on = current_time
+                print('System active: {}'.format(app.on))
+            elif (current_time.microsecond - app.on.microsecond) > 5000:
+                app.c.green.off()
+                app.on = None
+                print('System disabled: {}'.format(current_time))
 
         try:
             if app.c.pir.is_active and app.on is True:
