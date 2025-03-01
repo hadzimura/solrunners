@@ -61,6 +61,9 @@ app.c = dict()
 # App: Sensors
 app.s = dict()
 app.on = None
+app.off = None
+app.armed = False
+app.last_button_press = None
 app.presence = False
 
 async def actions():
@@ -79,16 +82,39 @@ async def read_sensors():
     while True:
 
         current_time = dt.now()
+        if app.last_button_press is None:
+            app.last_button_press = current_time
+
         # STANDBY / READY
         if app.c.button.is_active:
-            if app.on is None:
+
+            if (current_time.second - app.last_button_press.second) < 1:
+                print('Button pressed too soon, jittering')
+            elif app.armed is False:
                 app.c.green.on()
-                app.on = current_time
-                print('System active: {}'.format(app.on))
-            elif (current_time.second - app.on.second) > 1:
+                app.armed = True
+                app.last_button_press = current_time
+                print('System activated: {}'.format(current_time))
+            elif app.armed is True:
                 app.c.green.off()
-                app.on = None
-                print('System disabled: {}'.format(current_time))
+                app.armed = False
+                app.last_button_press = current_time
+                print('System de-activated: {}'.format(current_time))
+
+
+            # if app.on is None and app.off is not None:
+            #     app.c.green.on()
+            #     app.on = current_time
+            #     app.off = None
+            #     print('System active: {}'.format(app.on))
+            # elif app.off is None and app.on is not None:
+            #     pass
+            #
+            # elif (current_time.second - app.on.second) > 1:
+            #     app.c.green.off()
+            #     app.on = None
+            #     app.off = current_time
+            #     print('System disabled: {}'.format(current_time))
 
         # try:
         #     if app.c.pir.is_active and app.on is True:
