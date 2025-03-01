@@ -71,10 +71,9 @@ async def actions():
     while True:
         if app.presence is True:
             if app.a.p is None:
-                try:
-                    app.a.play_audio(6)
-                except Exception as e:
-                    print(e)
+                print('Playing...')
+                app.a.play_audio(6)
+
         await asyncio.sleep(0.05)
 
 async def read_sensors():
@@ -89,7 +88,7 @@ async def read_sensors():
         if app.c.button.is_active:
 
             if (current_time.second - app.last_button_press.second) < 1:
-                print('Button pressed too soon, jittering')
+                pass
             elif app.armed is False:
                 app.c.green.on()
                 app.armed = True
@@ -101,29 +100,10 @@ async def read_sensors():
                 app.last_button_press = current_time
                 print('System de-activated: {}'.format(current_time))
 
-
-            # if app.on is None and app.off is not None:
-            #     app.c.green.on()
-            #     app.on = current_time
-            #     app.off = None
-            #     print('System active: {}'.format(app.on))
-            # elif app.off is None and app.on is not None:
-            #     pass
-            #
-            # elif (current_time.second - app.on.second) > 1:
-            #     app.c.green.off()
-            #     app.on = None
-            #     app.off = current_time
-            #     print('System disabled: {}'.format(current_time))
-
-        # try:
-        #     if app.c.pir.is_active and app.on is True:
-        #         app.c.green.blink(background=True, on_time=0.5, off_time=0.5)
-        #         app.presence = True
-        #     elif app.c.pir.is_active:
-        #         print('PIR tick')
-        # except Exception:
-        #     pass
+        if app.c.pir.is_active and app.armed is True:
+            if app.presence is None:
+                app.c.green.blink(background=True, on_time=1, off_time=1)
+                app.presence = current_time
 
         await asyncio.sleep(0.05)
 @app.get("/")
