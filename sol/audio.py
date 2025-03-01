@@ -85,7 +85,7 @@ async def read_sensors():
                 app.c.green.on()
                 app.on = current_time
                 print('System active: {}'.format(app.on))
-            elif (current_time.microsecond - app.on.microsecond) > 5000:
+            elif (current_time.second - app.on.second) < 1:
                 app.c.green.off()
                 app.on = None
                 print('System disabled: {}'.format(current_time))
