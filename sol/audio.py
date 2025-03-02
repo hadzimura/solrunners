@@ -69,9 +69,28 @@ app.presence = False
 async def actions():
 
     print('Initiating Runtime Background Loop...')
+    last_second = None
+    tick = False
+    elapsed = 0
     while True:
 
         current_time = dt.now()
+
+        if last_second is None:
+            last_second = current_time.second
+        if current_time.second == 0 and last_second == 59:
+            tick = True
+            last_second = current_time.second
+        elif current_time.second > last_second:
+            tick = True
+            last_second = current_time.second
+
+        if tick is True:
+            elapsed += 1
+            print('Elapsed: {} seconds'.format(elapsed))
+            tick = False
+
+
         if app.armed is not True:
             # Do nothing if App is not armed
             await asyncio.sleep(0.05)
@@ -120,6 +139,11 @@ async def read_sensors():
             app.last_presence = current_time
             app.presence = True
             app.c.blue.on()
+        elif not app.c.pir.is_active and (current_time.second - app.last_presence.second) < app.c.jitter_presence:
+
+            if not app.c.blue.is_active:
+                app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
+
         elif not app.c.pir.is_active and (current_time.second - app.last_presence.second) > app.c.jitter_presence:
             app.presence = False
             app.c.blue.off()
