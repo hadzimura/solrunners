@@ -75,7 +75,7 @@ async def actions():
             # Do nothing if App is not armed
             continue
 
-        if (current_time.second - app.presence.second) <
+        # if (current_time.second - app.presence.second) <
 
 
 
