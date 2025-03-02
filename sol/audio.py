@@ -94,6 +94,8 @@ async def read_sensors():
         current_time = dt.now()
         if app.last_button_press is None:
             app.last_button_press = current_time
+        if app.last_presence is None:
+            app.last_presence = current_time
 
         # Button: STANDBY / READY (jitter)
         if app.c.button.is_active:
