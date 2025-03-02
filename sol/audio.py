@@ -101,7 +101,7 @@ async def read_sensors():
         if app.c.button.is_active:
 
             if (current_time.second - app.last_button_press.second) < app.c.jitter_button:
-                print('Button jitter: {} - {} < {}', format(current_time.second, app.last_button_press.second, app.c.jitter_button))
+                print('Button jitter: {} - {} < {}'.format(current_time.second, app.last_button_press.second, app.c.jitter_button))
                 pass
             elif app.armed is False:
                 app.c.green.on()
