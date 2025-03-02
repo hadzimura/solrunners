@@ -65,6 +65,7 @@ app.armed = False
 app.last_button_press = None
 app.last_presence = None
 app.presence = False
+app.presence_fader = False
 
 async def actions():
 
@@ -128,9 +129,13 @@ async def read_sensors():
                 print('System activated: {}'.format(current_time))
             elif app.armed is True:
                 app.c.green.off()
-                app.armed = False
-                app.last_button_press = current_time
                 print('System de-activated: {}'.format(current_time))
+                # reset all the stateful data
+                app.armed = False
+                app.last_presence = None
+                app.presence = False
+                app.presence_fader = False
+                app.last_button_press = current_time
 
         # PIR presence detection
         if app.armed:
@@ -145,16 +150,17 @@ async def read_sensors():
 
             elif app.presence and not app.c.pir.is_active and (current_time.second - app.last_presence.second) < app.c.jitter_presence:
 
-                if not app.c.blue.is_active:
+                if app.presence_fader is False:
                     app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
+                    app.presence_fader = True
                 print('Presence diminishing')
 
             elif app.presence and not app.c.pir.is_active and (current_time.second - app.last_presence.second) > app.c.jitter_presence:
 
                 print('Presence stopped')
                 app.presence = False
+                app.presence_fader = False
                 app.c.blue.off()
-
 
         await asyncio.sleep(0.05)
 @app.get("/")
