@@ -73,6 +73,7 @@ async def actions():
         current_time = dt.now()
         if app.armed is not True:
             # Do nothing if App is not armed
+            await asyncio.sleep(0.05)
             continue
 
         # if (current_time.second - app.presence.second) <
