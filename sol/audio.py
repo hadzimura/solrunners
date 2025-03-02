@@ -134,18 +134,23 @@ async def read_sensors():
 
         # PIR presence detection
         if app.armed:
-            if app.c.pir.is_active:
+
+            if app.c.pir.is_active and not app.presence:
+
                 # Keep the presence timer updated
                 app.last_presence = current_time
                 app.presence = True
                 app.c.blue.on()
                 print('Presence started')
-            elif not app.c.pir.is_active and (current_time.second - app.last_presence.second) < app.c.jitter_presence:
+
+            elif app.presence and not app.c.pir.is_active and (current_time.second - app.last_presence.second) < app.c.jitter_presence:
 
                 if not app.c.blue.is_active:
                     app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
                 print('Presence diminishing')
-            elif not app.c.pir.is_active and (current_time.second - app.last_presence.second) > app.c.jitter_presence:
+
+            elif app.presence and not app.c.pir.is_active and (current_time.second - app.last_presence.second) > app.c.jitter_presence:
+
                 print('Presence stopped')
                 app.presence = False
                 app.c.blue.off()
