@@ -90,7 +90,6 @@ async def actions():
             print('Elapsed: {} seconds'.format(elapsed))
             tick = False
 
-
         if app.armed is not True:
             # Do nothing if App is not armed
             await asyncio.sleep(0.05)
@@ -98,10 +97,10 @@ async def actions():
 
         # if (current_time.second - app.presence.second) <
 
-        if app.presence is True:
-            if app.a.p is None:
-                print('Playing...')
-                # app.a.play_audio(6)
+        # if app.presence is True:
+        #     if app.a.p is None:
+        #         print('Playing...')
+        #         # app.a.play_audio(6)
 
         await asyncio.sleep(0.05)
 
@@ -139,12 +138,14 @@ async def read_sensors():
             app.last_presence = current_time
             app.presence = True
             app.c.blue.on()
+            print('Presence started')
         elif not app.c.pir.is_active and (current_time.second - app.last_presence.second) < app.c.jitter_presence:
 
             if not app.c.blue.is_active:
                 app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
-
+            print('Presence diminishing')
         elif not app.c.pir.is_active and (current_time.second - app.last_presence.second) > app.c.jitter_presence:
+            print('Presence stopped')
             app.presence = False
             app.c.blue.off()
 
