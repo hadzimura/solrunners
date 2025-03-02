@@ -82,7 +82,7 @@ async def actions():
         if app.presence is True:
             if app.a.p is None:
                 print('Playing...')
-                app.a.play_audio(6)
+                # app.a.play_audio(6)
 
         await asyncio.sleep(0.05)
 
