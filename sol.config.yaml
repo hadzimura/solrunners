@@ -1,6 +1,31 @@
-1:
-  audio:
-    button: 2
-    pir: 15
-    green: 19
-    blue: 26
+global:
+  pirTest: true
+jitter:
+  button: 1
+  presence: 1
+pinout:
+  1:
+    audio:
+      button: 2
+      pir: 15
+      green: 19
+      blue: 26
+  2:
+  3:
+    audio:
+      pir: 15
+      green: 19
+      blue: 26
+    video:
+      green: 19
+      blue: 26
+  4:
+    video:
+      distance:
+      green: 19
+      blue: 26
+  5:
+    video:
+      pir: 15
+      green: 19
+      blue: 26

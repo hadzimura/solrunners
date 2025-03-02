@@ -105,21 +105,23 @@ class Configuration(object):
         self.entropy_subtitles = self.media_root / Path('video/entropy.subtitles')
         self.entropy = None
 
-        self.sol_sensors = self.project_root / Path('sol.config.yaml')
-
-        # Load RPi PINOUT configuration
+        # Load RPi configurations
         self.yaml = YAML()
         self.yaml.preserve_quotes = True
-        self.pinout = dict()
+        self.configuration_file = self.project_root / Path('sol.config.yaml')
+        self.configuration = self.yaml.load(self.configuration_file)
 
         # Initialize possible Sensors
+        self.pinout = self.configuration['pinout']
         self.pir = None
         self.blue = None
         self.green = None
         self.button = None
+        self.jitter_button = self.configuration['jitter']['button']
+        self.jitter_presence = self.configuration['jitter']['presence']
+        self.pir_test = self.configuration['global']['pirTest']
 
         try:
-            self.pinout = self.yaml.load(self.sol_sensors)
             pprint(self.pinout, indent=4)
             if self.room not in self.pinout:
                 print("No PINOUT config found for Runners of Room '{}'".format(self.room))

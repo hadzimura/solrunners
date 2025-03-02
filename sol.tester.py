@@ -19,6 +19,11 @@ from signal import pause
 from datetime import datetime, timedelta
 
 
+while True:
+    sine = pyglet.media.synthesis.Sine(0.1, frequency=440, sample_rate=44800)
+    sine.play()
+    sleep(0.5)
+
 n = datetime.now()
 
 

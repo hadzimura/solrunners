@@ -60,15 +60,25 @@ app.a = dict()
 app.c = dict()
 # App: Sensors
 app.s = dict()
-app.on = None
-app.off = None
+# Runtimes
 app.armed = False
 app.last_button_press = None
 app.presence = False
 
 async def actions():
+
     print('Initiating Runtime Background Loop...')
     while True:
+
+        current_time = dt.now()
+        if app.armed is not True:
+            # Do nothing if App is not armed
+            continue
+
+        if (current_time.second - app.presence.second) <
+
+
+
         if app.presence is True:
             if app.a.p is None:
                 print('Playing...')
@@ -77,6 +87,7 @@ async def actions():
         await asyncio.sleep(0.05)
 
 async def read_sensors():
+
     print('Initiating Read Sensors Background Loop...')
     while True:
 
@@ -84,10 +95,11 @@ async def read_sensors():
         if app.last_button_press is None:
             app.last_button_press = current_time
 
-        # STANDBY / READY
+        # Button: STANDBY / READY (jitter)
         if app.c.button.is_active:
 
-            if (current_time.second - app.last_button_press.second) < 1:
+            if (current_time.second - app.last_button_press.second) < app.c.jitter_button:
+                print('Button jitter: {} - {} < {}', format(current_time.second, app.last_button_press.second, app.c.jitter_button))
                 pass
             elif app.armed is False:
                 app.c.green.on()
@@ -100,10 +112,13 @@ async def read_sensors():
                 app.last_button_press = current_time
                 print('System de-activated: {}'.format(current_time))
 
-        if app.c.pir.is_active and app.armed is True:
-            if app.presence is None:
-                app.c.green.blink(background=True, on_time=1, off_time=1)
-                app.presence = current_time
+        # PIR presence detection
+        if app.c.pir.is_active:
+            # Keep the presence timer updated
+            app.last_presence = current_time
+            app.presence = True
+        elif not app.c.pir.is_active and (current_time.second - app.last_presence.second) > app.c.jitter_presence:
+
 
         await asyncio.sleep(0.05)
 @app.get("/")

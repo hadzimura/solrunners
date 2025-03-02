@@ -244,3 +244,8 @@ class AudioLibrary(object):
             # print('NO match: {}'.format(current_playhead))
 
         return event
+
+    @staticmethod
+    def play_sound(self):
+        sound = pyglet.media.synthesis.Sine(0.1, frequency=440, sample_rate=44800)
+        sound.play()
