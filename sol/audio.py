@@ -79,8 +79,6 @@ async def actions():
 
         # if (current_time.second - app.presence.second) <
 
-
-
         if app.presence is True:
             if app.a.p is None:
                 print('Playing...')
@@ -119,8 +117,10 @@ async def read_sensors():
             # Keep the presence timer updated
             app.last_presence = current_time
             app.presence = True
+            app.c.blue.on()
         elif not app.c.pir.is_active and (current_time.second - app.last_presence.second) > app.c.jitter_presence:
             app.presence = False
+            app.c.blue.off()
 
 
         await asyncio.sleep(0.05)
