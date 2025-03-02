@@ -63,6 +63,7 @@ app.s = dict()
 # Runtimes
 app.armed = False
 app.last_button_press = None
+app.last_presence = None
 app.presence = False
 
 async def actions():
