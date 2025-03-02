@@ -118,6 +118,7 @@ async def read_sensors():
             app.last_presence = current_time
             app.presence = True
         elif not app.c.pir.is_active and (current_time.second - app.last_presence.second) > app.c.jitter_presence:
+            app.presence = False
 
 
         await asyncio.sleep(0.05)
