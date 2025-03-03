@@ -4,6 +4,7 @@
 
 import asyncio
 from contextlib import asynccontextmanager
+from copy import deepcopy
 from datetime import datetime as dt
 from fastapi import FastAPI
 from fastapi import Request
@@ -62,10 +63,17 @@ app.c = dict()
 app.s = dict()
 # Runtimes
 app.armed = False
-app.last_button_press = None
-app.last_presence = None
-app.presence = False
-app.presence_fader = False
+runtime = {
+    'last_button_press': None,
+    'last_presence': None,
+    'presence': False,
+    'presence_fader': False
+}
+app.r = deepcopy(runtime)
+# app.last_button_press = None
+# app.last_presence = None
+# app.presence = False
+# app.presence_fader = False
 
 async def actions():
 
@@ -110,59 +118,61 @@ async def read_sensors():
     print('Initiating Read Sensors Background Loop...')
     while True:
 
+        # Current cycle
         current_time = dt.now()
-        if app.last_button_press is None:
-            app.last_button_press = current_time
-        if app.last_presence is None:
-            app.last_presence = current_time
+        # Default values
+        if app.r['last_button_press'] is None:
+            app.r['last_button_press'] = current_time
+        if app.r['last_presence'] is None:
+            app.r['last_presence'] = current_time
+        # Default calculations
+        button_delta = current_time.second - app.r['last_button_press'].second
+        presence_delta = current_time.second - app.r['last_presence'].second
 
         # Button: STANDBY / READY (jitter)
         if app.c.button.is_active:
 
-            if (current_time.second - app.last_button_press.second) < app.c.jitter_button:
-                print('Button jitter: {} - {} < {}'.format(current_time.second, app.last_button_press.second, app.c.jitter_button))
+            if button_delta < app.c.jitter_button:
+                print('Button: delta={}; jitter={}'.format(button_delta, app.c.jitter_button))
                 pass
             elif app.armed is False:
                 app.c.green.on()
                 app.armed = True
-                app.last_button_press = current_time
+                app.r['last_button_press'] = current_time
                 print('System activated: {}'.format(current_time))
             elif app.armed is True:
                 app.c.green.off()
                 print('System de-activated: {}'.format(current_time))
                 # reset all the stateful data
                 app.armed = False
-                app.last_presence = None
-                app.presence = False
-                app.presence_fader = False
-                app.last_button_press = current_time
+                app.r = deepcopy(runtime)
 
         # PIR presence detection
         if app.armed:
 
-            if app.c.pir.is_active and not app.presence:
+            if app.c.pir.is_active and not app.r['presence']:
 
                 # Keep the presence timer updated
-                app.last_presence = current_time
-                app.presence = True
+                app.r['last_presence'] = current_time
+                app.r['presence'] = True
                 app.c.blue.on()
                 print('Presence started')
 
-            elif app.presence and not app.c.pir.is_active and (current_time.second - app.last_presence.second) < app.c.jitter_presence:
+            elif app.r['presence'] and not app.c.pir.is_active and presence_delta < app.c.jitter_presence:
 
-                if app.presence_fader is False:
+                if app.r['presence_fader'] is False:
                     app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
-                    app.presence_fader = True
+                    app.r['presence_fader'] = True
                 print('Presence diminishing')
 
-            elif app.presence and not app.c.pir.is_active and (current_time.second - app.last_presence.second) > app.c.jitter_presence:
+            elif app.r['presence'] and not app.c.pir.is_active and presence_delta > app.c.jitter_presence:
 
                 print('Presence stopped')
-                app.presence = False
-                app.presence_fader = False
+                app.r['presence'] = False
+                app.r['presence_fader'] = False
                 app.c.blue.off()
 
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.01)
 @app.get("/")
 async def index(request: Request):
     """ Index page """
