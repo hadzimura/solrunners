@@ -32,7 +32,7 @@ async def runtime_lifespan(app: FastAPI):
 
     # Application startup: blue blinx
     if platform.system() != 'Darwin':
-        app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
+        app.c.green.blink(background=True, on_time=0.1, off_time=0.3)
 
     app.a = AudioLibrary(audio_path=app.c.audio_path, tracks_info=app.c.tracks)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
@@ -46,7 +46,7 @@ async def runtime_lifespan(app: FastAPI):
 
     # Blue light means we are ready
     if platform.system() != 'Darwin':
-        app.c.blue.on()
+        app.c.green.on()
 
     print('SoL Runner lifespan events initialized')
     yield
@@ -136,7 +136,7 @@ async def read_sensors():
                 print('Button: delta={}; jitter={}'.format(button_delta, app.c.jitter_button))
                 pass
             elif app.armed is False:
-                app.c.green.on()
+                app.c.green.blink(background=True, on_time=1, off_time=0.3)
                 app.armed = True
                 app.r['last_button_press'] = current_time
                 print('System activated: {}'.format(current_time))
