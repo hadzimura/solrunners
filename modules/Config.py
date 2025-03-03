@@ -119,6 +119,7 @@ class Configuration(object):
         self.button = None
         self.jitter_button = self.configuration['jitter']['button']
         self.jitter_presence = self.configuration['jitter']['presence']
+        self.presence_delay = self.configuration['jitter']['presence_delay']
         self.pir_test = self.configuration['global']['pirTest']
 
         try:

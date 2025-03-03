@@ -67,7 +67,8 @@ runtime = {
     'last_button_press': None,
     'last_presence': None,
     'presence': False,
-    'presence_fader': False
+    'presence_fader': False,
+    'presence_delay': False
 }
 app.r = deepcopy(runtime)
 # app.last_button_press = None
@@ -96,7 +97,10 @@ async def actions():
 
         if tick is True:
             elapsed += 1
-            print('Elapsed: {} seconds; presence: {}; presence fader: {}'.format(elapsed, str(app.r['presence']), str(app.r['presence_fader'])))
+            print('Elapsed: {} seconds; presence: {}; presence fader: {}; presence_delay={}'.format(elapsed,
+                                                                                                    str(app.r['presence']),
+                                                                                                    str(app.r['presence_fader']),
+                                                                                                    str(app.r['presence_delay'])))
             tick = False
 
         if app.armed is not True:
@@ -136,7 +140,7 @@ async def read_sensors():
                 print('Button: delta={}; jitter={}'.format(button_delta, app.c.jitter_button))
                 pass
             elif app.armed is False:
-                app.c.green.blink(background=True, on_time=1, off_time=0.3)
+                app.c.green.blink(background=True, on_time=0.5, off_time=3)
                 app.armed = True
                 app.r['last_button_press'] = current_time
                 print('System activated: {}'.format(current_time))
@@ -150,7 +154,14 @@ async def read_sensors():
         # PIR presence detection
         if app.armed:
 
-            if app.c.pir.is_active and not app.r['presence']:
+            if app.c.pir.is_active and app.r['presence_delay']:
+
+                if presence_delta > app.c.presence_delay:
+                    # Waiting for another round
+                    app.r['presence'] = True
+                    app.r['presence_delay'] = False
+
+            elif app.c.pir.is_active and not app.r['presence']:
 
                 # Keep the presence timer updated
                 app.r['last_presence'] = current_time
@@ -163,13 +174,15 @@ async def read_sensors():
                 if app.r['presence_fader'] is False:
                     app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
                     app.r['presence_fader'] = True
-                # print('Presence diminishing')
 
             elif app.r['presence'] and not app.c.pir.is_active and presence_delta > app.c.jitter_presence:
 
                 print('Presence stopped')
                 app.r['presence'] = False
                 app.r['presence_fader'] = False
+                # Start timer for next presence activity
+                app.r['presence_delay'] = True
+                app.r['last_presence'] = current_time
                 app.c.blue.off()
 
         await asyncio.sleep(0.01)
