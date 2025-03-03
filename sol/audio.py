@@ -96,7 +96,7 @@ async def actions():
 
         if tick is True:
             elapsed += 1
-            print('Elapsed: {} seconds'.format(elapsed))
+            print('Elapsed: {} seconds; presence: {}; presence fader: {}'.format(elapsed, str(app.r['presence']), str(app.r['presence_fader'])))
             tick = False
 
         if app.armed is not True:
@@ -163,7 +163,7 @@ async def read_sensors():
                 if app.r['presence_fader'] is False:
                     app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
                     app.r['presence_fader'] = True
-                print('Presence diminishing')
+                # print('Presence diminishing')
 
             elif app.r['presence'] and not app.c.pir.is_active and presence_delta > app.c.jitter_presence:
 
