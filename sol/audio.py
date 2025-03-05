@@ -139,7 +139,7 @@ async def read_sensors():
 
             if current_time <= app.button_delay:
                 # Button safety jitter
-                print('Button skipped? {} - {}'.format(current_time, app.button_delay))
+                # print('Button skipped? {} - {}'.format(current_time, app.button_delay))
                 pass
             elif app.armed is False:
                 # Arm the Sensors runtime
