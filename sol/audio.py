@@ -146,26 +146,21 @@ async def read_sensors():
         # PIR presence detection
         if app.armed:
 
+            # PIR status
+            if app.c.pir.is_active:
+                app.last_presence = current_time
+
             if app.presence_delay and current_time < app.next_presence:
                 pass
 
             elif app.presence_delay and current_time >= app.next_presence:
                 app.presence_delay = False
 
-            elif app.c.pir.is_active and not app.presence:
-
-                # Keep the presence timer updated
-                app.last_presence = current_time
-                app.presence = True
-                app.c.blue.on()
-                print('Presence started')
-
-            elif not app.c.pir.is_active and app.presence and current_time > app.last_presence + timedelta(seconds=app.c.jitter_presence):
+            elif not app.c.pir.is_active and app.presence and current_time >= app.last_presence + timedelta(seconds=app.c.jitter_presence):
 
                 # Starting the Presence Fader
                 app.c.blue.blink(background=True, on_time=0.3, off_time=0.3)
                 app.presence_delay = True
-                app.last_presence = current_time
 
             elif not app.c.pir.is_active and app.presence and not app.presence_delay:
 
@@ -176,6 +171,12 @@ async def read_sensors():
                 # Start timer for next presence activity
                 app.next_presence = current_time + timedelta(seconds=app.c.presence_delay)
                 app.c.blue.off()
+
+           elif app.c.pir.is_active and not app.presence:
+                app.presence = True
+                app.c.blue.on()
+                print('Presence started')
+
 
         await asyncio.sleep(0.01)
 @app.get("/")
