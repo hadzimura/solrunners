@@ -68,7 +68,7 @@ app.armed = False
 app.presence = False
 app.presence_delay = False
 app.button_delay = dt.now()
-app.next_presence = None
+app.next_presence = dt.now()
 
 async def actions():
 
