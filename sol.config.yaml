@@ -1,9 +1,9 @@
 global:
   pirTest: true
 jitter:
-  button: 1
-  presence: 10
-  presence_delay: 10
+  button: 2
+  presence: 5
+  presence_delay: 5
 pinout:
   1:
     audio:
