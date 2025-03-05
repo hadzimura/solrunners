@@ -138,7 +138,6 @@ async def read_sensors():
                 # reset all the stateful data
                 app.armed = False
                 app.presence = False
-                app.presence_fader = False
                 app.presence_delay = False
                 app.button_delay = current_time + timedelta(seconds=app.c.jitter_button)
                 app.c.blue.off()
