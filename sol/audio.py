@@ -150,16 +150,20 @@ async def read_sensors():
                 app.last_presence = current_time
 
             if app.presence_delay and current_time < app.next_presence:
+                print('1')
                 pass
 
             elif app.presence_delay and current_time >= app.next_presence:
                 app.presence_delay = False
+                print('2')
 
             elif not app.c.pir.is_active and app.presence and current_time >= app.last_presence + timedelta(seconds=app.c.jitter_presence):
 
                 # Starting the Presence Fader
-                app.c.blue.blink(background=True, on_time=0.3, off_time=0.3)
+                if not app.c.blue.is_active:
+                    app.c.blue.blink(background=True, on_time=0.3, off_time=0.3)
                 app.presence_delay = True
+                print('3')
 
             elif not app.c.pir.is_active and app.presence and not app.presence_delay:
 
