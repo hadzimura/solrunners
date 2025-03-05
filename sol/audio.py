@@ -136,7 +136,7 @@ async def read_sensors():
         # Button: STANDBY / READY (jitter)
         if app.c.button.is_active:
 
-            if app.r['button_delay'] <= current_time:
+            if app.button_delay <= current_time:
                 # Button safety jitter
                 print('Button skipped')
                 pass
@@ -144,7 +144,7 @@ async def read_sensors():
                 # Arm the Sensors runtime
                 app.c.green.blink(background=True, on_time=0.5, off_time=3)
                 app.armed = True
-                app.r['button_delay'] = current_time + timedelta(seconds=app.c.jitter_button)
+                app.button_delay = current_time + timedelta(seconds=app.c.jitter_button)
                 print('System activated: {}'.format(current_time))
             elif app.armed is True:
                 # Disarm the Sensors Runtime
