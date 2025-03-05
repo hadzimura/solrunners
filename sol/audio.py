@@ -153,7 +153,7 @@ async def read_sensors():
                 print('System de-activated: {}'.format(current_time))
                 # reset all the stateful data
                 app.armed = False
-                app.r = dict()
+                app.button_delay = current_time + timedelta(seconds=app.c.jitter_button)
 
         # PIR presence detection
         if app.armed:
