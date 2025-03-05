@@ -66,24 +66,9 @@ app.s = dict()
 # Runtimes
 app.armed = False
 app.presence = False
-app.presence_fader = False
 app.presence_delay = False
 app.button_delay = dt.now()
 app.next_presence = None
-# runtime = dict()
-# runtime = {
-#     'last_button_press': dt,
-#     'next_button_press': dt,
-#     'last_presence': None,
-#     'presence': False,
-#     'presence_fader': False,
-#     'presence_delay': False
-# }
-# app.r = deepcopy(runtime)
-# app.last_button_press = None
-# app.last_presence = None
-# app.presence = False
-# app.presence_fader = False
 
 async def actions():
 
@@ -155,7 +140,7 @@ async def read_sensors():
                 app.armed = False
                 app.presence = False
                 app.presence_fader = False
-                app.presence_delay = True
+                app.presence_delay = False
                 app.button_delay = current_time + timedelta(seconds=app.c.jitter_button)
                 app.c.blue.off()
 
@@ -163,9 +148,6 @@ async def read_sensors():
         if app.armed:
 
             if app.presence_delay and current_time <= app.next_presence:
-                pass
-
-            elif app.presence_fader and current_time <= app.last_presence + timedelta(seconds=app.c.jitter_presence):
                 pass
 
             elif app.c.pir.is_active and not app.presence:
@@ -179,10 +161,9 @@ async def read_sensors():
             elif not app.c.pir.is_active and app.presence and current_time < app.last_presence + timedelta(seconds=app.c.jitter_presence):
 
                 # Starting the Presence Fader
-                if app.presence_fader is False:
-                    app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
-                    app.presence_fader = True
-                    app.last_presence = current_time
+                app.c.blue.blink(background=True, on_time=0.3, off_time=0.3)
+                app.presence_delay = True
+                app.last_presence = current_time
 
             elif not app.c.pir.is_active and app.presence:
 
