@@ -162,7 +162,7 @@ async def read_sensors():
                 if not app.c.blue.is_active:
                     app.c.blue.blink(background=True, on_time=0.3, off_time=0.3)
 
-            elif not app.c.pir.is_active and app.presence and not app.presence_delay:
+            elif not app.c.pir.is_active and app.presence:
 
                 print('Presence stopped')
                 app.presence = False
