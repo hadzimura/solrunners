@@ -148,10 +148,11 @@ async def read_sensors():
             # PIR status
             if app.c.pir.is_active:
                 app.last_presence = current_time
-                if not app.c.blue.is_active:
-                    app.c.blue.on()
+                app.c.blue.on()
+                print('*')
             else:
                 app.c.blue.off()
+                print('-')
             #
             #
             # if app.presence_delay and current_time < app.next_presence:
