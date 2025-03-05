@@ -132,8 +132,6 @@ async def read_sensors():
 
         # Current cycle
         current_time = dt.now()
-        # Default calculations
-        presence_timer = current_time.second - app.r['last_presence'].second
 
         # Button: STANDBY / READY (jitter)
         if app.c.button.is_active:
