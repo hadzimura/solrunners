@@ -152,9 +152,9 @@ async def read_sensors():
             if app.presence_delay and current_time < app.next_presence:
                 pass
 
-            elif app.presence_delay and current_time >= app.next_presence:
-                app.presence_delay = False
-                print('2')
+            # elif app.presence_delay and current_time >= app.next_presence:
+            #     app.presence_delay = False
+            #     print('2')
 
             elif not app.c.pir.is_active and app.presence and current_time >= app.last_presence + timedelta(seconds=app.c.jitter_presence):
 
@@ -173,6 +173,7 @@ async def read_sensors():
 
             elif app.c.pir.is_active and not app.presence:
                 app.presence = True
+                app.presence_delay = False
                 app.c.blue.on()
                 print('Presence started')
 
