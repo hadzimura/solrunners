@@ -162,7 +162,7 @@ async def read_sensors():
             #     print('2')
 
             elif not app.c.pir.is_active and app.presence and current_time >= app.last_presence + timedelta(seconds=app.c.jitter_presence):
-
+                print('*')
                 # # Starting the Presence Fader
                 # if not app.c.blue.is_active:
                 #     app.c.blue.blink(background=True, on_time=0.3, off_time=0.3)
