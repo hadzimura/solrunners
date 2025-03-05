@@ -162,7 +162,7 @@ async def read_sensors():
         # PIR presence detection
         if app.armed:
 
-            if app.presence_delay and current_time >= app.next_presence:
+            if app.presence_delay and current_time <= app.next_presence:
                 pass
 
             elif app.presence_fader and current_time <= app.last_presence + timedelta(seconds=app.c.jitter_presence):
