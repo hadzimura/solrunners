@@ -148,6 +148,11 @@ async def read_sensors():
             # PIR status
             if app.c.pir.is_active:
                 app.last_presence = current_time
+                if not app.c.blue.is_active:
+                    app.c.blue.on()
+            else:
+                app.c.blue.off()
+
 
             if app.presence_delay and current_time < app.next_presence:
                 pass
@@ -158,9 +163,9 @@ async def read_sensors():
 
             elif not app.c.pir.is_active and app.presence and current_time >= app.last_presence + timedelta(seconds=app.c.jitter_presence):
 
-                # Starting the Presence Fader
-                if not app.c.blue.is_active:
-                    app.c.blue.blink(background=True, on_time=0.3, off_time=0.3)
+                # # Starting the Presence Fader
+                # if not app.c.blue.is_active:
+                #     app.c.blue.blink(background=True, on_time=0.3, off_time=0.3)
 
             elif not app.c.pir.is_active and app.presence:
 
@@ -174,7 +179,7 @@ async def read_sensors():
             elif app.c.pir.is_active and not app.presence:
                 app.presence = True
                 app.presence_delay = False
-                app.c.blue.on()
+                # app.c.blue.on()
                 print('Presence started')
 
 
