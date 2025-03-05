@@ -152,35 +152,35 @@ async def read_sensors():
                     app.c.blue.on()
             else:
                 app.c.blue.off()
-
-
-            if app.presence_delay and current_time < app.next_presence:
-                pass
-
-            # elif app.presence_delay and current_time >= app.next_presence:
+            #
+            #
+            # if app.presence_delay and current_time < app.next_presence:
+            #     pass
+            #
+            # # elif app.presence_delay and current_time >= app.next_presence:
+            # #     app.presence_delay = False
+            # #     print('2')
+            #
+            # elif not app.c.pir.is_active and app.presence and current_time >= app.last_presence + timedelta(seconds=app.c.jitter_presence):
+            #     print('*')
+            #     # # Starting the Presence Fader
+            #     # if not app.c.blue.is_active:
+            #     #     app.c.blue.blink(background=True, on_time=0.3, off_time=0.3)
+            #
+            # elif not app.c.pir.is_active and app.presence:
+            #
+            #     print('Presence stopped')
+            #     app.presence = False
+            #     app.presence_delay = True
+            #     # Start timer for next presence activity
+            #     app.next_presence = current_time + timedelta(seconds=app.c.presence_delay)
+            #     app.c.blue.off()
+            #
+            # elif app.c.pir.is_active and not app.presence:
+            #     app.presence = True
             #     app.presence_delay = False
-            #     print('2')
-
-            elif not app.c.pir.is_active and app.presence and current_time >= app.last_presence + timedelta(seconds=app.c.jitter_presence):
-                print('*')
-                # # Starting the Presence Fader
-                # if not app.c.blue.is_active:
-                #     app.c.blue.blink(background=True, on_time=0.3, off_time=0.3)
-
-            elif not app.c.pir.is_active and app.presence:
-
-                print('Presence stopped')
-                app.presence = False
-                app.presence_delay = True
-                # Start timer for next presence activity
-                app.next_presence = current_time + timedelta(seconds=app.c.presence_delay)
-                app.c.blue.off()
-
-            elif app.c.pir.is_active and not app.presence:
-                app.presence = True
-                app.presence_delay = False
-                # app.c.blue.on()
-                print('Presence started')
+            #     # app.c.blue.on()
+            #     print('Presence started')
 
 
         await asyncio.sleep(0.01)
