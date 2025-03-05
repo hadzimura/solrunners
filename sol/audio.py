@@ -171,7 +171,7 @@ async def read_sensors():
                 app.next_presence = current_time + timedelta(seconds=app.c.presence_delay)
                 app.c.blue.off()
 
-           elif app.c.pir.is_active and not app.presence:
+            elif app.c.pir.is_active and not app.presence:
                 app.presence = True
                 app.c.blue.on()
                 print('Presence started')
