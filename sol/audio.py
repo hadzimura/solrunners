@@ -91,10 +91,9 @@ async def actions():
 
         if tick is True:
             elapsed += 1
-            print('Elapsed: {} seconds; presence: {}; presence fader: {}; presence_delay={}'.format(elapsed,
-                                                                                                    str(app.presence),
-                                                                                                    str(app.presence_fader),
-                                                                                                    str(app.presence_delay)))
+            print('Elapsed: {} seconds; presence: {}; presence_delay={}'.format(elapsed,
+                                                                                str(app.presence),
+                                                                                str(app.presence_delay)))
             tick = False
 
         if app.armed is not True:
