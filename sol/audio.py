@@ -108,7 +108,7 @@ async def actions():
         #         print('Playing...')
         #         # app.a.play_audio(6)
 
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.01)
 
 async def read_sensors():
 
