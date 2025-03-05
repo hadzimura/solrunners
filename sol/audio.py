@@ -146,8 +146,11 @@ async def read_sensors():
         # PIR presence detection
         if app.armed:
 
-            if app.presence_delay and current_time <= app.next_presence:
+            if app.presence_delay and current_time < app.next_presence:
                 pass
+
+            elif app.presence_delay and current_time >= app.next_presence:
+                app.presence_delay = False
 
             elif app.c.pir.is_active and not app.presence:
 
@@ -164,7 +167,7 @@ async def read_sensors():
                 app.presence_delay = True
                 app.last_presence = current_time
 
-            elif not app.c.pir.is_active and app.presence:
+            elif not app.c.pir.is_active and app.presence and not app.presence_delay:
 
                 print('Presence stopped')
                 app.presence = False
