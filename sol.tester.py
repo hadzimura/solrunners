@@ -16,8 +16,48 @@ from time import sleep
 
 # from gpiozero import LED, Button, MotionSensor
 from signal import pause
-from datetime import datetime, timedelta
+from datetime import datetime as dt
+from datetime import timedelta
 
+app = object
+app.presence_delay = False
+app.next_presence = None
+
+
+while True:
+
+    current_time = dt.now()
+
+    if app.presence_delay and current_time >= app.next_presence:
+        pass
+
+    elif app.presence_fader and current_time <= app.last_presence + timedelta(seconds=5):
+        pass
+
+    elif app.c.pir.is_active and not app.presence:
+
+        # Keep the presence timer updated
+        app.last_presence = current_time
+        app.presence = True
+        app.c.blue.on()
+        print('Presence started')
+
+    elif not app.c.pir.is_active and app.presence and current_time > app.last_presence + timedelta(seconds=5):
+
+        # Starting the Presence Fader
+        if app.presence_fader is False:
+            app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
+            app.presence_fader = True
+
+    elif not app.c.pir.is_active and app.presence and current_time > app.c.jitter_presence:
+
+        print('Presence stopped')
+        app.presence = False
+        app.presence_fader = False
+        # Start timer for next presence activity
+        app.presence_delay = True
+        app.next_presence = current_time + timedelta(seconds=app.c.presence_delay)
+        app.c.blue.off()
 
 while True:
     sine = pyglet.media.synthesis.Sine(0.1, frequency=440, sample_rate=44800)

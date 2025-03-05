@@ -3,9 +3,11 @@
 # Springs of Life (2025) / rkucera@gmail.com
 
 import asyncio
+import datetime
 from contextlib import asynccontextmanager
 from copy import deepcopy
 from datetime import datetime as dt
+from datetime import timedelta
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import status
@@ -63,14 +65,20 @@ app.c = dict()
 app.s = dict()
 # Runtimes
 app.armed = False
-runtime = {
-    'last_button_press': None,
-    'last_presence': None,
-    'presence': False,
-    'presence_fader': False,
-    'presence_delay': False
-}
-app.r = deepcopy(runtime)
+app.presence = False
+app.presence_fader = False
+app.presence_delay = False
+app.next_presence = None
+# runtime = dict()
+# runtime = {
+#     'last_button_press': dt,
+#     'next_button_press': dt,
+#     'last_presence': None,
+#     'presence': False,
+#     'presence_fader': False,
+#     'presence_delay': False
+# }
+# app.r = deepcopy(runtime)
 # app.last_button_press = None
 # app.last_presence = None
 # app.presence = False
@@ -98,9 +106,9 @@ async def actions():
         if tick is True:
             elapsed += 1
             print('Elapsed: {} seconds; presence: {}; presence fader: {}; presence_delay={}'.format(elapsed,
-                                                                                                    str(app.r['presence']),
-                                                                                                    str(app.r['presence_fader']),
-                                                                                                    str(app.r['presence_delay'])))
+                                                                                                    str(app.presence),
+                                                                                                    str(app.presence_fader),
+                                                                                                    str(app.presence_delay)))
             tick = False
 
         if app.armed is not True:
@@ -124,65 +132,62 @@ async def read_sensors():
 
         # Current cycle
         current_time = dt.now()
-        # Default values
-        if app.r['last_button_press'] is None:
-            app.r['last_button_press'] = current_time
-        if app.r['last_presence'] is None:
-            app.r['last_presence'] = current_time
         # Default calculations
-        button_delta = current_time.second - app.r['last_button_press'].second
-        presence_delta = current_time.second - app.r['last_presence'].second
+        presence_timer = current_time.second - app.r['last_presence'].second
 
         # Button: STANDBY / READY (jitter)
         if app.c.button.is_active:
 
-            if button_delta < app.c.jitter_button:
-                print('Button: delta={}; jitter={}'.format(button_delta, app.c.jitter_button))
+            if app.r['button_delay'] <= current_time:
+                # Button safety jitter
+                print('Button skipped')
                 pass
             elif app.armed is False:
+                # Arm the Sensors runtime
                 app.c.green.blink(background=True, on_time=0.5, off_time=3)
                 app.armed = True
-                app.r['last_button_press'] = current_time
+                app.r['button_delay'] = current_time + timedelta(seconds=app.c.jitter_button)
                 print('System activated: {}'.format(current_time))
             elif app.armed is True:
+                # Disarm the Sensors Runtime
                 app.c.green.off()
                 print('System de-activated: {}'.format(current_time))
                 # reset all the stateful data
                 app.armed = False
-                app.r = deepcopy(runtime)
+                app.r = dict()
 
         # PIR presence detection
         if app.armed:
 
-            if app.c.pir.is_active and app.r['presence_delay']:
+            if app.presence_delay and current_time >= app.next_presence:
+                pass
 
-                if presence_delta > app.c.presence_delay:
-                    # Waiting for another round
-                    app.r['presence'] = True
-                    app.r['presence_delay'] = False
+            elif app.presence_fader and current_time <= app.last_presence + timedelta(seconds=app.c.jitter_presence):
+                pass
 
-            elif app.c.pir.is_active and not app.r['presence']:
+            elif app.c.pir.is_active and not app.presence:
 
                 # Keep the presence timer updated
-                app.r['last_presence'] = current_time
-                app.r['presence'] = True
+                app.last_presence = current_time
+                app.presence = True
                 app.c.blue.on()
                 print('Presence started')
 
-            elif app.r['presence'] and not app.c.pir.is_active and presence_delta < app.c.jitter_presence:
+            elif not app.c.pir.is_active and app.presence and current_time > app.last_presence + timedelta(seconds=app.c.jitter_presence):
 
-                if app.r['presence_fader'] is False:
+                # Starting the Presence Fader
+                if app.presence_fader is False:
                     app.c.blue.blink(background=True, on_time=0.1, off_time=0.3)
-                    app.r['presence_fader'] = True
+                    app.presence_fader = True
 
-            elif app.r['presence'] and not app.c.pir.is_active and presence_delta > app.c.jitter_presence:
+            elif not app.c.pir.is_active and app.presence and current_time > app.c.jitter_presence:
 
                 print('Presence stopped')
-                app.r['presence'] = False
-                app.r['presence_fader'] = False
+                app.presence = False
+                app.presence_fader = False
                 # Start timer for next presence activity
-                app.r['presence_delay'] = True
-                app.r['last_presence'] = current_time
+                app.presence_delay = True
+                app.next_presence = current_time + timedelta(seconds=app.c.presence_delay)
                 app.c.blue.off()
 
         await asyncio.sleep(0.01)
