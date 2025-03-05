@@ -68,6 +68,7 @@ app.armed = False
 app.presence = False
 app.presence_fader = False
 app.presence_delay = False
+app.button_delay = None
 app.next_presence = None
 # runtime = dict()
 # runtime = {
