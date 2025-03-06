@@ -103,6 +103,8 @@ async def actions():
         if app.armed:
             if app.presence and app.c.blue.is_active is False:
                 app.c.blue.on()
+            elif not app.presence and app.c.blue.is_active:
+                app.c.blue.off()
 
         if app.armed is not True:
             # Do nothing if App is not armed
