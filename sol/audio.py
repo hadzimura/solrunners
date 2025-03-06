@@ -158,16 +158,16 @@ async def read_sensors():
                 app.presence_delay = False
                 app.button_delay = current_time + timedelta(seconds=app.c.jitter_button)
 
-        if current_time >= presence_ticker:
+        if app.c.pir.is_active:
+            app.presence_counter += 1
 
+        if current_time >= presence_ticker:
+            print('Evaluating presence: {}'.format(app.presence_counter))
             if app.presence_counter > 0:
                 app.presence = True
             else:
                 app.presence = False
             app.presence_counter = 0
-
-        if app.c.pir.is_active:
-            app.presence_counter += 1
 
         # PIR presence detection
         # if app.armed:
