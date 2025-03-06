@@ -133,6 +133,7 @@ async def read_sensors():
         # Initialize the App Presence itself
         if app.presence is None:
             presence_ticker = current_time + timedelta(seconds=1)
+            app.presence = False
 
         # Button: STANDBY / READY (jitter)
         if app.c.button.is_active:
@@ -161,7 +162,7 @@ async def read_sensors():
         if app.c.pir.is_active:
             app.presence_counter += 1
 
-        if current_time >= presence_ticker:
+        if current_time > presence_ticker:
             print('Evaluating presence: {}'.format(app.presence_counter))
             if app.presence_counter > 0:
                 app.presence = True
