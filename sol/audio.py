@@ -168,6 +168,7 @@ async def read_sensors():
             else:
                 app.presence = False
             app.presence_counter = 0
+            presence_ticker = current_time + timedelta(seconds=1)
 
         # PIR presence detection
         # if app.armed:
