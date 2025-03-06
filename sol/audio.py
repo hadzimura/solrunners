@@ -145,6 +145,7 @@ async def read_sensors():
                 # Arm the Sensors runtime
                 app.c.green.on()
                 app.armed = True
+                app.presence_counter = 0
                 app.button_delay = current_time + timedelta(seconds=app.c.jitter_button)
                 print('System activated: {}'.format(current_time))
             elif app.armed is True:
