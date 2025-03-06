@@ -143,7 +143,7 @@ async def read_sensors():
                 pass
             elif app.armed is False:
                 # Arm the Sensors runtime
-                app.c.green.on(background=True, on_time=0.5, off_time=3)
+                app.c.green.on()
                 app.armed = True
                 app.button_delay = current_time + timedelta(seconds=app.c.jitter_button)
                 print('System activated: {}'.format(current_time))
