@@ -92,20 +92,17 @@ async def actions():
             last_second = current_time.second
 
         if tick is True:
+
             elapsed += 1
-            print('Elapsed: {} seconds; presence: {} ({})'.format(elapsed,
-                                                                                str(app.presence),
-                                                                                str(app.presence_counter)))
+            print('T: {} | A: {} | P: {} ({})'.format(elapsed,
+                                                      str(app.armed),
+                                                      str(app.presence),
+                                                      str(app.presence_counter)))
             tick = False
 
         if app.armed:
-
             if app.presence and app.c.blue.is_active is False:
                 app.c.blue.on()
-
-
-
-
 
         if app.armed is not True:
             # Do nothing if App is not armed
