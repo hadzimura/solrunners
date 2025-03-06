@@ -34,7 +34,7 @@ async def runtime_lifespan(app: FastAPI):
 
     # Application startup: blue blinx
     if platform.system() != 'Darwin':
-        app.c.green.blink(background=True, on_time=0.1, off_time=0.3)
+        app.c.green.blink(background=True, on_time=0.2, off_time=0.2)
 
     app.a = AudioLibrary(audio_path=app.c.audio_path, tracks_info=app.c.tracks)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
@@ -48,9 +48,9 @@ async def runtime_lifespan(app: FastAPI):
 
     # Blue light means we are ready
     if platform.system() != 'Darwin':
-        app.c.green.on()
+        app.c.green.blink(background=True, on_time=1, off_time=1)
 
-    print('SoL Runner lifespan events initialized')
+    print('All SoL Runner lifespan events initialized')
     yield
     # Clean up
     pass
@@ -65,7 +65,9 @@ app.c = dict()
 app.s = dict()
 # Runtimes
 app.armed = False
-app.presence = False
+app.presence = None
+app.presence_counter = 0
+
 app.presence_delay = False
 app.button_delay = dt.now()
 app.next_presence = dt.now()
@@ -91,10 +93,14 @@ async def actions():
 
         if tick is True:
             elapsed += 1
-            print('Elapsed: {} seconds; presence: {}; presence_delay={}'.format(elapsed,
+            print('Elapsed: {} seconds; presence: {} ({})'.format(elapsed,
                                                                                 str(app.presence),
-                                                                                str(app.presence_delay)))
+                                                                                str(app.presence_counter)))
             tick = False
+
+        if app.armed:
+
+
 
         if app.armed is not True:
             # Do nothing if App is not armed
@@ -113,10 +119,15 @@ async def actions():
 async def read_sensors():
 
     print('Initiating Read Sensors Background Loop...')
+    presence_ticker = dt.now()
     while True:
 
         # Current cycle
         current_time = dt.now()
+
+        # Initialize the App Presence itself
+        if app.presence is None:
+            presence_ticker = current_time + timedelta(seconds=1)
 
         # Button: STANDBY / READY (jitter)
         if app.c.button.is_active:
@@ -127,7 +138,7 @@ async def read_sensors():
                 pass
             elif app.armed is False:
                 # Arm the Sensors runtime
-                app.c.green.blink(background=True, on_time=0.5, off_time=3)
+                app.c.green.on(background=True, on_time=0.5, off_time=3)
                 app.armed = True
                 app.button_delay = current_time + timedelta(seconds=app.c.jitter_button)
                 print('System activated: {}'.format(current_time))
@@ -137,22 +148,33 @@ async def read_sensors():
                 print('System de-activated: {}'.format(current_time))
                 # reset all the stateful data
                 app.armed = False
-                app.presence = False
+                app.presence = None
+                app.presence_counter = 0
                 app.presence_delay = False
                 app.button_delay = current_time + timedelta(seconds=app.c.jitter_button)
-                app.c.blue.off()
+
+        if current_time >= presence_ticker:
+
+            if app.presence_counter > 0:
+                app.presence = True
+            else:
+                app.presence = False
+            app.presence_counter = 0
+
+        if app.c.pir.is_active:
+            app.presence_counter += 1
 
         # PIR presence detection
-        if app.armed:
-
-            # PIR status
-            if app.c.pir.is_active:
-                app.last_presence = current_time
-                app.c.blue.on()
-                print('*')
-            else:
-                app.c.blue.off()
-                print('-')
+        # if app.armed:
+        #
+        #     # PIR status
+        #     if app.c.pir.is_active:
+        #         app.last_presence = current_time
+        #         app.c.blue.on()
+        #         print('*')
+        #     else:
+        #         app.c.blue.off()
+        #         print('-')
             #
             #
             # if app.presence_delay and current_time < app.next_presence:
