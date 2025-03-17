@@ -4,29 +4,38 @@ jitter:
   button: 2
   presence: 5
   presence_delay: 5
-pinout:
+instances:
   1:
     audio:
-      button: 2
-      pir: 15
-      green: 19
-      blue: 26
+      pinout:
+        button: 2
+        pir: 15
+        green: 19
+        blue: 26
   2:
   3:
     audio:
-      pir: 15
-      green: 19
-      blue: 26
+      pinout:
+        pir: 15
+        green: 19
+        blue: 26
     video:
-      green: 19
-      blue: 26
+      pinout:
+        green: 19
+        blue: 26
+      files:
+        - entropy.mov
   4:
     video:
-      distance:
-      green: 19
-      blue: 26
+      pinout:
+        blue: 26
+        distance:
+        green: 19
+      folders:
+        - tate
   5:
     video:
-      pir: 15
-      green: 19
-      blue: 26
+      pinout:
+        pir: 15
+        green: 19
+        blue: 26

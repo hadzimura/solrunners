@@ -16,7 +16,8 @@ import uvicorn
 
 from modules.SolVideo import SolVideoConfig
 from modules.Config import arg_parser
-from modules.Entro import main
+from modules.VideoPlayer import ocv
+from modules.VideoPlayer import ppl
 
 # Parse the runtime arguments to decide 'who we are'
 arg = arg_parser()
@@ -26,10 +27,7 @@ arg = arg_parser()
 async def runtime_lifespan(app: FastAPI):
     """ Lifespan of the FastAPI application """
     print('Initializing SoL Video Runner...')
-    app.c = SolVideoConfig(sol=str(arg.sol), room=int(arg.room), master=bool(arg.master))
-
-    # Init video configurations
-    app.c.init_video()
+    app.c = SolVideoConfig(audio=arg.audio, video=arg.video, room=int(arg.room), master=bool(arg.master))
 
     if platform.system() != 'Darwin':
         app.c.blue.light.blink(background=True, on_time=0.1, off_time=0.3)
@@ -38,7 +36,18 @@ async def runtime_lifespan(app: FastAPI):
     # app.audio = AudioLibrary(entropy=app.c.entropy_audio)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
     app.templates = Jinja2Templates(directory=app.c.fastapi_templates)
-    asyncio.create_task(main(app.c))
+
+    # OpenCV Player
+    asyncio.create_task(ocv(app.c, player_name='Tate'))
+
+    # # Choose player for the runtime
+    # if app.c.entropy:
+    #     # OpenCV Player
+    #     asyncio.create_task(ocv(app.c))
+    # elif app.c.tate:
+    #     # Pyglet Player
+    #     asyncio.create_task(ppl(app.c))
+
     asyncio.create_task(actions())
 
     if platform.system() != 'Darwin':

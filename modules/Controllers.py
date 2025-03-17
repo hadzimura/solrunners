@@ -17,7 +17,7 @@ class Effect(object):
             case 'offset':
                 pass
             case 'mix':
-                self.value = [0, 0, 1]
+                self.value = [0.5, 0.5, 0.5]
             case 'flip' | 'gray':
                 # Plugin only supports enable/disable
                 pass

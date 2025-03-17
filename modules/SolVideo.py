@@ -17,16 +17,16 @@ class SolVideoConfig(Configuration):
 
     def init_video(self):
         # Canvas definition
-        self.frame_area = {'x': range(0, self.width), 'y': range(0, self.height)}
-        self.x = 0
-        self.y = 0
-
-        # Effects states
-        self.flip = Effect('flip')
-        self.gray = Effect('gray')
-        self.blur = Effect('blur')
-        self.mix = Effect('mix')
-        self.offset = Effect('offset')
+        # self.frame_area = {'x': range(0, self.width), 'y': range(0, self.height)}
+        # self.x = 0
+        # self.y = 0
+        #
+        # # Effects states
+        # self.flip = Effect('flip')
+        # self.gray = Effect('gray')
+        # self.blur = Effect('blur')
+        # self.mix = Effect('mix')
+        # self.offset = Effect('offset')
 
         # Input handlers
         self.input = Input()
@@ -84,66 +84,43 @@ class SolVideoConfig(Configuration):
         metadata['stream'] = stream
         return metadata
 
-    def _get_entropy(self):
+    def _get_folders(self, framework='opencv'):
 
+        for folder in self.folders:
+            folder_path = self.video_path / folder
+            print("Processing videos in folder: '{}'".format(folder_path))
+            for filename in sorted(glob('{}/*.*'.format(folder_path))):
+
+                try:
+                    name = filename.split('/')[-1]
+                    print("Importing video: '{}'".format(name))
+                    if folder not in self.video:
+                        self.video[folder] = dict()
+
+                    self.video[folder][name] = dict()
+                    if framework == 'opencv':
+                        self.video[folder][name] = self._stream_metadata(cv.VideoCapture(filename), name, folder)
+
+                except Exception as error:
+                    print('Problem acquiring video stream: {}'.format(filename))
+                    print(error)
+                    exit(1)
+
+
+    def _get_files(self):
         """ video stream for Entropy """
-
-
         try:
             self.entropy = self._stream_metadata(cv.VideoCapture(self.entropy_video), 'entropy', 'feature')
         except Exception as error:
-            print('Problem acquiring video stream: {}'.format(path))
+            print('Problem acquiring video stream: {}'.format(self.entropy_video))
             print(error)
             exit(1)
 
-        # elif folder is not None:
-        #
-        #     try:
-        #         for filename in glob('{}/*.mov'.format(folder)):
-        #             name = filename.split('/')[-1]
-        #             category = name.split('.')[0][0:len(name.split('.')[0]) - 3]
-        #
-        #             if category not in self.video:
-        #                 self.video[category] = dict()
-        #
-        #             self.video[category][name] = dict()
-        #             self.video[category][name] = self._stream_metadata(cv.VideoCapture(filename), name, category)
-        #             if category not in self.video_seg:
-        #                 self.video_seg.append(category)
-        #
-        #     except Exception as error:
-        #         print('Problem acquiring video stream: {}'.format(path))
-        #         print(error)
-        #         exit(1)
+    def set_playhead2(self, layer='main', category=None, stream=None, start_frame=0):
 
-    def set_playhead2(self, layer=0, category=None, stream=None, start_frame=0):
-
-        """ Set playhead of stream """
-
-        if stream is None and category is None:
-
-            # Set category
-            if self.playing[layer]['category'] is None:
-                # Set random category
-                category = choice(self.video_seg)
-            else:
-                # Set random category but different from the currently selected
-                cats = self.video_seg
-                cats.remove(self.playing[layer]['category'])
-                category = choice(cats)
-            # From selected category get random stream
-            stream = choice(list(self.video[category].keys()))
-
-        elif stream is None and category is not None:
-            if self.playing[layer]['name'] is None:
-                # Set random stream
-                stream = choice(list(self.video[category].keys()))
-            else:
-                # Get random stream from the selected category but different from the currently selected
-                pprint(self.playing[layer])
-                streams = list(self.video[category].keys())
-                streams.remove(self.playing[layer]['filename'])
-                stream = choice(streams)
+        """ Set playhead of Tate stream """
+        category = 'tate'
+        stream = choice(list(self.video[category].keys()))
 
         # Set stream into the layer
         self.playing[layer] = self.video[category][stream]
@@ -195,9 +172,7 @@ class SolVideoConfig(Configuration):
         result = str()
         if resource == 'status':
 
-            result = '(g)ray: {} | (f)lip: {} | (b)lur: {} {} | (m)ix: {} {}'.format(
-                int(self.gray.enabled),
-                int(self.flip.enabled),
+            result = '(b)lur: {} {} | (m)ix: {} {}'.format(
                 int(self.blur.enabled),
                 self.blur_value,
                 int(self.mix.enabled),
@@ -247,51 +222,52 @@ class SolVideoConfig(Configuration):
 
     def action(self):
 
+        pass
         """ Do stuff when an event received """
-        if self.mix.enabled is True and self.volume is not None:
-
-            # Get current setting
-            value = 0.1
-            if self.volume == 'up':
-                self.blend_value[0] += value
-            elif self.volume == 'down':
-                self.blend_value[0] -= value
-            elif self.volume == 'left':
-                self.blend_value[1] -= value
-            elif self.volume == 'right':
-                self.blend_value[1] += value
-            elif self.volume == 'gamma-up':
-                self.blend_value[2] += value
-            elif self.volume == 'gamma-down':
-                self.blend_value[2] -= value
-            print(self.blur_value)
-
-        elif self.blur.enabled is True and self.volume is not None:
-
-            # Get current setting
-            # a = self._blur_mapping(self.blur_control[self.volume])
-
-            bx = self.blur_value[0]
-            by = self.blur_value[1]
-
-            if bx == 1 or by == 1:
-                value = 4
-            else:
-                value = 5
-
-            # if self.volume == 'down':
-            #     by =
-
-
-            if self.volume == 'up':
-                self.blur_value[0] += value
-            elif self.volume == 'down':
-                self.blur_value[0] -= value
-            elif self.volume == 'left':
-                self.blur_value[1] -= value
-            elif self.volume == 'right':
-                self.blur_value[1] += value
-            print(self.blur_value)
+        # if self.mix.enabled and self.volume is not None:
+        #
+        #     # Get current setting
+        #     value = 0.1
+        #     if self.volume == 'up':
+        #         self.mix.value[0] += value
+        #     elif self.volume == 'down':
+        #         self.mix.value[0] -= value
+        #     elif self.volume == 'left':
+        #         self.mix.value[1] -= value
+        #     elif self.volume == 'right':
+        #         self.mix.value[1] += value
+        #     elif self.volume == 'gamma-up':
+        #         self.mix.value[2] += value
+        #     elif self.volume == 'gamma-down':
+        #         self.mix.value[2] -= value
+        #     print(self.mix.value)
+        #
+        # elif self.blur.enabled is True and self.volume is not None:
+        #
+        #     # Get current setting
+        #     # a = self._blur_mapping(self.blur_control[self.volume])
+        #
+        #     bx = self.blur_value[0]
+        #     by = self.blur_value[1]
+        #
+        #     if bx == 1 or by == 1:
+        #         value = 4
+        #     else:
+        #         value = 5
+        #
+        #     # if self.volume == 'down':
+        #     #     by =
+        #
+        #
+        #     if self.volume == 'up':
+        #         self.blur_value[0] += value
+        #     elif self.volume == 'down':
+        #         self.blur_value[0] -= value
+        #     elif self.volume == 'left':
+        #         self.blur_value[1] -= value
+        #     elif self.volume == 'right':
+        #         self.blur_value[1] += value
+        #     print(self.blur_value)
 
     def read_input(self, input_key):
 
@@ -318,7 +294,8 @@ class SolVideoConfig(Configuration):
                 self.offset.enabled = not self.offset.enabled
             case 109:
                 # 'm'
-                self.set_mix()
+                self.mix.enabled = not self.mix.enabled
+                print('Mix: {}'.format(self.mix.enabled))
             case 98:
                 # 'b'
                 self.blur.enabled = not self.blur.enabled
