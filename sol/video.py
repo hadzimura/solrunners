@@ -29,9 +29,9 @@ async def runtime_lifespan(app: FastAPI):
     print('Initializing SoL Video Runner...')
     app.c = SolVideoConfig(audio=arg.audio, video=arg.video, room=int(arg.room), master=bool(arg.master))
 
-    if platform.system() != 'Darwin':
-        app.c.blue.light.blink(background=True, on_time=0.1, off_time=0.3)
-        app.c.green.light.on()
+    # if platform.system() != 'Darwin':
+    #     app.c.blue.light.blink(background=True, on_time=0.1, off_time=0.3)
+    #     app.c.green.light.on()
 
     # app.audio = AudioLibrary(entropy=app.c.entropy_audio)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
@@ -50,9 +50,9 @@ async def runtime_lifespan(app: FastAPI):
 
     asyncio.create_task(actions())
 
-    if platform.system() != 'Darwin':
-        app.c.blue.light.blink(background=True, on_time=1, off_time=1)
-        app.c.green.light.off()
+    # if platform.system() != 'Darwin':
+    #     app.c.blue.light.blink(background=True, on_time=1, off_time=1)
+    #     app.c.green.light.off()
 
     print('SoL Runner lifespan events initialized')
     yield
