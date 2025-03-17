@@ -27,10 +27,10 @@ instances:
         - entropy.mov
   4:
     video:
-      pinout:
-        blue: 26
-        distance:
-        green: 19
+#      pinout:
+#        blue: 26
+#        distance:
+#        green: 19
       folders:
         - tate
   5:
