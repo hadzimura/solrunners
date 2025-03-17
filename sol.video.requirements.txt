@@ -4,7 +4,7 @@ Jinja2
 pyglet
 matplotlib
 numpy
-opencv-python
+opencv-contrib-python
 pillow
 requests
 ruamel.yaml
