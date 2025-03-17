@@ -24,6 +24,7 @@ async def ocv(config, player_name='Entropy'):
 
     # Global settings for runtime
     cv.namedWindow(player_name, cv.WINDOW_NORMAL)
+    cv.namedWindow(player_name, cv.WINDOW_FREERATIO)
     # if c.fullscreen is True:
     cv.setWindowProperty(player_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
