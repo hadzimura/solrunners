@@ -27,7 +27,7 @@ arg = arg_parser()
 async def runtime_lifespan(app: FastAPI):
     """ Lifespan of the FastAPI application """
     print('Initializing SoL Video Runner...')
-    app.c = SolVideoConfig(audio=arg.audio, video=arg.video, room=int(arg.room), master=bool(arg.master))
+    app.c = SolVideoConfig(audio=arg.audio, video=arg.video, room=int(arg.room), master=bool(arg.master), fps=30)
 
     # if platform.system() != 'Darwin':
     #     app.c.blue.light.blink(background=True, on_time=0.1, off_time=0.3)
