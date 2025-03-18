@@ -105,6 +105,8 @@ class SolVideoConfig(Configuration):
                     print('Problem acquiring video stream: {}'.format(filename))
                     print(error)
                     exit(1)
+            self._reset_queue(folder, 'main')
+            self._reset_queue(folder, 'overlay')
 
 
     def _get_files(self):
@@ -116,11 +118,18 @@ class SolVideoConfig(Configuration):
             print(error)
             exit(1)
 
+    def _reset_queue(self, category, q_name):
+        if category not in self.mix_queues:
+            self.mix_queues[category] = dict()
+        self.mix_queues[category][q_name] = list(self.video[category].keys())
+
     def set_playhead2(self, layer='main', category=None, stream=None, start_frame=0):
 
         """ Set playhead of Tate stream """
-        category = 'tate'
-        stream = choice(list(self.video[category].keys()))
+
+        if len(self.mix_queues[category][layer]) == 0:
+            self._reset_queue(category, layer)
+        stream = choice(self.mix_queues[category][layer])
 
         # Set stream into the layer
         self.playing[layer] = self.video[category][stream]
@@ -129,6 +138,9 @@ class SolVideoConfig(Configuration):
         self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_WIDTH, self.width)
         self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_HEIGHT, self.height)
         self.playing[layer]['stream'].set(cv.CAP_PROP_FPS, self.fps)
+
+        # Remove latest stream from selector queue
+        self.mix_queues[category][layer].remove(stream)
 
     def set_playhead(self, layer=0, start_frame=0):
 

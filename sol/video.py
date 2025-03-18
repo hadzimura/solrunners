@@ -16,8 +16,7 @@ import uvicorn
 
 from modules.SolVideo import SolVideoConfig
 from modules.Config import arg_parser
-from modules.VideoPlayer import ocv
-from modules.VideoPlayer import ppl
+from modules.VideoPlayer import tate
 
 # Parse the runtime arguments to decide 'who we are'
 arg = arg_parser()
@@ -38,7 +37,8 @@ async def runtime_lifespan(app: FastAPI):
     app.templates = Jinja2Templates(directory=app.c.fastapi_templates)
 
     # OpenCV Player
-    asyncio.create_task(ocv(app.c, player_name='Tate'))
+    if int(arg.room) == 4:
+        asyncio.create_task(tate(app.c))
 
     # # Choose player for the runtime
     # if app.c.entropy:

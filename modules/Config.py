@@ -127,6 +127,7 @@ class Configuration(object):
         self.pinout = dict()
         self.folders = dict()
         self.files = dict()
+        self.mix_queues = dict()
         self.tracks = dict()
 
         self.pir = None
@@ -152,6 +153,7 @@ class Configuration(object):
                 self.folders[folder] = list()
                 if folder == 'tate':
                     self.tate = True
+
         except KeyError:
             print("Configuration file does not contain a 'folders' section")
 
@@ -201,7 +203,7 @@ class Configuration(object):
             # Fonts
             self.font = {
                 'subtitle': Font(font_org=(50, 800)),
-                'status': Font(font_org=(50, 1000)),
+                'status': Font(font_org=(50, 50)),
                 'runtime': Font(font_org=(50, 1050)),
                 'mission': Font(font_org=(1700, 1050))
             }
