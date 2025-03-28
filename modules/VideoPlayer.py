@@ -33,6 +33,7 @@ async def tate_linear(config, audio_player):
 
         try:
             main_status, main_frame = c.playing['main']['stream'].read()
+            width, height = c.playing['main']['stream'].get(3), c.playing['main']['stream'].get(4)
             frame += 1
             # if frame / sync == 1:
             #     v = round(c.playing['main']['stream'].get(cv.CAP_PROP_POS_MSEC)/1000, 3)
@@ -43,7 +44,10 @@ async def tate_linear(config, audio_player):
             #         audio_player.p.seek(c.playing['main']['stream'].get(cv.CAP_PROP_POS_MSEC)/1000)
             #     sync += defined_sync
 
-
+            cv.namedWindow(player_name, cv.WINDOW_NORMAL)
+            # cv.namedWindow(player_name, cv.WINDOW_FREERATIO)
+            cv.setWindowProperty(player_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+            cv.moveWindow(player_name, int((640 / 2) - (width / 2)), int((480 / 2) - (height / 2)))
             if main_status is True:
 
                 if c.blur.enabled is True:
