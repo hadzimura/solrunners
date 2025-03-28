@@ -21,9 +21,10 @@ async def tate_linear(config, audio_player):
     # pitch = 0.5
 
     # Global settings for runtime
-    cv.namedWindow(player_name, cv.WINDOW_NORMAL)
+    cv.namedWindow(player_name, cv.WND_PROP_FULLSCREEN)
     # cv.namedWindow(player_name, cv.WINDOW_FREERATIO)
-    cv.setWindowProperty(player_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+    # cv.setWindowProperty(player_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+    cv.setWindowProperty(player_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_NORMAL)
 
     audio_player.play_audio(int(c.playing['main']['name']) - 1)
     # audio_player.p.pitch = pitch
