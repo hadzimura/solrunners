@@ -6,36 +6,39 @@ jitter:
   presence_delay: 5
 instances:
   1:
+    pinout:
+      button: 2
+      pir: 15
+      green: 19
+      blue: 26
     audio:
-      pinout:
-        button: 2
-        pir: 15
-        green: 19
-        blue: 26
+      - heads
   2:
   3:
+    pinout:
+      pir: 15
+      green: 19
+      blue: 26
+    video:
+      - entropy.mov
     audio:
-      pinout:
-        pir: 15
-        green: 19
-        blue: 26
-    video:
-      pinout:
-        green: 19
-        blue: 26
-      files:
-        - entropy.mov
+      - heads
   4:
+    pinout:
+      blue: 26
+      presence: 5
+      green: 19
+    audio:
+      - tate
+      - heads
     video:
-#      pinout:
-#        blue: 26
-#        distance:
-#        green: 19
-      folders:
-        - tate
+      - tate
   5:
+    pinout:
+      pir: 15
+      green: 19
+      blue: 26
+    audio:
+      - heads
     video:
-      pinout:
-        pir: 15
-        green: 19
-        blue: 26
+      - heads

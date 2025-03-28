@@ -32,7 +32,6 @@ class AudioLibrary(object):
 
     def __init__(self, audio_path=None, tracks_info=None):
 
-        #
         self.catalog = dict()
         self.media = list()
         self.tracks_info = tracks_info
@@ -45,8 +44,10 @@ class AudioLibrary(object):
 
         # Player storage
         self.p = None
-        # self.load_media('entropy', audio_path / Path('entropy'))
-        self.load_media('nasa', audio_path / Path('nasa'))
+
+        # Load audio tracks using tracks metadata
+        for album in self.tracks_info:
+            self.load_media(album, audio_path / Path(album))
         self.swap = False
 
     def analyze(self, wav_file, video_fps=23.98, sampling=44100, generate=False):
@@ -208,6 +209,7 @@ class AudioLibrary(object):
     #                                                       str(self.metadata['tags'])))
 
     def seek_stream(self, frame):
+
         if self.p is None:
             print('Nothing playing, seek void')
             return

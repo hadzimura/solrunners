@@ -19,8 +19,9 @@ import platform
 import uvicorn
 
 from modules.Audio import AudioLibrary
-from modules.SolAudio import SolAudioConfig
+from modules.Config import Configuration
 from modules.Config import arg_parser
+from modules.VideoPlayer import tate_linear
 
 # Parse the runtime arguments to decide 'who we are'
 arg = arg_parser()
@@ -29,8 +30,8 @@ arg = arg_parser()
 @asynccontextmanager
 async def runtime_lifespan(app: FastAPI):
     """ Lifespan of the FastAPI application """
-    print('Initializing SoL Runner...')
-    app.c = SolAudioConfig(audio=arg.audio, video=arg.video, room=int(arg.room), master=bool(arg.master))
+    print('Initializing SoL Runner ...')
+    app.c = Configuration(room=int(arg.room), master=bool(arg.master))
 
     # Application startup: blue blinx
     if platform.system() != 'Darwin':
@@ -42,7 +43,14 @@ async def runtime_lifespan(app: FastAPI):
 
     # Create Asyncio Tasks
     print('Creating background asyncio tasks...')
-    asyncio.create_task(read_sensors())
+
+    # OpenCV Player
+    if int(arg.room) == 4:
+        asyncio.create_task(tate_linear(app.c, app.a))
+
+    if platform.system() != 'Darwin':
+        asyncio.create_task(read_sensors())
+
     asyncio.create_task(actions())
     print('Asyncio background tasks initiated')
 
@@ -221,7 +229,7 @@ async def index(request: Request):
             "request": request,
             "playing": app.a.metadata,
             "library": app.a.catalog,
-            "config": app.c.summary,
+            "summary": app.c.summary,
             "sensors": app.s }
     )
 
@@ -242,4 +250,4 @@ async def seek_audio(request: Request, frame):
 if __name__ == "__main__":
 
     api_port = 8000 + int(arg.room)
-    uvicorn.run("audio:app", host="0.0.0.0", port=api_port, reload=False)
+    uvicorn.run("runner:app", host="0.0.0.0", port=api_port, reload=False)

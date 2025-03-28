@@ -164,3 +164,51 @@ PrivateTmp=true
 ExecStart=/usr/bin/pulseaudio --system --realtime --disallow-exit --no-cpu-limit
 ```
 
+# Boot
+
+http://rptl.io/configtxt
+
+## kernel parameters
+File is `/boot/firmware/cmdline.txt` and:
+
+``` 
+console=serial0,115200 console=tty1 root=PARTUUID=e75229ef-02 rootfstype=ext4 fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-consoles cfg80211.ieee80211_regdom=CZ loglevel=3 logo.nologo vt.global_cursor_default=0
+```
+
+## boot logo
+
+``` 
+$ scp -r zero@10.0.0.211:/usr/share/plymouth/themes/pix/splash.png .
+$ scp -r splash.png zero@10.0.0.211:/usr/share/plymouth/themes/pix/
+``` 
+
+sudo usermod -a -G tty zero
+
+# Bluetooth
+
+https://askubuntu.com/questions/701978/how-can-a-bluetooth-keyboard-that-requires-a-code-entry-be-paired-in-the-termina
+
+``` shell
+$ bluetoothctl
+[bluetooth]# power on
+Changing power on succeeded
+
+[bluetooth]# agent on
+Agent registered
+
+[bluetooth]# default-agent 
+Default agent request successful
+
+[bluetooth]# scan on
+Discovery started
+[NEW] Device F4:EE:25:52:EE:4B RAPOO 5.0KB
+
+[bluetooth]# pair F4:EE:25:52:EE:4B
+Attempting to pair with F4:EE:25:52:EE:4B
+[CHG] Device F4:EE:25:52:EE:4B Connected: yes
+[CHG] Device F4:EE:25:52:EE:4B Bonded: yes
+```
+
+
+ "640x480"x75.0   31.50  640 656 720 840  480 481 484 500 -hsync -vsync (37.5 kHz e)
+[  6437.421] (II) modeset(0): Modeline "640x480"x59.9   25.18  640 656 752 800  480 490 492 525 -hsync -vsync (31.5 kHz e)

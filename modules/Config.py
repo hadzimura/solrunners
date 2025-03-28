@@ -5,9 +5,11 @@ from argparse import ArgumentDefaultsHelpFormatter
 from argparse import BooleanOptionalAction
 from platform import system
 from datetime import datetime as dt
+from glob import glob
 from os import environ
 from pathlib import Path
 from pprint import pprint
+from random import choice
 from ruamel.yaml import YAML
 
 if system() != 'Darwin':
@@ -16,6 +18,7 @@ if system() != 'Darwin':
     from gpiozero import LED
     from gpiozero import MotionSensor
 
+import cv2 as cv
 from modules.Controllers import Effect
 from modules.Controllers import Font
 from modules.Controllers import Draw
@@ -26,11 +29,6 @@ def arg_parser():
     parser = ArgumentParser(description='Sol Audio Runner',
                             epilog='Author: rkucera@gmail.com',
                             formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-a', '--audio',
-                        action=BooleanOptionalAction,
-                        default=False,
-                        dest='audio',
-                        help='Set node as audio runner')
     parser.add_argument('-m', '--master',
                         action=BooleanOptionalAction,
                         default=False,
@@ -40,38 +38,13 @@ def arg_parser():
                         default=None,
                         dest='room',
                         help='Which room is this Runner in?')
-    parser.add_argument('-s', '--sol',
-                        default=None,
-                        dest='sol',
-                        choices=['audio', 'video'],
-                        help='Which kind is this Runner of?')
-    parser.add_argument('-v', '--video',
-                        action=BooleanOptionalAction,
-                        default=False,
-                        dest='video',
-                        help='Set node as video runner')
 
     return parser.parse_args()
 
 
 class Configuration(object):
 
-    def __init__(self, audio=False, video=False, room=None, master=False, width=1920, height=1080, fps=25, fullscreen=True):
-
-        if audio is True and video is True:
-            print('Only one of the types of the SoL Runner must be specified (--audio | --video)')
-            print('Exiting...')
-            exit(1)
-        elif audio is False and video is False:
-            print('At least one of the types of the SoL Runner must be specified (--audio | --video)')
-            print('Exiting...')
-            exit(1)
-        elif audio is True:
-            print('Running as the Audio Sol Runner')
-            self.sol = 'audio'
-        elif video is True:
-            print('Running as the Video Sol Runner')
-            self.sol = 'video'
+    def __init__(self, room=None, master=False, width=1920, height=1080, fps=25, fullscreen=True):
 
         if room is None:
             print('Room needs to be specified, exiting...')
@@ -87,12 +60,6 @@ class Configuration(object):
             self.master = True
         else:
             print('This is Slave Node')
-
-        self.summary = {
-            'sol': self.sol,
-            'room': self.room,
-            'node_type': self.node_type
-        }
 
         # Running Environment location
         env_var = environ
@@ -115,17 +82,18 @@ class Configuration(object):
         self.yaml = YAML()
         self.yaml.preserve_quotes = True
         self.configuration_file = self.project_root / Path('sol.config.yaml')
+
         try:
-            self.configuration = self.yaml.load(self.configuration_file)
-            self.instance = self.configuration['instances'][self.room][self.sol]
-            print("Loaded configuration file: '{}'".format(self.configuration_file))
+            print("Loading configuration file: '{}'".format(self.configuration_file))
+            self.configuration = dict(self.yaml.load(self.configuration_file))
+            self.instance = self.configuration['instances'][self.room]
         except FileNotFoundError:
             print("Configuration file not found: {}".format(self.configuration_file))
             exit(1)
 
         # Initialize possible Sensors
         self.pinout = dict()
-        self.folders = dict()
+        self.media = dict()
         self.files = dict()
         self.mix_queues = dict()
         self.tracks = dict()
@@ -141,36 +109,24 @@ class Configuration(object):
 
         # Pinout definitions
         try:
-            print('Loading pinout for {}:{}'.format(self.room, self.sol))
+            print('Loading pinout for room: {}'.format(self.room))
             if system() != 'Darwin':
                 self._init_sensors(self.instance['pinout'])
         except KeyError as error:
             print("Configuration file does not contain a pinout section: {}".format(error))
 
-        # Folders definition
+        # Audio tracks metadata
+        tracks_metadata = self.project_root / Path('sol.audio.yaml')
         try:
-            for folder in self.instance['folders']:
-                self.folders[folder] = list()
-                if folder == 'tate':
-                    self.tate = True
-
-        except KeyError:
-            print("Configuration file does not contain a 'folders' section")
-
-        # Files definition
-        try:
-            for filename in self.instance['files']:
-                video_name = filename.split('.')[0]
-                self.files[video_name] = filename
-                if video_name == 'entropy':
-                    self.entropy = True
-        except KeyError:
-            print("Configuration file does not contain a 'files' section")
-
-        try:
-            self.tracks = self.yaml.load(self.project_root / Path('sol.audio.yaml'))
+            print("Loading audio metadata: {}".format(tracks_metadata))
+            all_tracks = self.yaml.load(tracks_metadata)
+            for batch_name in all_tracks:
+                if batch_name in self.instance['audio']:
+                    print("Initializing tracks for: '{}'".format(batch_name))
+                    self.tracks[batch_name] = dict(all_tracks[batch_name])
+            pprint(self.tracks, indent=2)
         except FileNotFoundError:
-            print("Audio tracks config file not found: '{}'".format(self.project_root / Path('sol.audio.yaml')))
+            print("Audio metadata config file not found: '{}'".format(tracks_metadata))
             exit(1)
 
         # Total beats of the runtime
@@ -199,7 +155,8 @@ class Configuration(object):
 
         self.playing = dict()
 
-        if self.sol == 'video':
+        if 'video' in self.instance:
+
             # Fonts
             self.font = {
                 'subtitle': Font(font_org=(50, 800)),
@@ -215,15 +172,13 @@ class Configuration(object):
                                 color=(36, 204, 68),
                                 thickness=3)
             }
-            if self.room == 3:
-                self._get_entropy()
-            if len(self.folders) > 0:
-                self._get_folders()
+
+            self._load_assets(self.instance['video'])
 
         # Subtitle acquisition is for both Audio / Video Nodes
         self.sub = dict()
         self.subtitle = None
-        self._load_subtitles(self.entropy_subtitles)
+        self._get_subtitles(self.entropy_subtitles)
 
         # Presence setup
         self.presence = {
@@ -237,7 +192,14 @@ class Configuration(object):
             # TBD
             pass
 
-    def _load_subtitles(self, srt_file):
+        # Publish summary of the runtime
+        self.summary = {
+            'room': self.room,
+            'node_type': self.node_type
+        }
+
+
+    def _get_subtitles(self, srt_file):
 
         """ Load the subtitles for runtime """
 
@@ -260,6 +222,49 @@ class Configuration(object):
         except FileNotFoundError as e:
 
             print('Subtitle file not found: {}'.format(srt_file))
+
+    def _load_assets(self, entities):
+        for entity in entities:
+            if '.' in entity:
+                # These are singular video files
+                self._get_file(entity)
+            else:
+                # These are folders of video files
+                self._get_folder(entity)
+
+    def _get_folder(self, folder_name):
+
+        folder_path = self.video_path / Path(folder_name)
+        print("Processing videos in folder: '{}'".format(folder_path))
+
+        for filename in sorted(glob('{}/*.mp4'.format(folder_path))):
+
+            try:
+                video_name = filename.split('/')[-1]
+                print("Importing video: '{}'".format(video_name))
+                if folder_name not in self.video:
+                    self.video[folder_name] = dict()
+
+                self.video[folder_name][video_name] = dict()
+                self.video[folder_name][video_name] = self._stream_metadata(cv.VideoCapture(filename), folder_name, video_name)
+
+            except Exception as error:
+                print('Problem acquiring video stream: {}'.format(filename))
+                print(error)
+                exit(1)
+
+        self._reset_queue(folder_name, 'main')
+        # self._reset_queue(folder_name, 'overlay')
+
+    def _get_file(self, filename):
+        """ Video streams """
+        video_file = self.video_path / Path(filename)
+        try:
+            self.entropy = self._stream_metadata(cv.VideoCapture(str(video_file)), 'entropy', filename)
+        except Exception as error:
+            print('Problem acquiring video stream: {}'.format(video_file))
+            print(error)
+            exit(1)
 
     def _init_sensors(self, pinout):
 
@@ -286,3 +291,131 @@ class Configuration(object):
                 print('Initializing Button ({})'.format(pin))
                 self.button = Button(pin)
         print('Done initializing Sensors')
+
+    @staticmethod
+    def _stream_metadata(stream, category, filename):
+        """ Get metadata from stream"""
+        metadata = dict()
+        metadata['name'] = filename.split('.')[0]
+        metadata['filename'] = filename
+        metadata['category'] = category
+        metadata['frames'] = int(stream.get(cv.CAP_PROP_FRAME_COUNT))
+        metadata['fps'] = int(stream.get(cv.CAP_PROP_FPS))
+        metadata['duration'] = round(metadata['frames'] / metadata['fps'])
+        metadata['stream'] = stream
+        return metadata
+
+    def _reset_queue(self, category, q_name):
+        if category not in self.mix_queues:
+            self.mix_queues[category] = dict()
+        self.mix_queues[category][q_name] = list(self.video[category].keys())
+
+    def action(self):
+
+        pass
+
+    def get_info(self, resource):
+
+        """ Get runtime information for various resources. Intended for text overlays. """
+
+        result = str()
+        if resource == 'status':
+
+            result = '(b)lur: {} {} | (m)ix: {} {}'.format(
+                int(self.blur.enabled),
+                self.blur_value,
+                int(self.mix.enabled),
+                self.blend_value
+            )
+
+        elif resource == 'runtime':
+
+            result = '{}: {} | {} frames | {} fps | duration: {}'.format(
+                self.playing[0]['name'],
+                self.playing[0]['category'],
+                self.playing[0]['frames'],
+                self.playing[0]['fps'],
+                self.playing[0]['duration']
+            )
+
+        elif resource == 'mission':
+
+            result = '{}f | {}s'.format(self.playing[0]['frame'], int(self.second))
+
+        return result
+
+    def update(self):
+
+        # Accumulate runtime beats
+        self.beats += 1
+
+        # Update frame for each layer
+        for layer in self.playing:
+            if self.playing[layer]['frame'] is not None:
+                self.playing[layer]['frame'] += 1
+
+        # Total runtime seconds
+        if (self.beats / self.fps).is_integer():
+            self.second = self.beats / self.fps
+
+        #25 fps = HH:MM:SS:
+        # Divide 1,000 by the frame rate will give you milliseconds per frame..
+        # 1000ms = 1 second
+        self.elapsed = self.beats / self.fps
+        self.action()
+
+    def read_input(self, input_key):
+
+        match input_key:
+
+            case -1:
+                # Nothing pressed
+                # zc.volume = None
+                return True
+            # case 9:
+            #     # 'tab'
+            #     self.control.active()
+            case 27:
+                # 'esc'
+                return False
+            case 102:
+                # 'f'
+                self.flip.enabled = not self.flip.enabled
+            case 103:
+                # 'g'
+                self.gray.enabled = not self.gray.enabled
+            case 111:
+                # 'o'
+                self.offset.enabled = not self.offset.enabled
+            case 109:
+                # 'm'
+                self.mix.enabled = not self.mix.enabled
+                print('Mix: {}'.format(self.mix.enabled))
+            case 98:
+                # 'b'
+                self.blur.enabled = not self.blur.enabled
+            case _:
+                # if input_key in self.volumes:
+                #     self.volume = self.volumes[input_key]
+                # else:
+                print("Undefined key pressed: '{}'".format(input_key))
+        return True
+
+    def set_playhead2(self, layer='main', category=None, stream=None, start_frame=0):
+
+        """ Set playhead of Tate stream """
+
+        if len(self.mix_queues[category][layer]) == 0:
+            self._reset_queue(category, layer)
+        stream = choice(self.mix_queues[category][layer])
+
+        # Set stream into the layer
+        self.playing[layer] = self.video[category][stream]
+        self.playing[layer]['frame'] = start_frame
+        self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
+        self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_WIDTH, self.width)
+        self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_HEIGHT, self.height)
+        self.playing[layer]['stream'].set(cv.CAP_PROP_FPS, self.fps)
+
+        # Remove latest stream from selector queue
+        self.mix_queues[category][layer].remove(stream)
