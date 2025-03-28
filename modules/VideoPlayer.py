@@ -9,6 +9,12 @@ from pprint import pprint
 from random import choice
 from time import sleep
 from PIL.ImageChops import overlay
+import pyglet
+
+async def tate_pyglet(config, audio_player):
+    a = pyglet.media.StaticSource(pyglet.media.load('/home/zero/solrunners/media/video/tate/23.mp4', streaming=False))
+    a.play()
+
 
 async def tate_linear(config, audio_player):
     # Initialize Player Layers
