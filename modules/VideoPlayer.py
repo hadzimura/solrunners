@@ -22,7 +22,7 @@ async def tate_linear(config, audio_player):
 
     # Global settings for runtime
     cv.namedWindow(player_name, cv.WINDOW_NORMAL)
-    cv.namedWindow(player_name, cv.WINDOW_FREERATIO)
+    # cv.namedWindow(player_name, cv.WINDOW_FREERATIO)
     cv.setWindowProperty(player_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
     # cv.setWindowProperty(player_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_NORMAL)
 
@@ -34,6 +34,7 @@ async def tate_linear(config, audio_player):
         try:
             c.playing['main']['stream'].set(cv.CAP_PROP_FRAME_WIDTH, 640)
             c.playing['main']['stream'].set(cv.CAP_PROP_FRAME_HEIGHT, 480)
+            c.playing['main']['stream'].get(cv.CAP_PROP_FRAME_WIDTH)
 
             main_status, main_frame = c.playing['main']['stream'].read()
             width, height = c.playing['main']['stream'].get(3), c.playing['main']['stream'].get(4)
@@ -47,9 +48,9 @@ async def tate_linear(config, audio_player):
             #         audio_player.p.seek(c.playing['main']['stream'].get(cv.CAP_PROP_POS_MSEC)/1000)
             #     sync += defined_sync
 
-            cv.namedWindow(player_name, cv.WINDOW_NORMAL)
+            # cv.namedWindow(player_name, cv.WINDOW_NORMAL)
             # cv.namedWindow(player_name, cv.WINDOW_FREERATIO)
-            cv.setWindowProperty(player_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+            # cv.setWindowProperty(player_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
             # cv.moveWindow(player_name, int((640 / 2) - (width / 2)), int((480 / 2) - (height / 2)))
             if main_status is True:
 
@@ -74,7 +75,7 @@ async def tate_linear(config, audio_player):
                 # cv.putText(main_frame, str(c.playing['main']['stream'].get(cv.CAP_PROP_POS_FRAMES)), [50, 50], f.name, f.scale, f.color, f.thickness, f.type)
                 cv.putText(main_frame, 'v: {}'.format(str(round(c.playing['main']['stream'].get(cv.CAP_PROP_POS_MSEC)/1000, 3))), [50, 50], f.name, f.scale, f.color, f.thickness, f.type)
                 cv.putText(main_frame, 'a: {}'.format(str(round(audio_player.p.time, 3))), [50, 100], f.name, f.scale, f.color, f.thickness, f.type)
-                cv.putText(main_frame, '{}x{}'.format(width, height), [50, 150], f.name, f.scale, f.color, f.thickness, f.type)
+                cv.putText(main_frame, '{}x{}'.format(c.playing['main']['stream'].get(cv.CAP_PROP_FRAME_WIDTH), height), [50, 150], f.name, f.scale, f.color, f.thickness, f.type)
                 # int(c.playing['main']['name'])
 
                 cv.imshow(player_name, main_frame)
