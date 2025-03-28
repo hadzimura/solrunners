@@ -34,7 +34,11 @@ async def runtime_lifespan(app: FastAPI):
     app.c = Configuration(room=int(arg.room), master=bool(arg.master))
 
     # Application startup: blue blinx
-    if platform.system() != 'Darwin':
+    peripherals = True
+    if platform.system() != 'Darwin' or len(app.c.pinout) == 0:
+        peripherals = False
+
+    if peripherals is True:
         app.c.green.blink(background=True, on_time=0.2, off_time=0.2)
 
     app.a = AudioLibrary(audio_path=app.c.audio_path, tracks_info=app.c.tracks)
@@ -48,14 +52,14 @@ async def runtime_lifespan(app: FastAPI):
     if int(arg.room) == 4:
         asyncio.create_task(tate_linear(app.c, app.a))
 
-    if platform.system() != 'Darwin':
+    if peripherals is True:
         asyncio.create_task(read_sensors())
 
     asyncio.create_task(actions())
     print('Asyncio background tasks initiated')
 
     # Blue light means we are ready
-    if platform.system() != 'Darwin':
+    if peripherals is True:
         app.c.green.blink(background=True, on_time=1, off_time=1)
 
     print('All SoL Runner lifespan events initialized')
