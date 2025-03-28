@@ -28,8 +28,8 @@ instances:
 #      blue: 26
 #      presence: 5
 #      green: 19
-#    audio:
-#      - tate
+    audio:
+      - tate
       # - heads
     video:
       - tate
