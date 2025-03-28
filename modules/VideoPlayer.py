@@ -71,6 +71,7 @@ async def tate_linear(config, audio_player):
                 # cv.putText(main_frame, str(c.playing['main']['stream'].get(cv.CAP_PROP_POS_FRAMES)), [50, 50], f.name, f.scale, f.color, f.thickness, f.type)
                 cv.putText(main_frame, 'v: {}'.format(str(round(c.playing['main']['stream'].get(cv.CAP_PROP_POS_MSEC)/1000, 3))), [50, 50], f.name, f.scale, f.color, f.thickness, f.type)
                 cv.putText(main_frame, 'a: {}'.format(str(round(audio_player.p.time, 3))), [50, 100], f.name, f.scale, f.color, f.thickness, f.type)
+                cv.putText(main_frame, '{}x{}'.format(width, height), [50, 150], f.name, f.scale, f.color, f.thickness, f.type)
                 # int(c.playing['main']['name'])
 
                 cv.imshow(player_name, main_frame)
