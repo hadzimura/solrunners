@@ -21,7 +21,7 @@ import uvicorn
 from modules.Audio import AudioLibrary
 from modules.Config import Configuration
 from modules.Config import arg_parser
-from modules.VideoPlayer import tate_linear, tate_pyglet
+from modules.VideoPlayer import tate_linear
 
 # Parse the runtime arguments to decide 'who we are'
 arg = arg_parser()
@@ -51,7 +51,7 @@ async def runtime_lifespan(app: FastAPI):
     # OpenCV Player
     if int(arg.room) == 4:
         # asyncio.create_task(tate_linear(app.c, app.a))
-        asyncio.create_task(tate_pyglet(app.c, app.a))
+        asyncio.create_task(tate_linear(app.c, app.a))
 
     if peripherals is True:
         asyncio.create_task(read_sensors())
