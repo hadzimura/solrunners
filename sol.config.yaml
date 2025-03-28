@@ -30,7 +30,7 @@ instances:
       green: 19
     audio:
       - tate
-      - heads
+      # - heads
     video:
       - tate
   5:
