@@ -24,10 +24,10 @@ instances:
     audio:
       - heads
   4:
-    pinout:
-      blue: 26
-      presence: 5
-      green: 19
+#    pinout:
+#      blue: 26
+#      presence: 5
+#      green: 19
     audio:
       - tate
       # - heads
