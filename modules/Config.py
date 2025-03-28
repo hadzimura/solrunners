@@ -125,6 +125,8 @@ class Configuration(object):
                     print("Initializing tracks for: '{}'".format(batch_name))
                     self.tracks[batch_name] = dict(all_tracks[batch_name])
             pprint(self.tracks, indent=2)
+        except KeyError as error:
+            print("Audio not configured".format(tracks_metadata))
         except FileNotFoundError:
             print("Audio metadata config file not found: '{}'".format(tracks_metadata))
             exit(1)
