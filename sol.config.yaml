@@ -11,8 +11,8 @@ instances:
       pir: 15
       green: 19
       blue: 26
-    audio:
-      - heads
+#    audio:
+#      - heads
   2:
   3:
     pinout:
@@ -21,24 +21,24 @@ instances:
       blue: 26
     video:
       - entropy.mov
-    audio:
-      - heads
+#    audio:
+#      - heads
   4:
 #    pinout:
 #      blue: 26
 #      presence: 5
 #      green: 19
     audio:
-      - tate
-      # - heads
-    video:
-      - tate
+#      - tate
+      - heads
+#    video:
+#      - tate
   5:
     pinout:
       pir: 15
       green: 19
       blue: 26
-    audio:
-      - heads
+#    audio:
+#      - heads
     video:
       - heads

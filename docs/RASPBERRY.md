@@ -209,6 +209,24 @@ Attempting to pair with F4:EE:25:52:EE:4B
 [CHG] Device F4:EE:25:52:EE:4B Bonded: yes
 ```
 
+https://askubuntu.com/questions/62858/turn-off-monitor-using-command-line
 
  "640x480"x75.0   31.50  640 656 720 840  480 481 484 500 -hsync -vsync (37.5 kHz e)
 [  6437.421] (II) modeset(0): Modeline "640x480"x59.9   25.18  640 656 752 800  480 490 492 525 -hsync -vsync (31.5 kHz e)
+
+309  xset -display :0 screen-saver reset
+  310  xset -display :0 s reset
+  311  xset -display :0
+  312  xset -display :0 q
+  313  xset -display :0 s 0
+  314  xset -display :0 q
+  315  xset -display :0 -dpms
+  316  xset -display :0 q
+
+https://forums.raspberrypi.com/viewtopic.php?t=359778
+https://rpishop.cz/chladice-pro-raspberry-pi-5/6496-raspberry-pi-5-active-cooler.html#tab-discussion
+dtparam=fan_temp0=40000 dtparam=fan_temp0_hyst=10000 dtparam=fan_temp0_speed=125
+Dobrý den, jedná se o chybu na současné verze libreelec. Starší verze nebo další update by měli problém vyřešit. Mělo by pomoci přidat ovladače do souboru config.txt /boot/firmware/config.txt dtparam=fan_temp0=40000 dtparam=fan_temp0_hyst=10000 dtparam=fan_temp0_speed=125
+ Odpovědět
+
+https://www.jeffgeerling.com/blog/2023/overclocking-and-underclocking-raspberry-pi-5

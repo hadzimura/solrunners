@@ -16,12 +16,19 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import platform
+from pprint import pprint
 import uvicorn
 
 from modules.Audio import AudioLibrary
 from modules.Config import Configuration
 from modules.Config import arg_parser
 from modules.VideoPlayer import tate_linear
+
+from pydantic import BaseModel
+
+class Queue(BaseModel):
+    play_time: datetime.datetime
+    track_id: int
 
 # Parse the runtime arguments to decide 'who we are'
 arg = arg_parser()
@@ -41,7 +48,7 @@ async def runtime_lifespan(app: FastAPI):
     if peripherals is True:
         app.c.green.blink(background=True, on_time=0.2, off_time=0.2)
 
-    app.a = AudioLibrary(audio_path=app.c.audio_path, tracks_info=app.c.tracks)
+    app.a = AudioLibrary(audio_path=app.c.audio_path, tracks_info=app.c.tracks, authors=app.c.authors)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
     app.templates = Jinja2Templates(directory=app.c.fastapi_templates)
 
@@ -91,8 +98,9 @@ async def actions():
     last_second = None
     tick = False
     elapsed = 0
-    while True:
+    last_queue = dict()
 
+    while True:
         current_time = dt.now()
 
         if last_second is None:
@@ -105,24 +113,35 @@ async def actions():
             last_second = current_time.second
 
         if tick is True:
+            if app.c.master is True:
+                app.c.dispatcher()
 
-            elapsed += 1
-            print('T: {} | A: {} | P: {} ({})'.format(elapsed,
-                                                      str(app.armed),
-                                                      str(app.presence),
-                                                      str(app.presence_counter)))
+            # elapsed += 1
+            # print('T: {} | A: {} | P: {} ({})'.format(elapsed,
+            #                                           str(app.armed),
+            #                                           str(app.presence),
+            #                                           str(app.presence_counter)))
             tick = False
 
-        if app.armed:
-            if app.presence and app.c.blue.is_active is False:
-                app.c.blue.on()
-            elif not app.presence and app.c.blue.is_active:
-                app.c.blue.off()
 
-        if app.armed is not True:
-            # Do nothing if App is not armed
-            await asyncio.sleep(0.05)
-            continue
+        if app.c.audio_queue != last_queue:
+            pprint(app.c.audio_queue, indent=2)
+
+
+
+        last_queue = app.c.audio_queue
+
+        #
+        # if app.armed:
+        #     if app.presence and app.c.blue.is_active is False:
+        #         app.c.blue.on()
+        #     elif not app.presence and app.c.blue.is_active:
+        #         app.c.blue.off()
+        #
+        # if app.armed is not True:
+        #     # Do nothing if App is not armed
+        #     await asyncio.sleep(0.05)
+        #     continue
 
         # if (current_time.second - app.presence.second) <
 
@@ -244,6 +263,14 @@ async def play_audio(request: Request, track_id):
     app.a.play_audio(int(track_id))
     redirect_url = request.url_for('index')
     return RedirectResponse(redirect_url, status_code=status.HTTP_303_SEE_OTHER)
+
+@app.post('/schedule/')
+async def schedule(queue: Queue):
+    """ Schedule audio track playback """
+    play_time = queue.play_time
+    track_id = queue.track_id
+    app.c.scheduler(play_time, int(track_id))
+    return pprint(app.c.audio_queue, indent=2)
 
 @app.get('/seek/{frame}')
 async def seek_audio(request: Request, frame):

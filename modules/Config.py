@@ -10,6 +10,7 @@ from os import environ
 from pathlib import Path
 from pprint import pprint
 from random import choice
+import requests
 from ruamel.yaml import YAML
 
 if system() != 'Darwin':
@@ -95,8 +96,10 @@ class Configuration(object):
         self.pinout = dict()
         self.media = dict()
         self.files = dict()
+        self.authors = dict()
         self.mix_queues = dict()
         self.tracks = dict()
+        self.audio_queue = dict()
 
         self.pir = None
         self.blue = None
@@ -124,11 +127,28 @@ class Configuration(object):
                 if batch_name in self.instance['audio']:
                     print("Initializing tracks for: '{}'".format(batch_name))
                     self.tracks[batch_name] = dict(all_tracks[batch_name])
-            pprint(self.tracks, indent=2)
+            # pprint(self.tracks, indent=2)
         except KeyError as error:
             print("Audio not configured".format(tracks_metadata))
         except FileNotFoundError:
             print("Audio metadata config file not found: '{}'".format(tracks_metadata))
+            exit(1)
+
+        heads_metadata = self.project_root / Path('sol.audio.heads.yaml')
+        try:
+            print("Loading audio heads metadata: {}".format(heads_metadata))
+            self.tracks['heads'] = dict(self.yaml.load(heads_metadata))
+        except FileNotFoundError:
+            print("Audio Heads metadata config file not found: '{}'".format(heads_metadata))
+            exit(1)
+
+
+        authors_metadata = self.project_root / Path('sol.authors.yaml')
+        try:
+            print("Loading authors metadata: {}".format(authors_metadata))
+            self.authors = dict(self.yaml.load(authors_metadata))
+        except FileNotFoundError:
+            print("Authors metadata config file not found: '{}'".format(authors_metadata))
             exit(1)
 
         # Total beats of the runtime
@@ -200,6 +220,12 @@ class Configuration(object):
             'node_type': self.node_type
         }
 
+    def scheduler(self, play_time, track_id):
+        self.audio_queue[play_time] = track_id
+
+    def dispatcher(self):
+        payload = {'play_time': dt.now(), 'track_id': 1}
+        response = requests.post(url='http://127.0.0.1:8002/schedule', params=payload)
 
     def _get_subtitles(self, srt_file):
 

@@ -30,7 +30,7 @@ class AudioLibrary(object):
         15.0: False
     }
 
-    def __init__(self, audio_path=None, tracks_info=None):
+    def __init__(self, audio_path=None, tracks_info=None, authors=None):
 
         self.catalog = dict()
         self.media = list()
@@ -47,7 +47,10 @@ class AudioLibrary(object):
 
         # Load audio tracks using tracks metadata
         for album in self.tracks_info:
-            self.load_media(album, audio_path / Path(album))
+            if album == 'heads':
+                self.load_heads(audio_path / Path(album))
+            else:
+                self.load_tracks(album, audio_path / Path(album))
         self.swap = False
 
     def analyze(self, wav_file, video_fps=23.98, sampling=44100, generate=False):
@@ -152,7 +155,47 @@ class AudioLibrary(object):
                 if data['id'] == track_id:
                     return self.catalog[album][track]
 
-    def load_media(self, album, library_path):
+    def load_heads(self, library_path):
+
+        print("Importing 'heads' audio files: '{}'".format(library_path))
+        self.catalog['heads'] = dict()
+
+        # Iterate over WAV samples and enrich
+        for filepath in sorted(glob('{}/heads/*.wav'.format(library_path))):
+            sample = filepath.split('/')[-1].split('.')[0]
+            name, actor, version = sample.split('-')
+
+
+
+            if sample not in result:
+                result[sample] = dict()
+            if actor not in result[sample]:
+                result[sample][actor] = list()
+            result[sample][actor].append(filepath)
+
+
+        for file_name in sorted(self.tracks_info[album]):
+
+            info = self.tracks_info[album][file_name]
+            file_path = '{}/{}'.format(library_path, Path('{}.wav'.format(file_name)))
+
+            if file_name not in self.catalog[album]:
+                self.catalog[album][file_name] = dict()
+            print('Loading file: {}'.format(file_path))
+
+            self.media.append(pyglet.media.StaticSource(pyglet.media.load(file_path, streaming=False)))
+            self.catalog[album][file_name] = info
+            self.catalog[album][file_name]['id'] = len(self.media) - 1
+            self.catalog[album][file_name]['duration'] = self.media[-1].duration
+            self.catalog[album][file_name]['filename'] = file_path
+
+            # if 'voice.left' in file:
+            #     print('Analyzing file: {}'.format(file))
+            #     self.timeline = self.analyze(file)
+        # pprint(self.catalog, indent=2)
+
+
+    def load_tracks(self, album, library_path):
 
         print("Importing '{}' audio files: '{}'".format(album, library_path))
         self.catalog[album] = dict()
@@ -176,6 +219,12 @@ class AudioLibrary(object):
             #     print('Analyzing file: {}'.format(file))
             #     self.timeline = self.analyze(file)
         # pprint(self.catalog, indent=2)
+
+    def prepare_audio(self, album, library_path):
+
+        result = dict()
+        pprint(result, indent=2)
+
 
     def play_audio(self, track_id):
 
