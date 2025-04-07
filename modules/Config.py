@@ -119,37 +119,36 @@ class Configuration(object):
             print("Configuration file does not contain a pinout section: {}".format(error))
 
         # Audio tracks metadata
-        tracks_metadata = self.project_root / Path('sol.audio.yaml')
-        try:
-            print("Loading audio metadata: {}".format(tracks_metadata))
-            all_tracks = self.yaml.load(tracks_metadata)
-            for batch_name in all_tracks:
-                if batch_name in self.instance['audio']:
-                    print("Initializing tracks for: '{}'".format(batch_name))
-                    self.tracks[batch_name] = dict(all_tracks[batch_name])
-            # pprint(self.tracks, indent=2)
-        except KeyError as error:
-            print("Audio not configured".format(tracks_metadata))
-        except FileNotFoundError:
-            print("Audio metadata config file not found: '{}'".format(tracks_metadata))
-            exit(1)
+        # tracks_metadata = self.project_root / Path('sol.audio.yaml')
+        # try:
+        #     print("Loading audio metadata: {}".format(tracks_metadata))
+        #     all_tracks = self.yaml.load(tracks_metadata)
+        #     for batch_name in all_tracks:
+        #         if batch_name in self.instance['audio']:
+        #             print("Initializing tracks for: '{}'".format(batch_name))
+        #             self.tracks[batch_name] = dict(all_tracks[batch_name])
+        #     # pprint(self.tracks, indent=2)
+        # except KeyError as error:
+        #     print("Audio not configured".format(tracks_metadata))
+        # except FileNotFoundError:
+        #     print("Audio metadata config file not found: '{}'".format(tracks_metadata))
+        #     exit(1)
 
         heads_metadata = self.project_root / Path('sol.audio.heads.yaml')
+        authors_metadata = self.project_root / Path('sol.authors.yaml')
         try:
             print("Loading audio heads metadata: {}".format(heads_metadata))
             self.tracks['heads'] = dict(self.yaml.load(heads_metadata))
-        except FileNotFoundError:
-            print("Audio Heads metadata config file not found: '{}'".format(heads_metadata))
-            exit(1)
-
-
-        authors_metadata = self.project_root / Path('sol.authors.yaml')
-        try:
             print("Loading authors metadata: {}".format(authors_metadata))
-            self.authors = dict(self.yaml.load(authors_metadata))
-        except FileNotFoundError:
-            print("Authors metadata config file not found: '{}'".format(authors_metadata))
+            authors = dict(self.yaml.load(authors_metadata))
+            for head in self.tracks['heads']:
+                a = self.tracks['heads'][head]['author']
+                self.tracks['heads'][head]['fullname'] = authors[a]['name']
+        except FileNotFoundError as e:
+            print('Audio metadata config file not found')
+            print(e)
             exit(1)
+
 
         # Total beats of the runtime
         self.beats = 0

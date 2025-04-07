@@ -48,7 +48,7 @@ async def runtime_lifespan(app: FastAPI):
     if peripherals is True:
         app.c.green.blink(background=True, on_time=0.2, off_time=0.2)
 
-    app.a = AudioLibrary(audio_path=app.c.audio_path, tracks_info=app.c.tracks, authors=app.c.authors)
+    app.a = AudioLibrary(audio_path=app.c.audio_path, tracks_info=app.c.tracks)
     app.mount("/static", StaticFiles(directory=app.c.fastapi_static), name="static")
     app.templates = Jinja2Templates(directory=app.c.fastapi_templates)
 
@@ -252,7 +252,7 @@ async def index(request: Request):
         "index.html", {
             "request": request,
             "playing": app.a.metadata,
-            "library": app.a.catalog,
+            "library": app.a.metadata,
             "summary": app.c.summary,
             "sensors": app.s }
     )
@@ -282,4 +282,4 @@ async def seek_audio(request: Request, frame):
 if __name__ == "__main__":
 
     api_port = 8000 + int(arg.room)
-    uvicorn.run("runner:app", host="0.0.0.0", port=api_port, reload=False)
+    uvicorn.run("runner:app", host="127.0.0.1", port=api_port, reload=False)

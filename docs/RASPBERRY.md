@@ -27,55 +27,40 @@ $ source /home/zero/sol-audio/.solenv/bin/activate
 
 Activate for session: `/home/zero/.bashrc`
 
-```
-source /home/zero/sol-audio/.solenv/bin/activate
-export PYTHONPATH=$PYTHONPATH:/home/zero/sol-audio/
+``` shell
+$ source /home/zero/sol-audio/.solenv/bin/activate
+$ export PYTHONPATH=$PYTHONPATH:/home/zero/sol-audio/
 ```
 
+```
 apt-get install libglfw3-dev libgles2-mesa-dev
 sudo apt-get install libosmesa6-dev
 sudo apt-get install freeglut3-dev
+```
 
+```
 sudo amixer cset numid=3 <n>
 # where n is 0=auto, 1=headphones, 2=hdmi.
+```
 
-
-ImportError: 
-    Error occured while running `from pyglet.gl import *`
-    HINT: make sure you have OpenGL install. On Ubuntu, you can run 'apt-get install python-opengl'.
-    If you're running on a server, you may need a virtual frame buffer; something like this should work:
-    'xvfb-run -s "-screen 0 1400x900x24" python <your_script.py>'
-
-    8  git clone https://github.com/goodtft/LCD-show.git
-    9  chmod -R 755 LCD-show
+## LCD screen
 
 https://avikdas.com/2018/12/31/setting-up-lcd-screen-on-raspberry-pi.html
 
-apt install xserver-xorg
-            xinit x11-xserver-utils blackbox xterm raspberrypi-ui-mods
+``` shell
+$ git clone https://github.com/goodtft/LCD-show.git
+$ chmod -R 755 LCD-show
+```
 
-mkdir /etc/X11/xorg.conf.d
-cp /root/LCD-show/usr/99-calibration.conf-35-270 /etc/X11/xorg.conf.d/99-calibration.conf
-cp /root/LCD-show/usr/99-fbturbo.conf /usr/share/X11/xorg.conf.d/
-cp /root/LCD-show/usr/99-fbturbo.conf /etc/X11/xorg.conf.d/
-
-
-   10  cd LCD-show/
-   11  ./LCD35-show
-   12  sh4d0w
-   13  halt
-   14  cat /boot/config.txt
-   15  alsa-info 
-   17  alsa-info 
-   18  alsamixer 
-   19  aplay -l
-   20  history
-
-
-$   sudo apt install mpg123
-
-
- 
+``` shell
+$ apt install xserver-xorg xinit x11-xserver-utils blackbox xterm raspberrypi-ui-mods
+$ mkdir /etc/X11/xorg.conf.d
+$ cp /root/LCD-show/usr/99-calibration.conf-35-270 /etc/X11/xorg.conf.d/99-calibration.conf
+$ cp /root/LCD-show/usr/99-fbturbo.conf /usr/share/X11/xorg.conf.d/
+$ cp /root/LCD-show/usr/99-fbturbo.conf /etc/X11/xorg.conf.d/
+$ cd LCD-show/
+$ ./LCD35-show
+```
 
 # Pulse Audio
 
@@ -209,24 +194,44 @@ Attempting to pair with F4:EE:25:52:EE:4B
 [CHG] Device F4:EE:25:52:EE:4B Bonded: yes
 ```
 
+BT?: F4:EE:25:53:EC:4B
+BT1: B4:EE:25:51:EC:4B
+
+## Set static IP address
+
+https://www.raspberrypi.com/documentation/computers/configuration.html
 https://askubuntu.com/questions/62858/turn-off-monitor-using-command-line
 
- "640x480"x75.0   31.50  640 656 720 840  480 481 484 500 -hsync -vsync (37.5 kHz e)
-[  6437.421] (II) modeset(0): Modeline "640x480"x59.9   25.18  640 656 752 800  480 490 492 525 -hsync -vsync (31.5 kHz e)
+## Controlling Screen
 
-309  xset -display :0 screen-saver reset
-  310  xset -display :0 s reset
-  311  xset -display :0
-  312  xset -display :0 q
-  313  xset -display :0 s 0
-  314  xset -display :0 q
-  315  xset -display :0 -dpms
-  316  xset -display :0 q
+``` shell
+$ xset -display :0 screen-saver reset
+$ xset -display :0 s reset
+$ xset -display :0
+$ xset -display :0 q
+$ xset -display :0 s 0
+$ xset -display :0 q
+$ xset -display :0 -dpms
+$ xset -display :0 q
+```
+
+## Controlling CPU fan
 
 https://forums.raspberrypi.com/viewtopic.php?t=359778
 https://rpishop.cz/chladice-pro-raspberry-pi-5/6496-raspberry-pi-5-active-cooler.html#tab-discussion
-dtparam=fan_temp0=40000 dtparam=fan_temp0_hyst=10000 dtparam=fan_temp0_speed=125
-Dobrý den, jedná se o chybu na současné verze libreelec. Starší verze nebo další update by měli problém vyřešit. Mělo by pomoci přidat ovladače do souboru config.txt /boot/firmware/config.txt dtparam=fan_temp0=40000 dtparam=fan_temp0_hyst=10000 dtparam=fan_temp0_speed=125
- Odpovědět
+
+`/boot/firmware/config.txt`
+
+`dtparam=fan_temp0=40000 dtparam=fan_temp0_hyst=10000 dtparam=fan_temp0_speed=125`
+
+## Overclocking
 
 https://www.jeffgeerling.com/blog/2023/overclocking-and-underclocking-raspberry-pi-5
+
+## Running video vertically
+
+`DISPLAY=:3 vlc media/video/heads.mov :vout-filter=transform --transform-type=270 --video-filter "transform{true}" -f
+`
+## Syncer
+
+https://www.digitalocean.com/community/tutorials/how-to-use-rsync-to-sync-local-and-remote-directories

@@ -30,14 +30,14 @@ class AudioLibrary(object):
         15.0: False
     }
 
-    def __init__(self, audio_path=None, tracks_info=None, authors=None):
+    def __init__(self, audio_path=None, tracks_info=None):
 
         self.catalog = dict()
         self.media = list()
         self.tracks_info = tracks_info
 
         # Metadata of currently playing
-        self.metadata = dict()
+        self.metadata = {'heads': dict()}
 
         # This is where the voice frames are
         self.timeline = dict()
@@ -158,41 +158,27 @@ class AudioLibrary(object):
     def load_heads(self, library_path):
 
         print("Importing 'heads' audio files: '{}'".format(library_path))
-        self.catalog['heads'] = dict()
+        heads_meta = self.tracks_info['heads']
 
         # Iterate over WAV samples and enrich
-        for filepath in sorted(glob('{}/heads/*.wav'.format(library_path))):
+        for filepath in sorted(glob('{}/*.wav'.format(library_path))):
             sample = filepath.split('/')[-1].split('.')[0]
             name, actor, version = sample.split('-')
 
+            if name not in self.metadata['heads']:
+                self.metadata['heads'][name] = self.tracks_info['heads'][name]
+                self.metadata['heads'][name]['v'] = dict()
 
+            print('Loading file: {}'.format(filepath))
 
-            if sample not in result:
-                result[sample] = dict()
-            if actor not in result[sample]:
-                result[sample][actor] = list()
-            result[sample][actor].append(filepath)
+            self.media.append(pyglet.media.StaticSource(pyglet.media.load(filepath, streaming=False)))
 
+            self.metadata['heads'][name]['v']['{}-{}'.format(actor, version)] = dict()
 
-        for file_name in sorted(self.tracks_info[album]):
-
-            info = self.tracks_info[album][file_name]
-            file_path = '{}/{}'.format(library_path, Path('{}.wav'.format(file_name)))
-
-            if file_name not in self.catalog[album]:
-                self.catalog[album][file_name] = dict()
-            print('Loading file: {}'.format(file_path))
-
-            self.media.append(pyglet.media.StaticSource(pyglet.media.load(file_path, streaming=False)))
-            self.catalog[album][file_name] = info
-            self.catalog[album][file_name]['id'] = len(self.media) - 1
-            self.catalog[album][file_name]['duration'] = self.media[-1].duration
-            self.catalog[album][file_name]['filename'] = file_path
-
-            # if 'voice.left' in file:
-            #     print('Analyzing file: {}'.format(file))
-            #     self.timeline = self.analyze(file)
-        # pprint(self.catalog, indent=2)
+            self.metadata['heads'][name]['v']['{}-{}'.format(actor, version)]['id'] = len(self.media) - 1
+            self.metadata['heads'][name]['v']['{}-{}'.format(actor, version)]['duration'] = self.media[-1].duration
+            self.metadata['heads'][name]['v']['{}-{}'.format(actor, version)]['filename'] = filepath
+        pprint(self.metadata['heads'], indent=2)
 
 
     def load_tracks(self, album, library_path):
@@ -233,11 +219,11 @@ class AudioLibrary(object):
         if self.p is not None:
             print('Stopping current stream')
             self.p.pause()
-        self.metadata = self._lookup(track_id)
+        # self.metadata = self._lookup(track_id)
         self.p = self.media[track_id].play()
-        print('Playing track ID {}: {} ({})'.format(self.metadata['id'],
-                                                          self.metadata['name'],
-                                                          str(self.metadata['tags'])))
+        # print('Playing track ID {}: {} ({})'.format(self.metadata['id'],
+        #                                                   self.metadata['name'],
+        #                                                   str(self.metadata['tags'])))
 
     # def play_audio(self, track_id, continuous=True):
     #
