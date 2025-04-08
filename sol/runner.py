@@ -66,7 +66,7 @@ async def runtime_lifespan(app: FastAPI):
     if peripherals is True:
         asyncio.create_task(read_sensors())
 
-    asyncio.create_task(actions())
+    # asyncio.create_task(actions())
     print('Asyncio background tasks initiated')
 
     # Blue light means we are ready

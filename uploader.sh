@@ -38,7 +38,7 @@ DESTINATION="${DESTINATION_USER}@${DESTINATION_HOST}"
 echo "Syncing default media folders"
 for FOLDER in "${DEFAULT_SYNC[@]}"; do
   echo "Syncing ' ${SOURCE_PATH}/${FOLDER}' to host '${DESTINATION_HOST}'";
-  rsync -azP --delete --mkpath -e "ssh -i \"$HOME/.ssh/expired/id_ed25519\"" ${SOURCE_PATH}/${FOLDER} ${DESTINATION}:${DEFAULT_DESTINATION_PATH}
+  rsync -azP --delete --mkpath ${SOURCE_PATH}/${FOLDER} ${DESTINATION}:${DEFAULT_DESTINATION_PATH}
 done
 echo "Done syncing default media folders"
 
@@ -47,11 +47,11 @@ case "${DESTINATION_IP}" in
     1) echo "Host '${DESTINATION_HOST}' does not need additional syncing" ;;
     2) echo "Host '${DESTINATION_HOST}' does not need additional syncing" ;;
     3) echo "Syncing folder '${ENTROPY_FOLDER}' to host '${DESTINATION_HOST}'"
-       rsync -azP --delete --mkpath -e "ssh -i \"$HOME/.ssh/expired/id_ed25519\"" ${SOURCE_PATH}/${ENTROPY_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH} ;;
+       rsync -azP --delete --mkpath ${SOURCE_PATH}/${ENTROPY_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH} ;;
     4) echo "Syncing folder '${TATE_FOLDER}' to host '${DESTINATION_HOST}'"
-       rsync -azP --delete --mkpath -e "ssh -i \"$HOME/.ssh/expired/id_ed25519\"" ${SOURCE_PATH}/${TATE_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH} ;;
+       rsync -azP --delete --mkpath ${SOURCE_PATH}/${TATE_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH} ;;
     5) echo "Syncing folder '${HEADS_FOLDER}' to host '${DESTINATION_HOST}'"
-       rsync -azP --delete --mkpath -e "ssh -i \"$HOME/.ssh/expired/id_ed25519\"" ${SOURCE_PATH}/${HEADS_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH} ;;
+       rsync -azP --delete --mkpath ${SOURCE_PATH}/${HEADS_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH} ;;
     test) echo "Nothing to be done, only testing" ;;
 esac
 

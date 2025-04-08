@@ -1,0 +1,12 @@
+fastapi
+jinja2
+pyglet==1.5.27
+opencv-contrib-python
+pillow
+ruamel.yaml
+scipy
+
+uvicorn
+
+requests==2.31.0
+urllib3==1.26.12

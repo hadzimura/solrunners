@@ -1,6 +1,6 @@
 gpiozero
-fastapi
-Jinja2
+- fastapi
+- Jinja2
 pyglet
 matplotlib
 numpy

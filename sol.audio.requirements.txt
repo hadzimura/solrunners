@@ -1,7 +1,7 @@
 gpiozero
-fastapi
-Jinja2
-pyglet==1.5.27
+- fastapi
+- Jinja2
+- pyglet==1.5.27
 # 1.5.11
 requests
 scipy
