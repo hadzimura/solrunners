@@ -4,41 +4,46 @@ jitter:
   button: 2
   presence: 5
   presence_delay: 5
-instances:
+# ---------------------------
+runners:
   1:
     pinout:
+      enabled: false
       button: 2
       pir: 15
       green: 19
       blue: 26
-#    audio:
-#      - heads
+    audio:
+      - heads
   2:
   3:
     pinout:
+      enabled: false
       pir: 15
       green: 19
       blue: 26
     video:
       - entropy.mov
-#    audio:
-#      - heads
-  4:
-#    pinout:
-#      blue: 26
-#      presence: 5
-#      green: 19
     audio:
-#      - tate
       - heads
-#    video:
-#      - tate
+  4:
+    pinout:
+      enabled: false
+      blue: 26
+      presence: 5
+      green: 19
+    audio:
+      - tate
+      - heads
+    video:
+      - tate
   5:
     pinout:
+      enabled: false
       pir: 15
       green: 19
       blue: 26
-#    audio:
-#      - heads
+    audio:
+      - heads
     video:
       - heads

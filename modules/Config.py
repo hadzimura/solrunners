@@ -62,7 +62,7 @@ class Configuration(object):
         else:
             print('This is Slave Node')
 
-        # Running Environment location
+        # Running Environment locations
         env_var = environ
         self.project_root = Path(env_var['PWD'])
         self.media_root = self.project_root / Path('media')
@@ -87,7 +87,7 @@ class Configuration(object):
         try:
             print("Loading configuration file: '{}'".format(self.configuration_file))
             self.configuration = dict(self.yaml.load(self.configuration_file))
-            self.instance = self.configuration['instances'][self.room]
+            self.runners = self.configuration['runners'][self.room]
         except FileNotFoundError:
             print("Configuration file not found: {}".format(self.configuration_file))
             exit(1)
@@ -113,8 +113,8 @@ class Configuration(object):
         # Pinout definitions
         try:
             print('Loading pinout for room: {}'.format(self.room))
-            if system() != 'Darwin':
-                self._init_sensors(self.instance['pinout'])
+            if self.runners['pinout']['enabled'] is True:
+                self._init_sensors(self.runners['pinout'])
         except KeyError as error:
             print("Configuration file does not contain a pinout section: {}".format(error))
 
@@ -149,7 +149,6 @@ class Configuration(object):
             print(e)
             exit(1)
 
-
         # Total beats of the runtime
         self.beats = 0
         self.second = 0
@@ -176,7 +175,7 @@ class Configuration(object):
 
         self.playing = dict()
 
-        if 'video' in self.instance:
+        if 'video' in self.runners:
 
             # Fonts
             self.font = {
@@ -194,7 +193,7 @@ class Configuration(object):
                                 thickness=3)
             }
 
-            self._load_assets(self.instance['video'])
+            self._load_assets(self.runners['video'])
 
         # Subtitle acquisition is for both Audio / Video Nodes
         self.sub = dict()
@@ -299,8 +298,8 @@ class Configuration(object):
         print('Initializing Sensors...')
         for input_name in pinout:
 
-            if input_name == "folders":
-                # Skip the 'folders' key
+            if input_name == 'enabled':
+                # Skip the 'enabled' key
                 continue
 
             pin = pinout[input_name]

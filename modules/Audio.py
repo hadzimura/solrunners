@@ -37,7 +37,8 @@ class AudioLibrary(object):
         self.tracks_info = tracks_info
 
         # Metadata of currently playing
-        self.metadata = {'heads': dict()}
+        self.metadata = dict()
+        self.heads = dict()
 
         # This is where the voice frames are
         self.timeline = dict()
@@ -157,28 +158,40 @@ class AudioLibrary(object):
 
     def load_heads(self, library_path):
 
+        """
+        Structure:
+        self.heads -> sample (info) -> version (roman-1) -> left/right (info)
+        """
+
         print("Importing 'heads' audio files: '{}'".format(library_path))
         heads_meta = self.tracks_info['heads']
 
         # Iterate over WAV samples and enrich
-        for filepath in sorted(glob('{}/*.wav'.format(library_path))):
-            sample = filepath.split('/')[-1].split('.')[0]
-            name, actor, version = sample.split('-')
+        for channel in ['left', 'right']:
+            for filepath in sorted(glob('{}/{}/*.wav'.format(library_path, channel))):
 
-            if name not in self.metadata['heads']:
-                self.metadata['heads'][name] = self.tracks_info['heads'][name]
-                self.metadata['heads'][name]['v'] = dict()
+                file_name = filepath.split('/')[-1].split('.')[0]
+                sample, actor, take = file_name.split('-')
 
-            print('Loading file: {}'.format(filepath))
+                version = '{}-{}'.format(actor, take)
 
-            self.media.append(pyglet.media.StaticSource(pyglet.media.load(filepath, streaming=False)))
+                if sample not in self.heads:
+                    self.heads[sample] = self.tracks_info['heads'][sample]
+                    self.heads[sample]['v'] = dict()
 
-            self.metadata['heads'][name]['v']['{}-{}'.format(actor, version)] = dict()
+                if version not in self.heads[sample]['v']:
+                    self.heads[sample]['v'][version] = dict()
 
-            self.metadata['heads'][name]['v']['{}-{}'.format(actor, version)]['id'] = len(self.media) - 1
-            self.metadata['heads'][name]['v']['{}-{}'.format(actor, version)]['duration'] = self.media[-1].duration
-            self.metadata['heads'][name]['v']['{}-{}'.format(actor, version)]['filename'] = filepath
-        pprint(self.metadata['heads'], indent=2)
+                print('Loading file: {}'.format(filepath))
+
+                self.media.append(pyglet.media.StaticSource(pyglet.media.load(filepath, streaming=False)))
+
+                self.heads[sample]['v'][version][channel] = dict()
+
+                self.heads[sample]['v'][version][channel]['id'] = len(self.media) - 1
+                self.heads[sample]['v'][version][channel]['duration'] = self.media[-1].duration
+                self.heads[sample]['v'][version][channel]['filename'] = filepath
+        # pprint(self.metadata['heads'], indent=2)
 
 
     def load_tracks(self, album, library_path):

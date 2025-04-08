@@ -15,9 +15,12 @@ from fastapi import status
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+import io
 import platform
 from pprint import pprint
 import uvicorn
+
+from ruamel.yaml import YAML
 
 from modules.Audio import AudioLibrary
 from modules.Config import Configuration
@@ -252,7 +255,7 @@ async def index(request: Request):
         "index.html", {
             "request": request,
             "playing": app.a.metadata,
-            "library": app.a.metadata,
+            "heads": app.a.heads,
             "summary": app.c.summary,
             "sensors": app.s }
     )
@@ -278,6 +281,22 @@ async def seek_audio(request: Request, frame):
     app.a.seek_stream(frame)
     redirect_url = request.url_for('index')
     return RedirectResponse(redirect_url, status_code=status.HTTP_303_SEE_OTHER)
+
+@app.get('/catalog')
+async def catalog(request: Request):
+    """ Display all the catalog info """
+    heads = dict()
+    yaml = YAML()
+    buffer = io.BytesIO()
+    yaml.dump(app.a.heads, buffer)
+    heads = buffer.getvalue().decode('utf-8')
+    return app.templates.TemplateResponse(
+        "catalog.html", {
+            "request": request,
+            "summary": app.c.summary,
+            "heads": heads }
+    )
+
 
 if __name__ == "__main__":
 
