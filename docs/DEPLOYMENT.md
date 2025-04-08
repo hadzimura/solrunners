@@ -54,10 +54,28 @@ rm -rf /home/zero/solrunners/.venv
 python3 -m venv /home/zero/solrunners/.venv
 source /home/zero/solrunners/.venv/bin/activate
     
-python3 -m pip install --upgrade pip
+    python3 -m pip install --upgrade pip
 python3 -m pip install -r /home/zero/solrunners/requirements.txt
 
 
 ``` 
 
+.bashrc
+``` 
+echo "source /home/zero/solrunners/.venv/bin/activate" >> /home/zero/.bashrc
+echo "export PYTHONPATH=$PYTHONPATH:/home/zero/solrunners/" >> /home/zero/.bashrc
+``` 
 fi
+
+https://repos.influxdata.com/debian/
+sudo -i
+wget -q https://repos.influxdata.com/influxdata-archive_compat.key
+echo '393e8779c89ac8d958f81f942f9ad7fb82a25e133faddaf92e15b16e6ac9ce4c influxdata-archive_compat.key' | sha256sum -c && cat influxdata-archive_compat.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg > /dev/null
+echo 'deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg] https://repos.influxdata.com/debian stable main' | sudo tee /etc/apt/sources.list.d/influxdata.list
+apt update
+apt install telegraf
+rm /etc/telegraf/telegraf.conf
+cp /home/zero/solrunners/telegraf.conf /etc/telegraf
+service telegraf start
+
+influx token: Si5w9T32qtMKfHvjzY2xAS-UuubDxqK7Roqo6jXOrh0rJ24_GGQXWfzwq6ym-376zdY7bkkxhNfYU16daFWNWA==
