@@ -79,6 +79,7 @@ apt update
 apt install telegraf
 rm /etc/telegraf/telegraf.conf
 cp /home/zero/solrunners/telegraf.conf /etc/telegraf
+!!!! sudo usermod -a -G video telegraf
 service telegraf start
 ``` 
 influx token: Si5w9T32qtMKfHvjzY2xAS-UuubDxqK7Roqo6jXOrh0rJ24_GGQXWfzwq6ym-376zdY7bkkxhNfYU16daFWNWA==

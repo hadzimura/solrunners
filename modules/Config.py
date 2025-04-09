@@ -74,8 +74,8 @@ class Configuration(object):
         self.audio_path = self.media_root / Path('audio')
         self.video_path = self.media_root / Path('video')
         self.entropy_audio = self.media_root / Path('audio/entropy')
-        self.entropy_video = self.media_root / Path('video/entropy.mov')
-        self.entropy_subtitles = self.media_root / Path('video/entropy.subtitles')
+        self.entropy_video = self.media_root / Path('video/entropy/entropy.mov')
+        self.entropy_subtitles = self.media_root / Path('video/entropy/entropy.subtitles')
         self.entropy = False
         self.tate = False
 
@@ -93,7 +93,7 @@ class Configuration(object):
             exit(1)
 
         # Initialize possible Sensors
-        self.pinout = dict()
+        self.pinout = {'enabled': False}
         self.media = dict()
         self.files = dict()
         self.authors = dict()

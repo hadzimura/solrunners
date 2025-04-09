@@ -43,7 +43,7 @@ runners:
       pir: 15
       green: 19
       blue: 26
-    audio:
-      - heads
+#    audio:
+#      - heads
     video:
-      - heads
+      - tate

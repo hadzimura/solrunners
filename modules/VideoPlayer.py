@@ -11,6 +11,109 @@ from time import sleep
 from PIL.ImageChops import overlay
 import pyglet
 
+
+
+async def heads(config, audio_player):
+    # Initialize Player Layers
+    c = config
+    c.set_playhead2(layer='main', category='tate')
+    player_name = 'tate'
+    frame = 0
+    defined_sync = 14
+    sync = defined_sync
+    # pitch = 0.5
+
+    # Global settings for runtime
+    cv.namedWindow(player_name, cv.WINDOW_AUTOSIZE)
+    # cv.namedWindow(player_name, cv.WINDOW_FREERATIO)
+    cv.setWindowProperty(player_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+    # cv.setWindowProperty(player_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_NORMAL)
+
+    audio_player.play_audio(int(c.playing['main']['name']) - 1)
+    # audio_player.p.pitch = pitch
+    # Main video loop
+    while True:
+
+        try:
+            c.playing['main']['stream'].set(cv.CAP_PROP_FRAME_WIDTH, 640)
+            c.playing['main']['stream'].set(cv.CAP_PROP_FRAME_HEIGHT, 480)
+            c.playing['main']['stream'].get(cv.CAP_PROP_FRAME_WIDTH)
+
+            main_status, main_frame = c.playing['main']['stream'].read()
+            width, height = c.playing['main']['stream'].get(3), c.playing['main']['stream'].get(4)
+            frame += 1
+            # if frame / sync == 1:
+            #     v = round(c.playing['main']['stream'].get(cv.CAP_PROP_POS_MSEC)/1000, 3)
+            #     a = round(audio_player.p.time, 3)
+            #     print(a, v)
+            #     if a != v:
+            #     # print(frame, c.playing['main']['stream'].get(cv.CAP_PROP_POS_FRAMES), audio_player.p.time)
+            #         audio_player.p.seek(c.playing['main']['stream'].get(cv.CAP_PROP_POS_MSEC)/1000)
+            #     sync += defined_sync
+
+            # cv.namedWindow(player_name, cv.WINDOW_NORMAL)
+            # cv.namedWindow(player_name, cv.WINDOW_FREERATIO)
+            # cv.setWindowProperty(player_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+            # cv.moveWindow(player_name, int((640 / 2) - (width / 2)), int((480 / 2) - (height / 2)))
+            if main_status is True:
+
+                if c.blur.enabled is True:
+                    main_frame = cv.blur(main_frame, c.blur.value)
+
+                # if c.mix.enabled is True:
+                    # frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+                    # frame = cv.applyColorMap(frame, cv.COLORMAP_PLASMA)
+                    # frame = cv.applyColorMap(frame, cv.COLORMAP_TWILIGHT)
+                    # frame = cv.applyColorMap(frame, cv.COLORMAP_OCEAN)
+                    # frame = cv.applyColorMap(frame, cv.COLORMAP_WINTER)
+                    # frame = Summer(frame)
+
+                    # overlay_frame = cv.applyColorMap(overlay_frame, cv.COLORMAP_PLASMA)
+                    # # frame = cv.addWeighted(frame, c.blend_value[0], blend_frame, c.blend_value[1], c.blend_value[2])
+                    # main_frame = cv.addWeighted(main_frame, c.mix.value[0], overlay_frame, c.mix.value[1],
+                    #                             c.mix.value[2])
+
+                f = c.font['runtime']
+                # cv.putText(main_frame, c.playing['main']['name'], [50, 50], f.name, f.scale, f.color, f.thickness, f.type)
+                # cv.putText(main_frame, str(c.playing['main']['stream'].get(cv.CAP_PROP_POS_FRAMES)), [50, 50], f.name, f.scale, f.color, f.thickness, f.type)
+                cv.putText(main_frame, 'v: {}'.format(str(round(c.playing['main']['stream'].get(cv.CAP_PROP_POS_MSEC)/1000, 3))), [50, 50], f.name, f.scale, f.color, f.thickness, f.type)
+                cv.putText(main_frame, 'a: {}'.format(str(round(audio_player.p.time, 3))), [50, 100], f.name, f.scale, f.color, f.thickness, f.type)
+                cv.putText(main_frame, '{}x{}'.format(c.playing['main']['stream'].get(cv.CAP_PROP_FRAME_WIDTH), height), [50, 150], f.name, f.scale, f.color, f.thickness, f.type)
+                # int(c.playing['main']['name'])
+
+                cv.imshow(player_name, main_frame)
+                cv.moveWindow(player_name, 0, 0)
+
+            else:
+                # e.set_playhead(layer=0, category='feature', stream='entropy.mov')
+                c.set_playhead2(layer='main', category='tate')
+                audio_player.play_audio(int(c.playing['main']['name']) - 1)
+                # audio_player.p.pitch = pitch
+                frame = 0
+                sync = defined_sync
+
+            # cv.waitKey(0)
+            # This actually controls the playback speed!
+            if c.read_input(cv.waitKey(int(c.playing['main']['stream'].get(cv.CAP_PROP_FPS)))) is False:
+                # Method returns False for ESC key
+                break
+
+            # Prepare data for next frame processing
+            c.update()
+            await asyncio.sleep(0.001)
+
+        except Exception as runtime_problem:
+            print('Runtime failing: {}'.format(runtime_problem))
+
+    # Release everything
+    c.playing[0]['stream'].release()
+    try:
+        c.playing[1]['stream'].release()
+        c.playing[2]['stream'].release()
+    except KeyError:
+        pass
+    cv.destroyAllWindows()
+
 async def tate_linear(config, audio_player):
     # Initialize Player Layers
     c = config
