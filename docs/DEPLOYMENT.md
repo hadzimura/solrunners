@@ -2,13 +2,13 @@
 
 Image: `Raspberry PI OS (64 bit)`
 
-| hostname | ip address | wlan0 MAC            |
-|----------|------------|----------------------|
-| room1    | 10.0.0.1   | `B8:27:EB:19:5D:5C ` |
-| room2    | 10.0.0.2   |                      |
-| room3    | 10.0.0.3   | `2C:CF:67:5B:80:DB`  |
-| room4    | 10.0.0.4   | `2C:CF:67:AB:95:2A`  |
-| room5    | 10.0.0.5   | `2C:CF:67:5B:7E:D2`  |
+| hostname | ip address | wlan0 MAC           |
+|----------|------------|---------------------|
+| room1    | 10.0.0.1   | `B8:27:EB:19:5D:5C` |
+| room2    | 10.0.0.2   | `1C:B7:2C:D5:0E:3D` |
+| room3    | 10.0.0.3   | `2C:CF:67:5B:80:DB` |
+| room4    | 10.0.0.4   | `2C:CF:67:AB:95:2A` |
+| room5    | 10.0.0.5   | `2C:CF:67:5B:7E:D2` |
 
 ``` shell
 mkdir /home/zero/.ssh
@@ -61,13 +61,16 @@ python3 -m pip install -r /home/zero/solrunners/requirements.txt
 ``` 
 
 .bashrc
+
 ``` 
 echo "source /home/zero/solrunners/.venv/bin/activate" >> /home/zero/.bashrc
 echo "export PYTHONPATH=$PYTHONPATH:/home/zero/solrunners/" >> /home/zero/.bashrc
 ``` 
+
 fi
 
 https://repos.influxdata.com/debian/
+``` 
 sudo -i
 wget -q https://repos.influxdata.com/influxdata-archive_compat.key
 echo '393e8779c89ac8d958f81f942f9ad7fb82a25e133faddaf92e15b16e6ac9ce4c influxdata-archive_compat.key' | sha256sum -c && cat influxdata-archive_compat.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdata-archive_compat.gpg > /dev/null
@@ -77,5 +80,5 @@ apt install telegraf
 rm /etc/telegraf/telegraf.conf
 cp /home/zero/solrunners/telegraf.conf /etc/telegraf
 service telegraf start
-
+``` 
 influx token: Si5w9T32qtMKfHvjzY2xAS-UuubDxqK7Roqo6jXOrh0rJ24_GGQXWfzwq6ym-376zdY7bkkxhNfYU16daFWNWA==
