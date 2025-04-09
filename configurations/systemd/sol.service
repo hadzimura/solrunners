@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/zero/solrunners/.venv/bin/python3 sol/runner.py --room 5
-WorkingDirectory=/home/zero/solrunners/
+ExecStart=/usr/bin/startx
+WorkingDirectory=/home/zero/
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
