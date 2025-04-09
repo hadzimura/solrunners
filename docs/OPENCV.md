@@ -12,3 +12,5 @@
 * https://machinelearningmastery.com/how-to-transform-images-and-create-video-with-opencv/
 * https://stackoverflow.com/questions/42732873/distortion-eﬀect-using-opencv-python
 * https://github.com/makew0rld/live-glitch/blob/master/main.py
+
+https://www.opencvhelp.org/tutorials/best-practices/memory-management-opencv/
