@@ -1,0 +1,15 @@
+[Unit]
+Description=Springs Of Life
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/zero/solrunners/.venv/bin/python3 sol/runner.py --room 5
+WorkingDirectory=/home/zero/solrunners/
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=zero
+
+[Install]
+WantedBy=multi-user.target
