@@ -3,5 +3,5 @@
 
 set -e
 
-sudo cp -rf /home/zero/solrunners/telegraf.conf /etc/telegraf
+sudo cp -rf /home/zero/solrunners/telegraf/telegraf.conf /etc/telegraf
 sudo service telegraf restart
