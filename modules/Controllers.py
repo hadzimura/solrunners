@@ -137,14 +137,25 @@ class Draw(object):
 
 class Text(object):
 
-    def __init__(self, coordinates):
+    def __init__(self, path, coordinates):
 
         self.coordinates = coordinates
-        self.font = ImageFont.truetype("/home/zero/solrunners/media/fonts/IBM_Logo_Regular_400.ttf", 50)
-        self.numbers = ImageFont.truetype("/home/zero/solrunners/media/fonts/Mx437_EpsonMGA_Mono.ttf", 50)
+        self.font = ImageFont.truetype("{}/IBM_Logo_Regular_400.ttf".format(path), 50)
+        self.numbers = ImageFont.truetype("{}/Mx437_EpsonMGA_Mono.ttf".format(path), 50)
 
     def source(self, data):
         self.data = data
+
+    def subtitle(self, frame, text):
+
+        cv2_im_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+        pil_im = Image.fromarray(cv2_im_rgb)
+        draw = ImageDraw.Draw(pil_im)
+
+        # Draw the text
+        # draw.text(self.coordinates, 'mission time', font=self.font, fill="#41FF00")
+        draw.text((50, 500), str(text), font=self.numbers, fill="#41FF00")
+        return np.array(pil_im)
 
     def write(self, frame, text):
 

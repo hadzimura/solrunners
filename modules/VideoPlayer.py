@@ -13,6 +13,8 @@ import pyglet
 from random import randrange
 from PIL import ImageFont, ImageDraw, Image
 import numpy as np
+from datetime import datetime
+from datetime import timedelta
 
 from modules.Controllers import Text
 
@@ -348,12 +350,12 @@ async def tate(config):
 async def entropy(eplayer, aplayer):
 
     eplayer.set_entropy_playhead(start_frame=0)
+    # eplayer.set_entropy_playhead(start_frame=0)
     total_frames = eplayer.playing['main']['frames']
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
     cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
-    eplayer.font['status'].source(eplayer.playing['main']['frame'])
 
     # Run audio track
     aplayer.play_audio(0, overlay=True)
@@ -426,12 +428,14 @@ async def entropy(eplayer, aplayer):
             # Mix in some letters
 
             # Subtitles overlay
-            if eplayer.playing['main']['frame'] in eplayer.sub:
-                eplayer.subtitle = eplayer.sub[eplayer.playing['main']['frame']]
+            dt_obj = datetime.strptime(str(round(aplayer.p.time, 6)), '%S.%f').time().replace(microsecond=0)
+            if dt_obj in eplayer.sub['entropy']:
+                eplayer.subtitle = eplayer.sub['entropy'][dt_obj]
 
             if eplayer.subtitle is not None:
-                f = eplayer.font['subtitle']
-                cv.putText(frame, eplayer.subtitle, f.org, f.name, f.scale, f.color, f.thickness, f.type)
+                frame = cv.cvtColor(eplayer.text['subtitles'].subtitle(frame, eplayer.subtitle), cv.COLOR_RGB2BGR)
+                # f = eplayer.font['subtitle']
+                # cv.putText(frame, eplayer.subtitle, f.org, f.name, f.scale, f.color, f.thickness, f.type)
 
             # Status overlay
             # f = eplayer.font['status']
@@ -440,8 +444,11 @@ async def entropy(eplayer, aplayer):
             # cv.putText(a)
 
             # Save the image
-            t = '{} / {}'.format(eplayer.playing['main']['frame'], eplayer.second)
-            frame = cv.cvtColor(eplayer.font['status'].write(frame, t), cv.COLOR_RGB2BGR)
+
+            # timestamp = datetime.fromtimestamp(eplayer.playing['main']['frame'])
+            # c = timestamp.strftime('%H:%M:%S')
+            t = '{} / {} / {} : {}'.format(eplayer.playing['main']['frame'], eplayer.second, dt_obj, aplayer.p.time)
+            frame = cv.cvtColor(eplayer.text['status'].write(frame, t), cv.COLOR_RGB2BGR)
 
             # Runtime overlay
             # f = c.font['runtime']
@@ -469,7 +476,7 @@ async def entropy(eplayer, aplayer):
 
         # cv.waitKey(0)
         # This actually controls the playback speed!
-        if eplayer.read_input(cv.waitKey(eplayer.fps)) is False:
+        if eplayer.read_input(cv.waitKey(25)) is False:
             # Method returns False for ESC key
             break
 

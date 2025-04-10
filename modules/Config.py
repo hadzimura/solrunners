@@ -180,11 +180,9 @@ class Configuration(object):
         if 'video' in self.runner:
 
             # Fonts
-            self.font = {
-                'subtitle': Font(font_org=(50, 800)),
-                'status': Text(coordinates=(50, 50)),
-                'runtime': Font(font_org=(50, 1050)),
-                'mission': Font(font_org=(1700, 1050))
+            self.text = {
+                'status': Text(path=self.fonts, coordinates=(50, 50)),
+                'subtitles': Text(path=self.fonts, coordinates=(50, self.height - 100))
             }
             # Drawings
             self.draw = {
@@ -242,11 +240,14 @@ class Configuration(object):
             with open(srt_file, 'r') as subtitles:
 
                 for line in subtitles.read().splitlines():
-                    start_time = dt.strptime(line.split('|')[0], '%H:%M:%S:%f').time()
-                    stop_time = dt.strptime(line.split('|')[1], '%H:%M:%S:%f').time()
+                    # start_time = dt.strptime(line.split('|')[0].removesuffix(':{}'.format(line.split('|')[0].split(':')[-1])), '%H:%M:%S').time()
+                    # stop_time = dt.strptime(line.split('|')[1].removesuffix(':{}'.format(line.split('|')[1].split(':')[-1])), '%H:%M:%S').time()
+                    start_time = dt.strptime(line.split('|')[0], '%H:%M:%S:%f').time().replace(microsecond=0)
+                    stop_time = dt.strptime(line.split('|')[1], '%H:%M:%S:%f').time().replace(microsecond=0)
                     self.sub[track][start_time] = line.split('|')[2].strip()
                     self.sub[track][stop_time] = None
             print("Subtitles loaded: '{}'".format(srt_file))
+            pprint(self.sub, indent=2)
 
         except FileNotFoundError as e:
 
