@@ -22,6 +22,7 @@ if system() != 'Darwin':
 import cv2 as cv
 from modules.Controllers import Effect
 from modules.Controllers import Font
+from modules.Controllers import Text
 from modules.Controllers import Draw
 
 
@@ -181,7 +182,7 @@ class Configuration(object):
             # Fonts
             self.font = {
                 'subtitle': Font(font_org=(50, 800)),
-                'status': Font(font_org=(50, 50)),
+                'status': Text(coordinates=(50, 50)),
                 'runtime': Font(font_org=(50, 1050)),
                 'mission': Font(font_org=(1700, 1050))
             }

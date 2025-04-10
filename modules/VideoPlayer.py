@@ -11,6 +11,10 @@ from time import sleep
 from PIL.ImageChops import overlay
 import pyglet
 from random import randrange
+from PIL import ImageFont, ImageDraw, Image
+import numpy as np
+
+from modules.Controllers import Text
 
 
 async def heads(config, audio_player):
@@ -349,20 +353,16 @@ async def entropy(eplayer, aplayer):
     cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
+    eplayer.font['status'].source(eplayer.playing['main']['frame'])
+
     # Run audio track
     aplayer.play_audio(0, overlay=True)
     aplayer.play_audio(1, overlay=True)
     aplayer.play_audio(2, overlay=True)
     aplayer.play_audio(3, overlay=True)
 
-    test = 0
-
     # Main video loop
     while True:
-        #
-        # test += 1
-        # if test == 300:
-        #     test = 0
         #     eplayer.playing['main']['stream'].set(cv.CAP_PROP_POS_FRAMES, randrange(500, total_frames-50))
 
         status, frame = eplayer.playing['main']['stream'].read()
@@ -434,8 +434,14 @@ async def entropy(eplayer, aplayer):
                 cv.putText(frame, eplayer.subtitle, f.org, f.name, f.scale, f.color, f.thickness, f.type)
 
             # Status overlay
-            # f = c.font['status']
-            # cv.putText(frame, c.get_info('status'), f.org, f.name, f.scale, f.color, f.thickness, f.type)
+            # f = eplayer.font['status']
+            # a = [frame, 'aaaaa', f.org, f.name, f.scale, f.color, f.thickness, f.type]
+            # # cv.putText(frame, c.get_info('status'), f.org, f.name, f.scale, f.color, f.thickness, f.type)
+            # cv.putText(a)
+
+            # Save the image
+            t = '{} / {}'.format(eplayer.playing['main']['frame'], eplayer.second)
+            frame = cv.cvtColor(eplayer.font['status'].write(frame, t), cv.COLOR_RGB2BGR)
 
             # Runtime overlay
             # f = c.font['runtime']
