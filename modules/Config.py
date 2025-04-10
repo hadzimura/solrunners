@@ -244,6 +244,7 @@ class Configuration(object):
                     # stop_time = dt.strptime(line.split('|')[1].removesuffix(':{}'.format(line.split('|')[1].split(':')[-1])), '%H:%M:%S').time()
                     start_time = dt.strptime(line.split('|')[0], '%H:%M:%S:%f').time().replace(microsecond=0)
                     stop_time = dt.strptime(line.split('|')[1], '%H:%M:%S:%f').time().replace(microsecond=0)
+                    stop_time.replace(second=stop_time.second +1)
                     self.sub[track][start_time] = line.split('|')[2].strip()
                     self.sub[track][stop_time] = None
             print("Subtitles loaded: '{}'".format(srt_file))

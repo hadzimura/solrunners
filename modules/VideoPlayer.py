@@ -356,6 +356,7 @@ async def entropy(eplayer, aplayer):
     cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
+    frame_time = 25
 
     # Run audio track
     aplayer.play_audio(0, overlay=True)
@@ -428,7 +429,21 @@ async def entropy(eplayer, aplayer):
             # Mix in some letters
 
             # Subtitles overlay
-            dt_obj = datetime.strptime(str(round(aplayer.p.time, 6)), '%S.%f').time().replace(microsecond=0)
+            cvf = eplayer.playing['main']['frame']
+            caf = round(round(aplayer.p.time, 6) * 25, 0)
+
+            test = timedelta(seconds=round(aplayer.p.time, 6))
+
+
+            try:
+                # dt_obj = datetime.strptime(str(round(aplayer.p.time, 6)), '%S.%f').time().replace(microsecond=0)
+                dt_obj = datetime.strptime(str(test), '%H:%M:%S.%f').time().replace(microsecond=0)
+            except Exception as runtime_problem:
+                print('Runtime failing: {}'.format(runtime_problem))
+
+
+            syn = caf - cvf
+
             if dt_obj in eplayer.sub['entropy']:
                 eplayer.subtitle = eplayer.sub['entropy'][dt_obj]
 
@@ -447,7 +462,7 @@ async def entropy(eplayer, aplayer):
 
             # timestamp = datetime.fromtimestamp(eplayer.playing['main']['frame'])
             # c = timestamp.strftime('%H:%M:%S')
-            t = '{} / {} / {} : {}'.format(eplayer.playing['main']['frame'], eplayer.second, dt_obj, aplayer.p.time)
+            t = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(syn, cvf, caf, frame_time,  dt_obj, aplayer.p.time)
             frame = cv.cvtColor(eplayer.text['status'].write(frame, t), cv.COLOR_RGB2BGR)
 
             # Runtime overlay
@@ -475,8 +490,12 @@ async def entropy(eplayer, aplayer):
             eplayer.set_playhead2(layer='main', category='tate')
 
         # cv.waitKey(0)
+        if syn > 0:
+            frame_time -=1
+        else:
+            frame_time +=1
         # This actually controls the playback speed!
-        if eplayer.read_input(cv.waitKey(25)) is False:
+        if eplayer.read_input(cv.waitKey(frame_time)) is False:
             # Method returns False for ESC key
             break
 
