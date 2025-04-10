@@ -251,11 +251,11 @@ class AudioLibrary(object):
         pprint(result, indent=2)
 
 
-    def play_audio(self, track_id):
+    def play_audio(self, track_id, overlay=False):
 
         """ Play selected track and channel through destined stereo position """
 
-        if self.p is not None:
+        if self.p is not None and overlay is False:
             print('Stopping current stream')
             self.p.pause()
 

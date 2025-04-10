@@ -343,24 +343,27 @@ async def tate(config):
 
 async def entropy(eplayer, aplayer):
 
-    eplayer.set_entropy_playhead(start_frame=3000)
+    eplayer.set_entropy_playhead(start_frame=0)
     total_frames = eplayer.playing['main']['frames']
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
     cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
     # Run audio track
-    aplayer.play_audio(0)
+    aplayer.play_audio(0, overlay=True)
+    aplayer.play_audio(1, overlay=True)
+    aplayer.play_audio(2, overlay=True)
+    aplayer.play_audio(3, overlay=True)
 
     test = 0
 
     # Main video loop
     while True:
-
-        test += 1
-        if test == 300:
-            test = 0
-            eplayer.playing['main']['stream'].set(cv.CAP_PROP_POS_FRAMES, randrange(500, total_frames-50))
+        #
+        # test += 1
+        # if test == 300:
+        #     test = 0
+        #     eplayer.playing['main']['stream'].set(cv.CAP_PROP_POS_FRAMES, randrange(500, total_frames-50))
 
         status, frame = eplayer.playing['main']['stream'].read()
 
