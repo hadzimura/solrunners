@@ -39,6 +39,7 @@ class AudioLibrary(object):
         # Metadata of currently playing
         self.metadata = dict()
         self.heads = dict()
+        self.entropy = {'music': {'left': dict(), 'right': dict()}, 'vocals': {'left': dict(), 'right': dict()}}
 
         # This is where the voice frames are
         self.timeline = dict()
@@ -50,6 +51,8 @@ class AudioLibrary(object):
         for album in self.tracks_info:
             if album == 'heads':
                 self.load_heads(audio_path / Path(album))
+            elif album == 'entropy':
+                self.load_entropy(audio_path / Path(album))
             else:
                 self.load_tracks(album, audio_path / Path(album))
         self.swap = False
@@ -194,6 +197,29 @@ class AudioLibrary(object):
         # pprint(self.metadata['heads'], indent=2)
 
 
+    def load_entropy(self, library_path):
+
+        print("Importing 'entropy' audio files: '{}'".format(library_path))
+
+        for file_name in sorted(self.tracks_info['entropy']):
+
+            info = self.tracks_info['entropy'][file_name]
+            file_path = '{}/{}'.format(library_path, Path('{}.wav'.format(file_name)))
+
+            print('Loading file: {}'.format(file_path))
+            self.media.append(pyglet.media.StaticSource(pyglet.media.load(file_path, streaming=False)))
+            record = {
+                'id':  len(self.media) - 1,
+                'duration':  self.media[-1].duration,
+                'filename': file_path
+            }
+
+            self.entropy[info['name']][info['channel']] = record
+            # if 'voice.left' in file:
+            #     print('Analyzing file: {}'.format(file))
+            #     self.timeline = self.analyze(file)
+        # pprint(self.entropy, indent=2)
+
     def load_tracks(self, album, library_path):
 
         print("Importing '{}' audio files: '{}'".format(album, library_path))
@@ -232,6 +258,7 @@ class AudioLibrary(object):
         if self.p is not None:
             print('Stopping current stream')
             self.p.pause()
+
         # self.metadata = self._lookup(track_id)
         self.p = self.media[track_id].play()
         # print('Playing track ID {}: {} ({})'.format(self.metadata['id'],

@@ -87,7 +87,7 @@ class Configuration(object):
         try:
             print("Loading configuration file: '{}'".format(self.configuration_file))
             self.configuration = dict(self.yaml.load(self.configuration_file))
-            self.runners = self.configuration['runners'][self.room]
+            self.runner = self.configuration['runners'][self.room]
         except FileNotFoundError:
             print("Configuration file not found: {}".format(self.configuration_file))
             exit(1)
@@ -113,27 +113,28 @@ class Configuration(object):
         # Pinout definitions
         try:
             print('Loading pinout for room: {}'.format(self.room))
-            if self.runners['pinout']['enabled'] is True:
-                self._init_sensors(self.runners['pinout'])
+            if self.runner['pinout']['enabled'] is True:
+                self._init_sensors(self.runner['pinout'])
         except KeyError as error:
             print("Configuration file does not contain a pinout section: {}".format(error))
 
-        # Audio tracks metadata
-        # tracks_metadata = self.project_root / Path('sol.audio.yaml')
-        # try:
-        #     print("Loading audio metadata: {}".format(tracks_metadata))
-        #     all_tracks = self.yaml.load(tracks_metadata)
-        #     for batch_name in all_tracks:
-        #         if batch_name in self.instance['audio']:
-        #             print("Initializing tracks for: '{}'".format(batch_name))
-        #             self.tracks[batch_name] = dict(all_tracks[batch_name])
-        #     # pprint(self.tracks, indent=2)
-        # except KeyError as error:
-        #     print("Audio not configured".format(tracks_metadata))
-        # except FileNotFoundError:
-        #     print("Audio metadata config file not found: '{}'".format(tracks_metadata))
-        #     exit(1)
+        # Global audio tracks metadata
+        tracks_metadata = self.project_root / Path('sol.audio.yaml')
+        try:
+            print("Loading global audio metadata: {}".format(tracks_metadata))
+            all_tracks = self.yaml.load(tracks_metadata)
+            for batch_name in all_tracks:
+                if batch_name in self.runner['audio']:
+                    print("Initializing tracks for: '{}'".format(batch_name))
+                    self.tracks[batch_name] = dict(all_tracks[batch_name])
+            pprint(self.tracks, indent=2)
+        except KeyError as error:
+            print("Audio not configured".format(tracks_metadata))
+        except FileNotFoundError:
+            print("Audio metadata config file not found: '{}'".format(tracks_metadata))
+            exit(1)
 
+        # Heads audio tracks metadata (always loaded)
         heads_metadata = self.project_root / Path('sol.audio.heads.yaml')
         authors_metadata = self.project_root / Path('sol.authors.yaml')
         try:
@@ -175,7 +176,7 @@ class Configuration(object):
 
         self.playing = dict()
 
-        if 'video' in self.runners:
+        if 'video' in self.runner:
 
             # Fonts
             self.font = {
@@ -193,7 +194,7 @@ class Configuration(object):
                                 thickness=3)
             }
 
-            self._load_assets(self.runners['video'])
+            self._load_assets(self.runner['video'])
 
         # Subtitle acquisition is for both Audio / Video Nodes
         self.sub = dict()
@@ -208,6 +209,7 @@ class Configuration(object):
             4: dict(),
             5: dict(),
         }
+
         if self.node_type is True:
             # TBD
             pass
@@ -250,10 +252,11 @@ class Configuration(object):
             print('Subtitle file not found: {}'.format(srt_file))
 
     def _load_assets(self, entities):
+
         for entity in entities:
             if '.' in entity:
                 # These are singular video files
-                self._get_file(entity)
+                self._get_entropy(entity)
             else:
                 # These are folders of video files
                 self._get_folder(entity)
@@ -282,14 +285,14 @@ class Configuration(object):
         self._reset_queue(folder_name, 'main')
         # self._reset_queue(folder_name, 'overlay')
 
-    def _get_file(self, filename):
-        """ Video streams """
-        video_file = self.video_path / Path(filename)
+    def _get_entropy(self, filename):
+        """ Entropy only loader """
+        print("Loading Entropy Main video file: '{}'".format(self.entropy_video))
         try:
-            self.entropy = self._stream_metadata(cv.VideoCapture(str(video_file)), 'entropy', filename)
+            self.entropy = self._stream_metadata(cv.VideoCapture(str(self.entropy_video)), 'entropy', 'entropy.mov')
         except Exception as error:
-            print('Problem acquiring video stream: {}'.format(video_file))
-            print(error)
+            print('Problem acquiring video stream: {}'.format(self.entropy_video))
+            print('Error message: {}'.format(error))
             exit(1)
 
     def _init_sensors(self, pinout):
@@ -445,3 +448,14 @@ class Configuration(object):
 
         # Remove latest stream from selector queue
         self.mix_queues[category][layer].remove(stream)
+
+
+    def set_entropy_playhead(self, layer='main', start_frame=0):
+
+        # Set stream into the layer
+        self.playing[layer] = self.entropy
+        self.playing[layer]['frame'] = start_frame
+        self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
+        self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_WIDTH, self.width)
+        self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_HEIGHT, self.height)
+        self.playing[layer]['stream'].set(cv.CAP_PROP_FPS, self.fps)

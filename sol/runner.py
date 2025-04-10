@@ -27,6 +27,7 @@ from modules.Config import Configuration
 from modules.Config import arg_parser
 from modules.VideoPlayer import tate_linear
 from modules.VideoPlayer import heads
+from modules.VideoPlayer import entropy
 
 from pydantic import BaseModel
 
@@ -69,7 +70,7 @@ async def runtime_lifespan(app: FastAPI):
         asyncio.create_task(tate_linear(app.c, app.a))
     elif room == 3:
         # asyncio.create_task(tate_linear(app.c, app.a))
-        asyncio.create_task(tate_linear(app.c, app.a))
+        asyncio.create_task(entropy(app.c, app.a))
     elif room == 4:
         # asyncio.create_task(tate_linear(app.c, app.a))
         asyncio.create_task(tate_linear(app.c, app.a))
@@ -270,11 +271,12 @@ async def index(request: Request):
             "request": request,
             "playing": app.a.metadata,
             "heads": app.a.heads,
+            "entropy": app.a.entropy,
             "summary": app.c.summary,
             "sensors": app.s }
     )
 
-@app.get('/play_audio/{track_id}')
+@app.get('/aplay/{category}/{track_id}')
 async def play_audio(request: Request, track_id):
     """ Play audio track """
     app.a.play_audio(int(track_id))

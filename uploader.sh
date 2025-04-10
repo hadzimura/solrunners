@@ -9,7 +9,6 @@ SOURCE_PATH="/Users/zero/Develop/github.com/hadzimura/solrunners/media"
 DEFAULT_DESTINATION_PATH="/home/zero/solrunners/media"
 VIDEO_DESTINATION_PATH="/home/zero/solrunners/media/video"
 
-
 DEFAULT_SYNC=(audio fonts raspberry static templates)
 ENTROPY_FOLDER="video/entropy"
 TATE_FOLDER="video/tate"
@@ -29,11 +28,14 @@ if [[ "${DESTINATION_IP}" == "test" ]]; then
   echo "Running testing scenario to '${DESTINATION_USER}@${DESTINATION_HOST}'"
 else
   DESTINATION_USER="zero"
-  DESTINATION_HOST="${SOL_NETORK}.${DESTINATION_IP}"
-  echo "Running deployment scenario to '${DESTINATION_USER}@${DESTINATION_HOST}'"
+  # DESTINATION_HOST="${SOL_NETORK}.${DESTINATION_IP}"
+  DESTINATION_HOST="room${DESTINATION_IP}"
+  # echo "Running deployment scenario to '${DESTINATION_USER}@${DESTINATION_HOST}'"
+  echo "Running deployment scenario to '${DESTINATION_HOST}'"
 fi
 
-DESTINATION="${DESTINATION_USER}@${DESTINATION_HOST}"
+# DESTINATION="${DESTINATION_USER}@${DESTINATION_HOST}"
+DESTINATION="${DESTINATION_HOST}"
 
 echo "Syncing default media folders"
 for FOLDER in "${DEFAULT_SYNC[@]}"; do

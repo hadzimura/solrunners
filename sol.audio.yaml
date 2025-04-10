@@ -1,24 +1,19 @@
 entropy:
   1:
-    name: Entropy - music
+    name: music
     channel: left
     tags:
   2:
-    name: Entropy - music
+    name:  music
     channel: right
     tags:
   3:
-    name: Entropy - vocals
+    name: vocals
     channel: left
     tags:
   4:
-    name: Entropy - vocals
+    name: vocals
     channel: right
-    tags:
-heads:
-  1:
-    name: Apollo 11 - We Have a Lift-Off
-    channel: stereo
     tags:
 nasa:
   1:

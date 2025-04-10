@@ -25,7 +25,7 @@ runners:
     video:
       - entropy.mov
     audio:
-      - heads
+      - entropy
   4:
     pinout:
       enabled: false
@@ -34,7 +34,6 @@ runners:
       green: 19
     audio:
       - tate
-      - heads
     video:
       - tate
   5:
@@ -46,4 +45,4 @@ runners:
 #    audio:
 #      - heads
     video:
-      - tate
+      - heads
