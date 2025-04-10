@@ -140,8 +140,8 @@ class Text(object):
     def __init__(self, coordinates):
 
         self.coordinates = coordinates
-        self.font = ImageFont.truetype("/Users/zero/Develop/github.com/hadzimura/solrunners/media/fonts/IBM_Logo_Regular_400.ttf", 50)
-        self.numbers = ImageFont.truetype("/Users/zero/Develop/github.com/hadzimura/solrunners/media/fonts/Mx437_EpsonMGA_Mono.ttf", 50)
+        self.font = ImageFont.truetype("/home/zero/solrunners/media/fonts/IBM_Logo_Regular_400.ttf", 50)
+        self.numbers = ImageFont.truetype("/home/zero/solrunners/media/fonts/Mx437_EpsonMGA_Mono.ttf", 50)
 
     def source(self, data):
         self.data = data
