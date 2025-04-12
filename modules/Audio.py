@@ -250,6 +250,8 @@ class AudioLibrary(object):
         result = dict()
         pprint(result, indent=2)
 
+    def stop_audio(self):
+        self.p.pause()
 
     def play_audio(self, track_id, overlay=False):
 

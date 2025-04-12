@@ -350,13 +350,13 @@ async def tate(config):
 async def entropy(eplayer, aplayer):
 
     eplayer.set_entropy_playhead(start_frame=0)
-    # eplayer.set_entropy_playhead(start_frame=0)
-    total_frames = eplayer.playing['main']['frames']
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
     cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
     frame_time = 25
+    fra_min = 25
+    fra_max = 25
 
     # Run audio track
     aplayer.play_audio(0, overlay=True)
@@ -487,13 +487,28 @@ async def entropy(eplayer, aplayer):
                 exit(1)
         else:
             # e.set_playhead(layer=0, category='feature', stream='entropy.mov')
-            eplayer.set_playhead2(layer='main', category='tate')
+            eplayer.set_entropy_playhead(start_frame=0)
+            aplayer.stop_audio()
+            aplayer.play_audio(0, overlay=True)
+            aplayer.play_audio(1, overlay=True)
+            aplayer.play_audio(2, overlay=True)
+            aplayer.play_audio(3, overlay=True)
 
         # cv.waitKey(0)
         if syn > 0:
             frame_time -=1
         else:
             frame_time +=1
+        if frame_time < 1:
+            frame_time = 1
+
+        if frame_time > fra_max:
+            fra_max = frame_time
+            print('max', fra_max)
+        if frame_time < fra_min:
+            fra_min = frame_time
+            print('min', fra_min)
+
         # This actually controls the playback speed!
         if eplayer.read_input(cv.waitKey(frame_time)) is False:
             # Method returns False for ESC key

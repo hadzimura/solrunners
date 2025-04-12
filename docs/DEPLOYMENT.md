@@ -83,3 +83,15 @@ cp /home/zero/solrunners/telegraf.conf /etc/telegraf
 service telegraf start
 ``` 
 influx token: Si5w9T32qtMKfHvjzY2xAS-UuubDxqK7Roqo6jXOrh0rJ24_GGQXWfzwq6ym-376zdY7bkkxhNfYU16daFWNWA==
+
+
+
+
+o make it permanent you have to use  systemctl set-default as shown below:
+
+sudo systemctl set-default multi-user.target
+and reboot.
+
+To revert graphical session use
+
+sudo systemctl set-default graphical.target
