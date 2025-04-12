@@ -480,7 +480,7 @@ async def entropy(eplayer, aplayer):
 
             try:
                 cv.imshow('entropy', frame)
-                cv.moveWindow('entropy', 0, 0)
+                # cv.moveWindow('entropy', 0, 0)
 
             except Exception as eplayer:
                 print(eplayer)
