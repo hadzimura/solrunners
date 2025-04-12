@@ -351,7 +351,8 @@ async def entropy(eplayer, aplayer):
 
     eplayer.set_entropy_playhead(start_frame=0)
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
-    cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
+    # cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
+    cv.namedWindow('entropy', cv.WINDOW_AUTOSIZE)
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
     frame_time = 25
@@ -480,7 +481,7 @@ async def entropy(eplayer, aplayer):
 
             try:
                 cv.imshow('entropy', frame)
-                # cv.moveWindow('entropy', 0, 0)
+                cv.moveWindow('entropy', 0, 0)
 
             except Exception as eplayer:
                 print(eplayer)
