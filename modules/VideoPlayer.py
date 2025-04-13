@@ -381,13 +381,13 @@ async def entropy(cfg, aplayer):
     width, height = screen.width, screen.height
 
     video = cv.VideoCapture(str(cfg.entropy_video))
-    video.set(cv.CAP_PROP_BUFFERSIZE, 25)
+    # video.set(cv.CAP_PROP_BUFFERSIZE, 25)
 
     # self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
-    video.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
-    video.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
+    # video.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
+    # video.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
     # self.playing[layer]['stream'].set(cv.CAP_PROP_BUFFERSIZE, self.fps)
-    video.set(cv.CAP_PROP_FPS, 25)
+    # video.set(cv.CAP_PROP_FPS, 25)
 
     # eplayer.set_entropy_playhead(start_frame=0)
     # cv.namedWindow('entropy', cv.WINDOW_NORMAL)
@@ -453,7 +453,7 @@ async def entropy(cfg, aplayer):
 
             try:
                 cv.imshow('entropy', frame)
-                cv.moveWindow('entropy', 0, 0)
+                # cv.moveWindow('entropy', 0, 0)
 
             except Exception as playback:
                 print(playback)
