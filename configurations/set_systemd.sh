@@ -3,14 +3,27 @@
 
 set -e
 
-sudo cp /home/zero/solrunners/configurations/systemd/sol.service /etc/systemd/system/
-# sudo cp /home/zero/solrunners/configurations/systemd/sol-watcher.service /etc/systemd/system/
-# sudo cp /home/zero/solrunners/configurations/systemd/sol-watcher.path /etc/systemd/system/
+if [[ -z "${1}" ]]; then
+  echo "Service name needed! (storage|sol|...)"
+fi
 
+SERVICE="${1}"
+
+echo "Deploying SystemD service '${SERVICE}'"
+
+case "${SERVICE}" in
+
+  storage)
+    sudo cp /home/zero/solrunners/configurations/systemd/storage.service /etc/systemd/system/
+    ;;
+  *)
+    echo "Undefined service name '${SERVICE}', exiting..."
+    exit 1 ;;
+esac
+
+echo "Reloading daemons now..."
 sudo systemctl daemon-reload
-
-sudo systemctl enable sol.service
-# sudo systemctl enable sol-watcher.service
-
-sudo systemctl start sol.service
-# sudo systemctl start sol-watcher.service
+echo "Enabling and starting '${SERVICE}.service'"
+sudo systemctl enable "${SERVICE}.service"
+sudo systemctl start "${SERVICE}.service"
+echo "All done"

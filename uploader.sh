@@ -53,7 +53,8 @@ case "${DESTINATION_IP}" in
     4) echo "Syncing folder '${TATE_FOLDER}' to host '${DESTINATION_HOST}'"
        rsync -azP --delete --mkpath ${SOURCE_PATH}/${TATE_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH} ;;
     5) echo "Syncing folder '${HEADS_FOLDER}' to host '${DESTINATION_HOST}'"
-       rsync -azP --delete --mkpath ${SOURCE_PATH}/${HEADS_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH} ;;
+       rsync -azP --delete --mkpath ${SOURCE_PATH}/${HEADS_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH}
+       rsync -azP --delete --mkpath ${SOURCE_PATH}/${ENTROPY_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH} ;;
     test) echo "Nothing to be done, only testing" ;;
 esac
 

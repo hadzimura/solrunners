@@ -1,0 +1,1 @@
+aptitude -F "%c %p" --disable-columns search '!~M ~i' | awk -F " " '{ print "apt-get -y install " $2 }' > aptshell.sh

@@ -1,0 +1,15 @@
+[Unit]
+Description=Move SoL Media Data to SHM storage
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/zero/solrunners/configurations/systemd/media_to_shm.sh
+WorkingDirectory=/home/zero/solrunners
+StandardOutput=inherit
+StandardError=inherit
+Restart=no
+User=zero
+
+[Install]
+WantedBy=multi-user.target
