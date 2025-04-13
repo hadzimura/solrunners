@@ -16,11 +16,11 @@ import numpy as np
 from datetime import datetime
 from datetime import timedelta
 from screeninfo import get_monitors
-from random import randint
+from random import randint, uniform
 
 from modules.Controllers import Text
 
-font = ImageFont.truetype("/home/zero/solrunners/media/fonts/Mx437_EpsonMGA_Mono.ttf", 50)
+# font = ImageFont.truetype("/home/zero/solrunners/media/fonts/Mx437_EpsonMGA_Mono.ttf", 50)
 # font = ImageFont.truetype("/Users/zero/Develop/github.com/hadzimura/solrunners/media/fonts/Mx437_EpsonMGA_Mono.ttf", 50)
 
 def text_overlay(frame, text, coordinates, fa, type_of='console'):
@@ -367,7 +367,7 @@ async def tate(config):
     except KeyError: pass
     cv.destroyAllWindows()
 
-async def entropy(eplayer, aplayer):
+async def entropy(cfg, aplayer):
 
 
     try:
@@ -378,7 +378,17 @@ async def entropy(eplayer, aplayer):
         print(e)
 
     width, height = screen.width, screen.height
-    eplayer.set_entropy_playhead(start_frame=0)
+
+    video = cv.VideoCapture(str(cfg.entropy_video))
+    video.set(cv.CAP_PROP_BUFFERSIZE, 25)
+
+    # self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
+    # self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_WIDTH, self.width)
+    # self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_HEIGHT, self.height)
+    # self.playing[layer]['stream'].set(cv.CAP_PROP_BUFFERSIZE, self.fps)
+    # self.playing[layer]['stream'].set(cv.CAP_PROP_FPS, self.fps)
+
+    # eplayer.set_entropy_playhead(start_frame=0)
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
     # cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
     cv.namedWindow('entropy', cv.WINDOW_AUTOSIZE)
@@ -387,6 +397,9 @@ async def entropy(eplayer, aplayer):
     frame_time = 25
     fra_min = 25
     fra_max = 25
+
+    font_status = cfg.font['status']
+    subtitle = None
 
     # Run audio track
     aplayer.eplay(action='init')
@@ -399,7 +412,7 @@ async def entropy(eplayer, aplayer):
     frame_average = 0
     while True:
 
-        status, frame = eplayer.playing['main']['stream'].read()
+        status, frame = video.read()
 
         if status is True:
 
@@ -418,37 +431,31 @@ async def entropy(eplayer, aplayer):
 
             av_sync = current_audio_frame - frame_counter
 
-            if subtitle_cue in eplayer.sub['entropy']:
-                eplayer.subtitle = eplayer.sub['entropy'][subtitle_cue]
+            if subtitle_cue in cfg.sub['entropy']:
+                subtitle = cfg.sub['entropy'][subtitle_cue]
                 coo = (randint(5, 400), randint(300, 1000))
-                fs = randint(25, 45)
+                fs = uniform(0.5, 1.9)
 
-            if eplayer.subtitle is not None:
-                frame = cv.cvtColor(text_overlay(frame, eplayer.subtitle, coo, fa=fs, type_of='subtitle'), cv.COLOR_RGB2BGR)
-                # f = eplayer.font['subtitle']
-                # cv.putText(frame, eplayer.subtitle, f.org, f.name, f.scale, f.color, f.thickness, f.type)
-
-            # timestamp = datetime.fromtimestamp(eplayer.playing['main']['frame'])
-            # c = timestamp.strftime('%H:%M:%S')
+            if subtitle is not None:
+                cv.putText(frame, subtitle, coo, font_status.name, fs, font_status.color, font_status.thickness, font_status.type)
             t = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(av_sync, frame_counter, current_audio_frame, frame_time,  subtitle_cue, aplayer.etime())
-            frame = cv.cvtColor(text_overlay(frame, t, (20, 50), fa=20, type_of=''),cv.COLOR_RGB2BGR)
-            #
-            # t = 'f: {} // l: {} x {} | r: {} x {} | min/max: {}/{}'.format(frame_counter, aplayer.p['L'][0].volume, aplayer.p['L'][1].volume, aplayer.p['R'][0].volume, aplayer.p['R'][1].volume, fra_min, fra_max)
-            # frame = cv.cvtColor(text_overlay(frame, t, (20, 100), fa=30, type_of=''), cv.COLOR_RGB2BGR)
-            #
+            cv.putText(frame, t, font_status.org, font_status.name, font_status.scale, font_status.color, font_status.thickness, font_status.type)
+
+            t = 'f: {} // l: {} x {} | r: {} x {} | min/max: {}/{}'.format(frame_counter, aplayer.p['L'][0].volume, aplayer.p['L'][1].volume, aplayer.p['R'][0].volume, aplayer.p['R'][1].volume, fra_min, fra_max)
+            cv.putText(frame, t, (50, 100), font_status.name, font_status.scale, font_status.color, font_status.thickness, font_status.type)
 
             try:
                 cv.imshow('entropy', frame)
                 cv.moveWindow('entropy', 0, 0)
 
-            except Exception as eplayer:
-                print(eplayer)
+            except Exception as playback:
+                print(playback)
                 exit(1)
             frame_counter += 1
 
         else:
             print('End of cycle')
-            eplayer.playing['main']['stream'].set(cv.CAP_PROP_POS_FRAMES, 1)
+            video.set(cv.CAP_PROP_POS_FRAMES, 0)
             # aplayer.eplay(action='init')
             frame_counter = 0
             # aplayer.stop_audio()
@@ -473,22 +480,19 @@ async def entropy(eplayer, aplayer):
             print('min', fra_min)
 
         if frame_time == 1:
-            eplayer.playing['main']['stream'].set(cv.CAP_PROP_POS_FRAMES, current_audio_frame)
+            print("Moving {} frames ahead".format(current_audio_frame - video.get(cv.CAP_PROP_POS_FRAMES)))
+            video.set(cv.CAP_PROP_POS_FRAMES, current_audio_frame)
 
         # This actually controls the playback speed!
-        if eplayer.read_input(cv.waitKey(frame_time)) is False:
+        if cfg.read_input(cv.waitKey(frame_time)) is False:
             # Method returns False for ESC key
             break
 
         # Prepare data for next frame processing
-        eplayer.update()
-        await asyncio.sleep(0.00005)
+        # eplayer.update()
+        await asyncio.sleep(0.0000005)
 
 
     # Release everything
-    eplayer.playing[0]['stream'].release()
-    try:
-        eplayer.playing[1]['stream'].release()
-        eplayer.playing[2]['stream'].release()
-    except KeyError: pass
+    video.release()
     cv.destroyAllWindows()

@@ -181,6 +181,10 @@ class Configuration(object):
 
         if 'video' in self.runner:
 
+            self.font = {
+                'status': Font()
+            }
+
             # Fonts
             self.text = {
                 'status': Text(path=self.fonts, coordinates=(50, 50)),
@@ -468,4 +472,5 @@ class Configuration(object):
         self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
         self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_WIDTH, self.width)
         self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_HEIGHT, self.height)
+        self.playing[layer]['stream'].set(cv.CAP_PROP_BUFFERSIZE, self.fps)
         self.playing[layer]['stream'].set(cv.CAP_PROP_FPS, self.fps)
