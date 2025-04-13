@@ -68,7 +68,11 @@ class Configuration(object):
         # Running Environment locations
         env_var = environ
         self.project_root = Path(env_var['PWD'])
-        self.media_root = self.project_root / Path('media')
+
+        if system() == 'Darwin':
+            self.media_root = self.project_root / Path('media')
+        else:
+            self.media_root = Path('/storage')
 
         self.fonts = self.media_root / Path('fonts')
         self.fastapi_static = self.media_root / Path('static')

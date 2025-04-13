@@ -23,21 +23,21 @@ from modules.Controllers import Text
 # font = ImageFont.truetype("/home/zero/solrunners/media/fonts/Mx437_EpsonMGA_Mono.ttf", 50)
 # font = ImageFont.truetype("/Users/zero/Develop/github.com/hadzimura/solrunners/media/fonts/Mx437_EpsonMGA_Mono.ttf", 50)
 
-def text_overlay(frame, text, coordinates, fa, type_of='console'):
-    # font_subs = ImageFont.truetype("/Users/zero/Develop/github.com/hadzimura/solrunners/media/fonts/IBM_Logo_Regular_400.ttf", fa)
-    font_subs = ImageFont.truetype("/home/zero/solrunners/media/fonts/IBM_Logo_Regular_400.ttf", fa)
-
-    cv2_im_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
-    pil_im = Image.fromarray(cv2_im_rgb)
-    draw = ImageDraw.Draw(pil_im)
-
-    # Draw the text
-    # draw.text(self.coordinates, 'mission time', font=self.font, fill="#41FF00")
-    if type_of == 'subtitle':
-        draw.text(coordinates, str(text), font=font_subs, fill="#41FF00")
-    else:
-        draw.text(coordinates, str(text), font=font, fill="#41FF00")
-    return np.array(pil_im)
+# def text_overlay(frame, text, coordinates, fa, type_of='console'):
+#     # font_subs = ImageFont.truetype("/Users/zero/Develop/github.com/hadzimura/solrunners/media/fonts/IBM_Logo_Regular_400.ttf", fa)
+#     font_subs = ImageFont.truetype("/home/zero/solrunners/media/fonts/IBM_Logo_Regular_400.ttf", fa)
+#
+#     cv2_im_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+#     pil_im = Image.fromarray(cv2_im_rgb)
+#     draw = ImageDraw.Draw(pil_im)
+#
+#     # Draw the text
+#     # draw.text(self.coordinates, 'mission time', font=self.font, fill="#41FF00")
+#     if type_of == 'subtitle':
+#         draw.text(coordinates, str(text), font=font_subs, fill="#41FF00")
+#     else:
+#         draw.text(coordinates, str(text), font=font, fill="#41FF00")
+#     return np.array(pil_im)
 
 async def heads(config, audio_player):
     # Initialize Player Layers
@@ -383,15 +383,15 @@ async def entropy(cfg, aplayer):
     video.set(cv.CAP_PROP_BUFFERSIZE, 25)
 
     # self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
-    # self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_WIDTH, self.width)
-    # self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_HEIGHT, self.height)
+    video.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
+    video.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
     # self.playing[layer]['stream'].set(cv.CAP_PROP_BUFFERSIZE, self.fps)
-    # self.playing[layer]['stream'].set(cv.CAP_PROP_FPS, self.fps)
+    video.set(cv.CAP_PROP_FPS, 25)
 
     # eplayer.set_entropy_playhead(start_frame=0)
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
-    # cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
-    cv.namedWindow('entropy', cv.WINDOW_AUTOSIZE)
+    cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
+    # cv.namedWindow('entropy', cv.WINDOW_AUTOSIZE)
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
     frame_time = 25
