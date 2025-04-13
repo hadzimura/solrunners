@@ -190,10 +190,10 @@ class Configuration(object):
             }
 
             # Fonts
-            self.text = {
-                'status': Text(path=self.fonts, coordinates=(50, 50)),
-                'subtitles': Text(path=self.fonts, coordinates=(50, self.height - 100))
-            }
+            # self.text = {
+            #     'status': Text(path=self.fonts, coordinates=(50, 50)),
+            #     'subtitles': Text(path=self.fonts, coordinates=(50, self.height - 100))
+            # }
             # Drawings
             self.draw = {
                 'mission': Draw(shape='rectangle',
