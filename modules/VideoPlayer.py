@@ -472,6 +472,9 @@ async def entropy(eplayer, aplayer):
             fra_min = frame_time
             print('min', fra_min)
 
+        if frame_time == 1:
+            eplayer.playing['main']['stream'].set(cv.CAP_PROP_POS_FRAMES, current_audio_frame)
+
         # This actually controls the playback speed!
         if eplayer.read_input(cv.waitKey(frame_time)) is False:
             # Method returns False for ESC key
