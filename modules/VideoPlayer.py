@@ -369,6 +369,7 @@ async def tate(config):
 
 async def entropy(cfg, aplayer):
 
+    overlays = False
 
     try:
         print('Attached display info:')
@@ -420,29 +421,31 @@ async def entropy(cfg, aplayer):
             current_audio_frame = round(aplayer.etime() * 25, 0)
             subtitle_cue = None
 
-            try:
-                subtitle_cue = datetime.strptime(str(timedelta(seconds=aplayer.etime())), '%H:%M:%S.%f').time().replace(microsecond=0)
-            except Exception as runtime_problem:
-                print('Runtime failing: {}'.format(runtime_problem))
+            if overlays is True:
 
-            # if frame_counter % 100 == 0:
-            #     print('swap')
-            #     aplayer.eplay(action='swap')
+                try:
+                    subtitle_cue = datetime.strptime(str(timedelta(seconds=aplayer.etime())), '%H:%M:%S.%f').time().replace(microsecond=0)
+                except Exception as runtime_problem:
+                    print('Runtime failing: {}'.format(runtime_problem))
 
-            av_sync = current_audio_frame - frame_counter
+                # if frame_counter % 100 == 0:
+                #     print('swap')
+                #     aplayer.eplay(action='swap')
 
-            if subtitle_cue in cfg.sub['entropy']:
-                subtitle = cfg.sub['entropy'][subtitle_cue]
-                coo = (randint(5, 400), randint(300, 1000))
-                fs = uniform(0.5, 1.9)
+                av_sync = current_audio_frame - frame_counter
 
-            if subtitle is not None:
-                cv.putText(frame, subtitle, coo, font_status.name, fs, font_status.color, font_status.thickness, font_status.type)
-            t = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(av_sync, frame_counter, current_audio_frame, frame_time,  subtitle_cue, aplayer.etime())
-            cv.putText(frame, t, font_status.org, font_status.name, font_status.scale, font_status.color, font_status.thickness, font_status.type)
+                if subtitle_cue in cfg.sub['entropy']:
+                    subtitle = cfg.sub['entropy'][subtitle_cue]
+                    coo = (randint(5, 400), randint(300, 1000))
+                    fs = uniform(0.5, 1.9)
 
-            t = 'f: {} // l: {} x {} | r: {} x {} | min/max: {}/{}'.format(frame_counter, aplayer.p['L'][0].volume, aplayer.p['L'][1].volume, aplayer.p['R'][0].volume, aplayer.p['R'][1].volume, fra_min, fra_max)
-            cv.putText(frame, t, (50, 100), font_status.name, font_status.scale, font_status.color, font_status.thickness, font_status.type)
+                if subtitle is not None:
+                    cv.putText(frame, subtitle, coo, font_status.name, fs, font_status.color, font_status.thickness, font_status.type)
+                t = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(av_sync, frame_counter, current_audio_frame, frame_time,  subtitle_cue, aplayer.etime())
+                cv.putText(frame, t, font_status.org, font_status.name, font_status.scale, font_status.color, font_status.thickness, font_status.type)
+
+                t = 'f: {} // l: {} x {} | r: {} x {} | min/max: {}/{}'.format(frame_counter, aplayer.p['L'][0].volume, aplayer.p['L'][1].volume, aplayer.p['R'][0].volume, aplayer.p['R'][1].volume, fra_min, fra_max)
+                cv.putText(frame, t, (50, 100), font_status.name, font_status.scale, font_status.color, font_status.thickness, font_status.type)
 
             try:
                 cv.imshow('entropy', frame)
