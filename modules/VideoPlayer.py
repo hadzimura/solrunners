@@ -454,7 +454,6 @@ async def entropy(cfg, aplayer):
 
             try:
                 cv.imshow('entropy', frame)
-                cv.sho
                 # cv.moveWindow('entropy', 0, 0)
 
             except Exception as playback:
