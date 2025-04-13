@@ -412,9 +412,9 @@ async def entropy(eplayer, aplayer):
             except Exception as runtime_problem:
                 print('Runtime failing: {}'.format(runtime_problem))
 
-            if frame_counter % 100 == 0:
-                print('swap')
-                aplayer.eplay(action='swap')
+            # if frame_counter % 100 == 0:
+            #     print('swap')
+            #     aplayer.eplay(action='swap')
 
             av_sync = current_audio_frame - frame_counter
 
