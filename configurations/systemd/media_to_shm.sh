@@ -3,7 +3,8 @@
 
 set -e
 
-SOURCE="/home/zero/solrunners/media/video"
+SOURCE_VIDEO="/home/zero/solrunners/media/video"
+SOURCE_AUDIO="/home/zero/solrunners/media/audio"
 DESTINATION="/storage"
 
 echo "Syncing all the SoL Media from '${SOURCE}' into the SHM storage '${DESTINATION}'"
@@ -14,6 +15,7 @@ if [[ ! -d "${DESTINATION}" ]]; then
   exit 1
 fi
 
-cp -r "${SOURCE}" "${DESTINATION}"
+cp -r "${SOURCE_VIDEO}" "${DESTINATION}"
+cp -r "${SOURCE_AUDIO}" "${DESTINATION}"
 
 echo "All done"
