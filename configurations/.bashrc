@@ -1,0 +1,1 @@
+xinit /home/zero/solrunners/configurations/kiosk.sh -- vt$(fgconsole)
