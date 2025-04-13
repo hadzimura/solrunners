@@ -15,9 +15,28 @@ from PIL import ImageFont, ImageDraw, Image
 import numpy as np
 from datetime import datetime
 from datetime import timedelta
+from screeninfo import get_monitors
+from random import randint
 
 from modules.Controllers import Text
 
+font = ImageFont.truetype("/Users/zero/Develop/github.com/hadzimura/solrunners/media/fonts/Mx437_EpsonMGA_Mono.ttf", 50)
+
+def text_overlay(frame, text, coordinates, fa, type_of='console'):
+    font_subs = ImageFont.truetype(
+        "/Users/zero/Develop/github.com/hadzimura/solrunners/media/fonts/IBM_Logo_Regular_400.ttf", fa)
+
+    cv2_im_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+    pil_im = Image.fromarray(cv2_im_rgb)
+    draw = ImageDraw.Draw(pil_im)
+
+    # Draw the text
+    # draw.text(self.coordinates, 'mission time', font=self.font, fill="#41FF00")
+    if type_of == 'subtitle':
+        draw.text(coordinates, str(text), font=font_subs, fill="#41FF00")
+    else:
+        draw.text(coordinates, str(text), font=font, fill="#41FF00")
+    return np.array(pil_im)
 
 async def heads(config, audio_player):
     # Initialize Player Layers
@@ -349,6 +368,15 @@ async def tate(config):
 
 async def entropy(eplayer, aplayer):
 
+
+    try:
+        print('Attached display info:')
+        screen = get_monitors()[0]
+        print(screen)
+    except Exception as e:
+        print(e)
+
+    width, height = screen.width, screen.height
     eplayer.set_entropy_playhead(start_frame=0)
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
     # cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
@@ -360,124 +388,53 @@ async def entropy(eplayer, aplayer):
     fra_max = 25
 
     # Run audio track
-    aplayer.play_audio(0, overlay=True)
-    aplayer.play_audio(1, overlay=True)
-    aplayer.play_audio(2, overlay=True)
-    aplayer.play_audio(3, overlay=True)
+    aplayer.eplay(action='init')
+    # aplayer.play_audio(1, overlay=True)
+    # aplayer.play_audio(2, overlay=True)
+    # aplayer.play_audio(3, overlay=True)
 
     # Main video loop
+    frame_counter = 0
+    frame_average = 0
     while True:
-        #     eplayer.playing['main']['stream'].set(cv.CAP_PROP_POS_FRAMES, randrange(500, total_frames-50))
 
         status, frame = eplayer.playing['main']['stream'].read()
 
-        # Blend layer 1
-        if eplayer.mix.enabled is True:
-            blend_status, blend_frame = eplayer.playing['overlay']['stream'].read()
-            # When blending segment ends, start a new one
-            if blend_status is False:
-                eplayer.set_playhead2(layer='overlay', category='tate')
-                blend_status, blend_frame = eplayer.playing['overlay']['stream'].read()
-
-
         if status is True:
 
-            # Effects first
-            # if entropy.flip.enabled is True:
-            #     frame = cv.flip(frame, 0)
-            #
-            # if entropy.gray.enabled is True:
-            #     a = choice([1, 2, 3])
-            #     if a == 1:
-            #         # ss = cv.applyColorMap(ss, cv.COLORMAP_PLASMA)
-            #         frame = cv.addWeighted(ss, 0.5, frame, 0.5, 0.5)
-            #
-            #
-            #     # frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-            #     # frame = cv.applyColorMap(frame, cv.COLORMAP_PLASMA)
-            #     # frame = cv.applyColorMap(frame, cv.COLORMAP_TWILIGHT)
-            #     # frame = cv.applyColorMap(frame, cv.COLORMAP_OCEAN)
-            #     # frame = cv.applyColorMap(frame, cv.COLORMAP_WINTER)
-            #     # frame = Summer(frame)
-            #     pass
-
-            if eplayer.blur.enabled is True:
-                frame = cv.blur(frame, eplayer.blur_value)
-
-            if eplayer.offset.enabled is True:
-                # 0,300,
-                # x,
-                left = frame[0:1080, 1920-eplayer:1920].copy()
-                right = frame[0:1080, 0:1920-eplayer].copy()
-                frame = cv.hconcat([left, right])
-                eplayer += 5
-                if eplayer > 1920:
-                    eplayer = 0
-
-            if eplayer.mix.enabled is True:
-                blend_frame = cv.applyColorMap(blend_frame, cv.COLORMAP_TWILIGHT)
-                # frame = cv.addWeighted(frame, c.blend_value[0], blend_frame, c.blend_value[1], c.blend_value[2])
-                frame = cv.addWeighted(frame, eplayer.mix.value[0], blend_frame, eplayer.mix.value[1], eplayer.mix.value[2])
-
-            # final = cv.vconcat([frame, face2])
-            # frame = cv.addWeighted(frame, 1, frame, 0.5, 2)
-
-            # frame = cv.blur(frame, play.blur)
-            # Create black canvas for each display
-            # canvas = np.zeros((720, 1280, 3), np.uint8)
-            # Apply the media image to canvas
-            # canvas[:, :] = frame
-            # Mix in some letters
-
             # Subtitles overlay
-            cvf = eplayer.playing['main']['frame']
-            caf = round(round(aplayer.p.time, 6) * 25, 0)
-
-            test = timedelta(seconds=round(aplayer.p.time, 6))
-
+            current_audio_frame = round(aplayer.etime() * 25, 0)
+            subtitle_cue = None
 
             try:
-                # dt_obj = datetime.strptime(str(round(aplayer.p.time, 6)), '%S.%f').time().replace(microsecond=0)
-                dt_obj = datetime.strptime(str(test), '%H:%M:%S.%f').time().replace(microsecond=0)
+                subtitle_cue = datetime.strptime(str(timedelta(seconds=aplayer.etime())), '%H:%M:%S.%f').time().replace(microsecond=0)
             except Exception as runtime_problem:
                 print('Runtime failing: {}'.format(runtime_problem))
 
+            if frame_counter % 100 == 0:
+                print('swap')
+                aplayer.eplay(action='swap')
 
-            syn = caf - cvf
+            av_sync = current_audio_frame - frame_counter
 
-            if dt_obj in eplayer.sub['entropy']:
-                eplayer.subtitle = eplayer.sub['entropy'][dt_obj]
+            if subtitle_cue in eplayer.sub['entropy']:
+                eplayer.subtitle = eplayer.sub['entropy'][subtitle_cue]
+                coo = (randint(5, 400), randint(300, 1000))
+                fs = randint(25, 45)
 
             if eplayer.subtitle is not None:
-                frame = cv.cvtColor(eplayer.text['subtitles'].subtitle(frame, eplayer.subtitle), cv.COLOR_RGB2BGR)
+                frame = cv.cvtColor(text_overlay(frame, eplayer.subtitle, coo, fa=fs, type_of='subtitle'), cv.COLOR_RGB2BGR)
                 # f = eplayer.font['subtitle']
                 # cv.putText(frame, eplayer.subtitle, f.org, f.name, f.scale, f.color, f.thickness, f.type)
 
-            # Status overlay
-            # f = eplayer.font['status']
-            # a = [frame, 'aaaaa', f.org, f.name, f.scale, f.color, f.thickness, f.type]
-            # # cv.putText(frame, c.get_info('status'), f.org, f.name, f.scale, f.color, f.thickness, f.type)
-            # cv.putText(a)
-
-            # Save the image
-
             # timestamp = datetime.fromtimestamp(eplayer.playing['main']['frame'])
             # c = timestamp.strftime('%H:%M:%S')
-            t = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(syn, cvf, caf, frame_time,  dt_obj, aplayer.p.time)
-            frame = cv.cvtColor(eplayer.text['status'].write(frame, t), cv.COLOR_RGB2BGR)
+            t = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(av_sync, frame_counter, current_audio_frame, frame_time,  subtitle_cue, aplayer.etime())
+            frame = cv.cvtColor(text_overlay(frame, t, (20, 50), fa=20, type_of=''),cv.COLOR_RGB2BGR)
 
-            # Runtime overlay
-            # f = c.font['runtime']
-            # cv.putText(frame, c.get_info('runtime'), f.org, f.name, f.scale, f.color, f.thickness, f.type)
+            t = 'f: {} // l: {} x {} | r: {} x {} | min/max: {}/{}'.format(frame_counter, aplayer.p['L'][0].volume, aplayer.p['L'][1].volume, aplayer.p['R'][0].volume, aplayer.p['R'][1].volume, fra_min, fra_max)
+            frame = cv.cvtColor(text_overlay(frame, t, (20, 100), fa=30, type_of=''), cv.COLOR_RGB2BGR)
 
-            # Mission time overlay
-            # f = c.font['mission']
-            # cv.putText(frame, c.get_info('mission'), f.org, f.name, f.scale, f.color, f.thickness, f.type)
-
-            # Drawings
-            for o, d in eplayer.draw.items():
-                if d.shape == 'rectangle':
-                    cv.rectangle(frame, d.pos1, d.pos2, d.color, d.thickness, d.type)
 
             try:
                 cv.imshow('entropy', frame)
@@ -486,17 +443,21 @@ async def entropy(eplayer, aplayer):
             except Exception as eplayer:
                 print(eplayer)
                 exit(1)
+            frame_counter += 1
+
         else:
-            # e.set_playhead(layer=0, category='feature', stream='entropy.mov')
-            eplayer.set_entropy_playhead(start_frame=0)
-            aplayer.stop_audio()
-            aplayer.play_audio(0, overlay=True)
-            aplayer.play_audio(1, overlay=True)
-            aplayer.play_audio(2, overlay=True)
-            aplayer.play_audio(3, overlay=True)
+            print('End of cycle')
+            eplayer.playing['main']['stream'].set(cv.CAP_PROP_POS_FRAMES, 1)
+            # aplayer.eplay(action='init')
+            frame_counter = 0
+            # aplayer.stop_audio()
+            # aplayer.play_audio(0, overlay=True)
+            # aplayer.play_audio(1, overlay=True)
+            # aplayer.play_audio(2, overlay=True)
+            # aplayer.play_audio(3, overlay=True)
 
         # cv.waitKey(0)
-        if syn > 0:
+        if av_sync > 0:
             frame_time -=1
         else:
             frame_time +=1

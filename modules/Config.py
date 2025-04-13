@@ -48,6 +48,8 @@ class Configuration(object):
 
     def __init__(self, room=None, master=False, width=1920, height=1080, fps=25, fullscreen=True):
 
+        self.verbose = False
+
         if room is None:
             print('Room needs to be specified, exiting...')
             exit(1)
@@ -128,7 +130,7 @@ class Configuration(object):
                 if batch_name in self.runner['audio']:
                     print("Initializing tracks for: '{}'".format(batch_name))
                     self.tracks[batch_name] = dict(all_tracks[batch_name])
-            pprint(self.tracks, indent=2)
+            self._verbose(self.tracks)
         except KeyError as error:
             print("Audio not configured".format(tracks_metadata))
         except FileNotFoundError:
@@ -219,6 +221,11 @@ class Configuration(object):
             'node_type': self.node_type
         }
 
+    def _verbose(self, content):
+
+        if self.verbose is True:
+            pprint(content, indent=2)
+
     def scheduler(self, play_time, track_id):
         self.audio_queue[play_time] = track_id
 
@@ -248,7 +255,7 @@ class Configuration(object):
                     self.sub[track][start_time] = line.split('|')[2].strip()
                     self.sub[track][stop_time] = None
             print("Subtitles loaded: '{}'".format(srt_file))
-            pprint(self.sub, indent=2)
+            self._verbose(self.sub)
 
         except FileNotFoundError as e:
 

@@ -17,10 +17,19 @@ pyglet.options['headless'] = True
 # pyglet.options['audio'] = 'pulse'
 
 
+class Room(object):
+
+    layout = {'l': {'volume'}}
+
+    def __init__(self, name):
+        self.three = {}
+
 class AudioLibrary(object):
 
     # For analysis purposes
     frame_summary = {'on': int(), 'off': int()}
+
+
 
     # Scripting of the playtime
     script = {
@@ -35,17 +44,22 @@ class AudioLibrary(object):
         self.catalog = dict()
         self.media = list()
         self.tracks_info = tracks_info
+        self.verbose = False
 
         # Metadata of currently playing
         self.metadata = dict()
         self.heads = dict()
         self.entropy = {'music': {'left': dict(), 'right': dict()}, 'vocals': {'left': dict(), 'right': dict()}}
+        # self.entropy = {'music': list(), 'vocals': list()}
+        self.esound = {'l0': None, 'l1': None, 'r0': None, 'r1': None}
+        # self.esound = list()
+
 
         # This is where the voice frames are
         self.timeline = dict()
 
         # Player storage
-        self.p = None
+        self.p = {'L': list(), 'R': list()}
 
         # Load audio tracks using tracks metadata
         for album in self.tracks_info:
@@ -185,7 +199,8 @@ class AudioLibrary(object):
                 if version not in self.heads[sample]['v']:
                     self.heads[sample]['v'][version] = dict()
 
-                print('Loading file: {}'.format(filepath))
+                if self.verbose:
+                    print('Loading file: {}'.format(filepath))
 
                 self.media.append(pyglet.media.StaticSource(pyglet.media.load(filepath, streaming=False)))
 
@@ -206,19 +221,22 @@ class AudioLibrary(object):
             info = self.tracks_info['entropy'][file_name]
             file_path = '{}/{}'.format(library_path, Path('{}.wav'.format(file_name)))
 
-            print('Loading file: {}'.format(file_path))
+            if self.verbose:
+                print('Loading file: {}'.format(file_path))
             self.media.append(pyglet.media.StaticSource(pyglet.media.load(file_path, streaming=False)))
             record = {
                 'id':  len(self.media) - 1,
                 'duration':  self.media[-1].duration,
-                'filename': file_path
+                'filename': file_path,
+                'stream': pyglet.media.StaticSource(pyglet.media.load(file_path, streaming=False))
             }
 
             self.entropy[info['name']][info['channel']] = record
+
             # if 'voice.left' in file:
             #     print('Analyzing file: {}'.format(file))
             #     self.timeline = self.analyze(file)
-        # pprint(self.entropy, indent=2)
+        pprint(self.entropy, indent=2)
 
     def load_tracks(self, album, library_path):
 
@@ -252,6 +270,54 @@ class AudioLibrary(object):
 
     def stop_audio(self):
         self.p.pause()
+
+    def eplay(self, action='status', start=0):
+
+        left = [1, 1]
+        right = [1, 1]
+        if action == 'init':
+            try:
+                self.p['L'] = list()
+                self.p['P'] = list()
+                self.p['L'].append(self.entropy['music']['left']['stream'].play())
+                self.p['L'].append(self.entropy['vocals']['left']['stream'].play())
+                self.p['R'].append(self.entropy['music']['right']['stream'].play())
+                self.p['R'].append(self.entropy['vocals']['right']['stream'].play())
+                # self.esound.append(self.entropy['music']['left']['stream'].play())
+                # self.esound.append(self.entropy['music']['right']['stream'].play())
+                # self.esound.append(self.entropy['vocals']['left']['stream'].play())
+                # self.esound.append(self.entropy['vocals']['right']['stream'].play())
+                print('Initialized the Entropy Audio Player')
+            except Exception as e:
+                print('Failed to initialize the Entropy Audio Player')
+                print(e)
+                exit(1)
+
+        elif action == 'swap':
+            if self.p['L'][0].volume == 0:
+                self.p['L'][0].volume = 0.5
+                self.p['L'][1].volume = 0.5
+                self.p['L'][0].volume = 1
+                self.p['L'][1].volume = 1
+                self.p['R'][0].volume = 0.7
+                self.p['R'][1].volume = 0.7
+                self.p['R'][0].volume = 0
+                self.p['R'][1].volume = 0
+            else:
+                self.p['L'][0].volume = 0.5
+                self.p['L'][1].volume = 0.5
+                self.p['L'][0].volume = 0
+                self.p['L'][1].volume = 0
+                self.p['R'][0].volume = 0.5
+                self.p['R'][1].volume = 0.5
+                self.p['R'][0].volume = 1
+                self.p['R'][1].volume = 1
+
+
+    def etime(self):
+
+        return round(self.p['L'][0].time, 6)
+
 
     def play_audio(self, track_id, overlay=False):
 
