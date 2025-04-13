@@ -420,6 +420,7 @@ async def entropy(cfg, aplayer):
             # Subtitles overlay
             current_audio_frame = round(aplayer.etime() * 25, 0)
             subtitle_cue = None
+            av_sync = current_audio_frame - frame_counter
 
             if overlays is True:
 
@@ -432,7 +433,7 @@ async def entropy(cfg, aplayer):
                 #     print('swap')
                 #     aplayer.eplay(action='swap')
 
-                av_sync = current_audio_frame - frame_counter
+
 
                 if subtitle_cue in cfg.sub['entropy']:
                     subtitle = cfg.sub['entropy'][subtitle_cue]
