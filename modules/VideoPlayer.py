@@ -450,7 +450,7 @@ async def entropy(cfg, aplayer):
 
             try:
                 cv.imshow('entropy', frame)
-                cv.moveWindow('entropy', 0, 0)
+                # cv.moveWindow('entropy', 0, 0)
 
             except Exception as playback:
                 print(playback)
@@ -494,7 +494,7 @@ async def entropy(cfg, aplayer):
 
         # Prepare data for next frame processing
         # eplayer.update()
-        await asyncio.sleep(0.0000005)
+        # await asyncio.sleep(0.0000005)
 
 
     # Release everything

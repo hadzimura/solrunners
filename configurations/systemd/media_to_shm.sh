@@ -5,6 +5,8 @@ set -e
 
 SOURCE_VIDEO="/home/zero/solrunners/media/video"
 SOURCE_AUDIO="/home/zero/solrunners/media/audio"
+SOURCE_AUDIO="/home/zero/solrunners/media/static"
+SOURCE_AUDIO="/home/zero/solrunners/media/templates"
 DESTINATION="/storage"
 
 echo "Syncing all the SoL Media from '${SOURCE}' into the SHM storage '${DESTINATION}'"
