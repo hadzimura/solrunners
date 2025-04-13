@@ -203,7 +203,7 @@ class Configuration(object):
                                 thickness=3)
             }
 
-            self._load_assets(self.runner['video'])
+            # self._load_assets(self.runner['video'])
 
         # Subtitle acquisition is for both Audio / Video Nodes
         self.sub = dict()
