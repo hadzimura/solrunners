@@ -183,7 +183,7 @@ class Configuration(object):
 
         self.playing = dict()
 
-        if 'video' in self.runner:
+        if 'video' in self.runner or self.room in [3, 4, 5]:
 
             self.font = {
                 'status': Font()
