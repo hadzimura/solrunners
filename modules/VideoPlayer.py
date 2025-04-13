@@ -20,11 +20,12 @@ from random import randint
 
 from modules.Controllers import Text
 
-font = ImageFont.truetype("/Users/zero/Develop/github.com/hadzimura/solrunners/media/fonts/Mx437_EpsonMGA_Mono.ttf", 50)
+font = ImageFont.truetype("/home/zero/solrunners/media/fonts/Mx437_EpsonMGA_Mono.ttf", 50)
+# font = ImageFont.truetype("/Users/zero/Develop/github.com/hadzimura/solrunners/media/fonts/Mx437_EpsonMGA_Mono.ttf", 50)
 
 def text_overlay(frame, text, coordinates, fa, type_of='console'):
-    font_subs = ImageFont.truetype(
-        "/Users/zero/Develop/github.com/hadzimura/solrunners/media/fonts/IBM_Logo_Regular_400.ttf", fa)
+    # font_subs = ImageFont.truetype("/Users/zero/Develop/github.com/hadzimura/solrunners/media/fonts/IBM_Logo_Regular_400.ttf", fa)
+    font_subs = ImageFont.truetype("/home/zero/solrunners/media/fonts/IBM_Logo_Regular_400.ttf", fa)
 
     cv2_im_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
     pil_im = Image.fromarray(cv2_im_rgb)
