@@ -390,9 +390,9 @@ async def entropy(cfg, aplayer):
     # video.set(cv.CAP_PROP_FPS, 25)
 
     # eplayer.set_entropy_playhead(start_frame=0)
-    # cv.namedWindow('entropy', cv.WINDOW_NORMAL)
-    cv.namedWindow('entropy', cv.WND_PROP_FULLSCREEN)
-    # cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
+    cv.namedWindow('entropy', cv.WINDOW_NORMAL)
+    # cv.namedWindow('entropy', cv.WND_PROP_FULLSCREEN)
+    cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
 
     # cv.namedWindow('entropy', cv.WINDOW_AUTOSIZE)
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
