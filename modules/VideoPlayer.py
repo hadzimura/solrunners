@@ -430,8 +430,8 @@ async def entropy(eplayer, aplayer):
 
             # timestamp = datetime.fromtimestamp(eplayer.playing['main']['frame'])
             # c = timestamp.strftime('%H:%M:%S')
-            # t = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(av_sync, frame_counter, current_audio_frame, frame_time,  subtitle_cue, aplayer.etime())
-            # frame = cv.cvtColor(text_overlay(frame, t, (20, 50), fa=20, type_of=''),cv.COLOR_RGB2BGR)
+            t = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(av_sync, frame_counter, current_audio_frame, frame_time,  subtitle_cue, aplayer.etime())
+            frame = cv.cvtColor(text_overlay(frame, t, (20, 50), fa=20, type_of=''),cv.COLOR_RGB2BGR)
             #
             # t = 'f: {} // l: {} x {} | r: {} x {} | min/max: {}/{}'.format(frame_counter, aplayer.p['L'][0].volume, aplayer.p['L'][1].volume, aplayer.p['R'][0].volume, aplayer.p['R'][1].volume, fra_min, fra_max)
             # frame = cv.cvtColor(text_overlay(frame, t, (20, 100), fa=30, type_of=''), cv.COLOR_RGB2BGR)
