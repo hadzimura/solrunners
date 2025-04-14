@@ -275,48 +275,49 @@ class AudioLibrary(object):
 
         left = [1, 1]
         right = [1, 1]
-        if action == 'init':
-            try:
-                self.p['L'] = list()
-                self.p['P'] = list()
-                self.p['L'].append(self.entropy['music']['left']['stream'].play())
-                self.p['L'].append(self.entropy['vocals']['left']['stream'].play())
-                self.p['R'].append(self.entropy['music']['right']['stream'].play())
-                self.p['R'].append(self.entropy['vocals']['right']['stream'].play())
-                # self.esound.append(self.entropy['music']['left']['stream'].play())
-                # self.esound.append(self.entropy['music']['right']['stream'].play())
-                # self.esound.append(self.entropy['vocals']['left']['stream'].play())
-                # self.esound.append(self.entropy['vocals']['right']['stream'].play())
-                print('Initialized the Entropy Audio Player')
-            except Exception as e:
-                print('Failed to initialize the Entropy Audio Player')
-                print(e)
-                exit(1)
-
-        elif action == 'swap':
-            if self.p['L'][0].volume == 0:
-                self.p['L'][0].volume = 0.5
-                self.p['L'][1].volume = 0.5
-                self.p['L'][0].volume = 1
-                self.p['L'][1].volume = 1
-                self.p['R'][0].volume = 0.7
-                self.p['R'][1].volume = 0.7
-                self.p['R'][0].volume = 0
-                self.p['R'][1].volume = 0
-            else:
-                self.p['L'][0].volume = 0.5
-                self.p['L'][1].volume = 0.5
-                self.p['L'][0].volume = 0
-                self.p['L'][1].volume = 0
-                self.p['R'][0].volume = 0.5
-                self.p['R'][1].volume = 0.5
-                self.p['R'][0].volume = 1
-                self.p['R'][1].volume = 1
+        self.p = self.entropy['music']['left']['stream'].play()
+        # if action == 'init':
+        #     try:
+        #         self.p['L'] = list()
+        #         self.p['P'] = list()
+        #         self.p['L'].append(self.entropy['music']['left']['stream'].play())
+        #         self.p['L'].append(self.entropy['vocals']['left']['stream'].play())
+        #         self.p['R'].append(self.entropy['music']['right']['stream'].play())
+        #         self.p['R'].append(self.entropy['vocals']['right']['stream'].play())
+        #         # self.esound.append(self.entropy['music']['left']['stream'].play())
+        #         # self.esound.append(self.entropy['music']['right']['stream'].play())
+        #         # self.esound.append(self.entropy['vocals']['left']['stream'].play())
+        #         # self.esound.append(self.entropy['vocals']['right']['stream'].play())
+        #         print('Initialized the Entropy Audio Player')
+        #     except Exception as e:
+        #         print('Failed to initialize the Entropy Audio Player')
+        #         print(e)
+        #         exit(1)
+        #
+        # elif action == 'swap':
+        #     if self.p['L'][0].volume == 0:
+        #         self.p['L'][0].volume = 0.5
+        #         self.p['L'][1].volume = 0.5
+        #         self.p['L'][0].volume = 1
+        #         self.p['L'][1].volume = 1
+        #         self.p['R'][0].volume = 0.7
+        #         self.p['R'][1].volume = 0.7
+        #         self.p['R'][0].volume = 0
+        #         self.p['R'][1].volume = 0
+        #     else:
+        #         self.p['L'][0].volume = 0.5
+        #         self.p['L'][1].volume = 0.5
+        #         self.p['L'][0].volume = 0
+        #         self.p['L'][1].volume = 0
+        #         self.p['R'][0].volume = 0.5
+        #         self.p['R'][1].volume = 0.5
+        #         self.p['R'][0].volume = 1
+        #         self.p['R'][1].volume = 1
 
 
     def etime(self):
 
-        return round(self.p['L'][0].time, 6)
+        return round(self.p.time, 6)
 
 
     def play_audio(self, track_id, overlay=False):
