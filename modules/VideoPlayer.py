@@ -426,7 +426,7 @@ async def entropy(cfg, aplayer):
             # kladná čísla = audio je napřed
             # záporná čísla = audio je pozadu
             av_sync = current_audio_frame - frame_counter
-            print(av_sync, current_audio_frame, frame_counter)
+            print(av_sync, current_audio_frame, frame_counter, frame_time)
 
             if overlays is True:
 
