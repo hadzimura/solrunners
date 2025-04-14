@@ -379,14 +379,12 @@ async def entropy(cfg, aplayer):
     except Exception as e:
         print(e)
 
-
-
     video = cv.VideoCapture(str(cfg.entropy_video))
-    video.set(cv.CAP_PROP_BUFFERSIZE, 10)
+    video.set(cv.CAP_PROP_BUFFERSIZE, 5)
 
     # self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
-    video.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
-    video.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
+    # video.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
+    # video.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
     # self.playing[layer]['stream'].set(cv.CAP_PROP_BUFFERSIZE, self.fps)
     video.set(cv.CAP_PROP_FPS, 25)
 
@@ -437,8 +435,6 @@ async def entropy(cfg, aplayer):
                 #     print('swap')
                 #     aplayer.eplay(action='swap')
 
-
-
                 if subtitle_cue in cfg.sub['entropy']:
                     subtitle = cfg.sub['entropy'][subtitle_cue]
                     coo = (randint(5, 400), randint(300, 1000))
@@ -453,17 +449,21 @@ async def entropy(cfg, aplayer):
                 cv.putText(frame, t, (50, 100), font_status.name, font_status.scale, font_status.color, font_status.thickness, font_status.type)
 
             try:
-                cv.imshow('entropy', frame)
+                if frame_time > 5:
+                    cv.imshow('entropy', frame)
+                else:
+                    print('Dropping frame {}'.format(frame_counter))
                 # cv.moveWindow('entropy', 0, 0)
 
             except Exception as playback:
                 print(playback)
                 exit(1)
+
             frame_counter += 1
 
         else:
             print('End of cycle')
-            video.set(cv.CAP_PROP_POS_FRAMES, 0)
+            video.set(cv.CAP_PROP_POS_FRAMES, 1)
             # aplayer.eplay(action='init')
             frame_counter = 0
             # aplayer.stop_audio()
@@ -487,14 +487,15 @@ async def entropy(cfg, aplayer):
             fra_min = frame_time
             print('min', fra_min)
 
-        if frame_time == 1:
-            print("Moving {} frames ahead".format(current_audio_frame - video.get(cv.CAP_PROP_POS_FRAMES)))
-            video.set(cv.CAP_PROP_POS_FRAMES, current_audio_frame)
+        # if frame_time == 1:
+        #     print("Moving {} frames ahead".format(current_audio_frame - video.get(cv.CAP_PROP_POS_FRAMES)))
+        #     video.set(cv.CAP_PROP_POS_FRAMES, current_audio_frame)
 
         # This actually controls the playback speed!
-        if cfg.read_input(cv.waitKey(frame_time)) is False:
-            # Method returns False for ESC key
-            break
+        cv.waitKey(frame_time)
+        # if cfg.read_input(cv.waitKey(frame_time)) is False:
+        #     # Method returns False for ESC key
+        #     break
 
         # Prepare data for next frame processing
         # eplayer.update()
