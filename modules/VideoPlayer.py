@@ -388,7 +388,7 @@ async def entropy(cfg, aplayer):
     # self.playing[layer]['stream'].set(cv.CAP_PROP_BUFFERSIZE, self.fps)
     video.set(cv.CAP_PROP_FPS, 25)
 
-    video.set(cv.CAP_PROP_POS_FRAMES, 7500)
+    # video.set(cv.CAP_PROP_POS_FRAMES, 7500)
 
     # eplayer.set_entropy_playhead(start_frame=0)
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
