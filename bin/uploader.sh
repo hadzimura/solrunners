@@ -5,7 +5,7 @@ set -e
 
 SOL_NETORK="10.0.0"
 
-BASE_PATH="/Users/zero/Develop/github.com/hadzimura/solrunners/"
+BASE_PATH="/Users/zero/Develop/github.com/hadzimura/solrunners"
 SOURCE_PATH="${BASE_PATH}/media"
 DEFAULT_DESTINATION_PATH="/home/zero/solrunners/media"
 VIDEO_DESTINATION_PATH="/home/zero/solrunners/media/video"
