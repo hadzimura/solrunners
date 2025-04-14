@@ -453,7 +453,8 @@ async def entropy(cfg, aplayer):
                 if frame_time > 5:
                     cv.imshow('entropy', frame)
                 else:
-                    print('Dropping frame {} | ft={} | total_drops={}'.format(frame_counter, frame_time, frame_drops))
+                    print('Dropping frame {} | ft={} | avsync={} | total_drops={}'.format(frame_counter, av_sync, frame_time, frame_drops))
+                    frame_drops += 1
                 # cv.moveWindow('entropy', 0, 0)
 
             except Exception as playback:
