@@ -369,7 +369,7 @@ async def tate(config):
 
 async def entropy(cfg, aplayer):
 
-    overlays = True
+    overlays = False
 
     try:
         print('Attached display info:')
@@ -423,6 +423,8 @@ async def entropy(cfg, aplayer):
             # Subtitles overlay
             current_audio_frame = round(aplayer.etime() * 25, 0)
             subtitle_cue = None
+            # kladná čísla = audio je napřed
+            # záporná čísla = audio je pozadu
             av_sync = current_audio_frame - frame_counter
             print(av_sync, current_audio_frame, frame_counter)
 
@@ -498,7 +500,7 @@ async def entropy(cfg, aplayer):
         #     video.set(cv.CAP_PROP_POS_FRAMES, current_audio_frame)
 
         # This actually controls the playback speed!
-        cv.waitKey(1)
+        cv.waitKey(frame_time)
         # if cfg.read_input(cv.waitKey(frame_time)) is False:
         #     # Method returns False for ESC key
         #     break
