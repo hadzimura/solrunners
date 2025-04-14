@@ -410,7 +410,7 @@ async def entropy(cfg, aplayer):
     cycle = 1
 
     # Run audio track
-    aplayer.eplay(action='init')
+    # aplayer.eplay(action='init')
     # aplayer.play_audio(1, overlay=True)
     # aplayer.play_audio(2, overlay=True)
     # aplayer.play_audio(3, overlay=True)
@@ -476,8 +476,9 @@ async def entropy(cfg, aplayer):
             video.release()
             # video.set(cv.CAP_PROP_POS_FRAMES, 1)
             video = cv.VideoCapture(str(cfg.entropy_video))
-            aplayer.eplay(action='init')
-            frame_counter = 0
+            # aplayer.eplay(action='init')
+            frame_counter = 1
+            print('New stream acquired')
             # aplayer.stop_audio()
             # aplayer.play_audio(0, overlay=True)
             # aplayer.play_audio(1, overlay=True)
@@ -517,6 +518,8 @@ async def entropy(cfg, aplayer):
 
         # Prepare data for next frame processing
         # eplayer.update()
+        if frame_counter == 1:
+            print('----')
         await asyncio.sleep(0.00001)
 
 
