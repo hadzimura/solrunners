@@ -388,6 +388,8 @@ async def entropy(cfg, aplayer):
     # self.playing[layer]['stream'].set(cv.CAP_PROP_BUFFERSIZE, self.fps)
     video.set(cv.CAP_PROP_FPS, 25)
 
+    video.set(cv.CAP_PROP_POS_FRAMES, 7500)
+
     # eplayer.set_entropy_playhead(start_frame=0)
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
     # cv.namedWindow('entropy', cv.WND_PROP_FULLSCREEN)
@@ -469,7 +471,7 @@ async def entropy(cfg, aplayer):
         else:
             print('End of cycle')
             video.set(cv.CAP_PROP_POS_FRAMES, 1)
-            # aplayer.eplay(action='init')
+            aplayer.eplay(action='init')
             frame_counter = 0
             # aplayer.stop_audio()
             # aplayer.play_audio(0, overlay=True)
