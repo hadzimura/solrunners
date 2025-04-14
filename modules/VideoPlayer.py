@@ -369,7 +369,7 @@ async def tate(config):
 
 async def entropy(cfg, aplayer):
 
-    overlays = False
+    overlays = True
 
     try:
         print('Attached display info:')
