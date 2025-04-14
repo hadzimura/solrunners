@@ -398,6 +398,7 @@ async def entropy(cfg, aplayer):
     # cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, 1)
 
     frame_time = 25
+    frame_drops = 0
     fra_min = 25
     fra_max = 25
 
@@ -452,7 +453,7 @@ async def entropy(cfg, aplayer):
                 if frame_time > 5:
                     cv.imshow('entropy', frame)
                 else:
-                    print('Dropping frame {}'.format(frame_counter))
+                    print('Dropping frame {} | total={}'.format(frame_counter, frame_drops))
                 # cv.moveWindow('entropy', 0, 0)
 
             except Exception as playback:
@@ -473,11 +474,16 @@ async def entropy(cfg, aplayer):
             # aplayer.play_audio(3, overlay=True)
 
         # cv.waitKey(0)
-        if av_sync > 0:
+        if av_sync == 0:
+            pass
+        elif av_sync > 0:
             frame_time -=1
         else:
             frame_time +=1
+
         if frame_time < 1:
+            frame_time = 1
+        if frame_time > 1:
             frame_time = 1
 
         if frame_time > fra_max:
@@ -492,14 +498,14 @@ async def entropy(cfg, aplayer):
         #     video.set(cv.CAP_PROP_POS_FRAMES, current_audio_frame)
 
         # This actually controls the playback speed!
-        cv.waitKey(frame_time)
+        cv.waitKey(25)
         # if cfg.read_input(cv.waitKey(frame_time)) is False:
         #     # Method returns False for ESC key
         #     break
 
         # Prepare data for next frame processing
         # eplayer.update()
-        # await asyncio.sleep(0.0000005)
+        await asyncio.sleep(0.0001)
 
 
     # Release everything
