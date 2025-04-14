@@ -274,6 +274,9 @@ class AudioLibrary(object):
     def eplay(self, action='status', start=0):
 
         left = [1, 1]
+        if self.p is not None:
+            print('deleting player instance')
+            self.p.delete()
         right = [1, 1]
         self.p = self.entropy['music']['left']['stream'].play()
         # if action == 'init':
