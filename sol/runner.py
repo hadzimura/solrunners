@@ -16,6 +16,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import io
+from os.path import isfile
 import platform
 from pprint import pprint
 import uvicorn
@@ -315,6 +316,14 @@ async def catalog(request: Request):
 
 
 if __name__ == "__main__":
+
+    if platform.system() != "Darwin":
+        print('Waiting for the SHM storage to be available...')
+        storage_available = False
+        while storage_available is False:
+            if isfile('/storage/.ready'):
+                storage_available = True
+                print('Storage online, starting Runner')
 
     api_port = 8000 + int(arg.room)
     uvicorn.run("runner:app", host="127.0.0.1", port=api_port, reload=False)

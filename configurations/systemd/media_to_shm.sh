@@ -26,4 +26,6 @@ cp -r "${SOURCE_STATIC}" "${DESTINATION}"
 echo "Syncing all the SoL Media from '${SOURCE_TEMPLATES}' into the SHM storage '${DESTINATION}'"
 cp -r "${SOURCE_TEMPLATES}" "${DESTINATION}"
 
+touch /storage/.ready
+
 echo "All done"
