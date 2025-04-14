@@ -380,15 +380,15 @@ async def entropy(cfg, aplayer):
         print(e)
 
     video = cv.VideoCapture(str(cfg.entropy_video))
-    video.set(cv.CAP_PROP_BUFFERSIZE, 5)
+    # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
 
     # self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
     # video.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
     # video.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
     # self.playing[layer]['stream'].set(cv.CAP_PROP_BUFFERSIZE, self.fps)
-    video.set(cv.CAP_PROP_FPS, 25)
+    # video.set(cv.CAP_PROP_FPS, 25)
 
-    # video.set(cv.CAP_PROP_POS_FRAMES, 7500)
+    video.set(cv.CAP_PROP_POS_FRAMES, 7500)
 
     # eplayer.set_entropy_playhead(start_frame=0)
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
@@ -428,7 +428,7 @@ async def entropy(cfg, aplayer):
             # kladná čísla = audio je napřed
             # záporná čísla = audio je pozadu
             av_sync = current_audio_frame - frame_counter
-            print(av_sync, current_audio_frame, frame_counter, frame_time)
+            # print(av_sync, current_audio_frame, frame_counter, frame_time)
 
             if overlays is True:
 
@@ -470,7 +470,9 @@ async def entropy(cfg, aplayer):
 
         else:
             print('End of cycle')
-            video.set(cv.CAP_PROP_POS_FRAMES, 1)
+            video.release()
+            # video.set(cv.CAP_PROP_POS_FRAMES, 1)
+            video = cv.VideoCapture(str(cfg.entropy_video))
             aplayer.eplay(action='init')
             frame_counter = 0
             # aplayer.stop_audio()
