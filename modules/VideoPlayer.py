@@ -488,8 +488,8 @@ async def entropy(cfg, aplayer):
         if frame_time < 1:
             frame_time = 1
 
-        if frame_time > 25:
-            frame_time = 25
+        if frame_time > 35:
+            frame_time = 35
 
         if frame_time > fra_max:
             fra_max = frame_time
