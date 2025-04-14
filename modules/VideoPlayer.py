@@ -424,6 +424,7 @@ async def entropy(cfg, aplayer):
             current_audio_frame = round(aplayer.etime() * 25, 0)
             subtitle_cue = None
             av_sync = current_audio_frame - frame_counter
+            print(av_sync, current_audio_frame, frame_counter)
 
             if overlays is True:
 
