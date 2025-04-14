@@ -410,10 +410,7 @@ async def entropy(cfg, aplayer):
     cycle = 1
 
     # Run audio track
-    # aplayer.eplay(action='init')
-    # aplayer.play_audio(1, overlay=True)
-    # aplayer.play_audio(2, overlay=True)
-    # aplayer.play_audio(3, overlay=True)
+    aplayer.eplay(action='init')
 
     # Main video loop
     frame_counter = 1
