@@ -499,7 +499,7 @@ async def entropy(cfg, aplayer):
         #     video.set(cv.CAP_PROP_POS_FRAMES, current_audio_frame)
 
         # This actually controls the playback speed!
-        cv.waitKey(25)
+        cv.waitKey(frame_time)
         # if cfg.read_input(cv.waitKey(frame_time)) is False:
         #     # Method returns False for ESC key
         #     break
