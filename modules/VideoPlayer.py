@@ -407,6 +407,8 @@ async def entropy(cfg, aplayer):
     font_status = cfg.font['status']
     subtitle = None
 
+    cycle = 1
+
     # Run audio track
     aplayer.eplay(action='init')
     # aplayer.play_audio(1, overlay=True)
@@ -469,7 +471,8 @@ async def entropy(cfg, aplayer):
             frame_counter += 1
 
         else:
-            print('End of cycle')
+            print('End of cycle {}'.format(cycle))
+            cycle += 1
             video.release()
             # video.set(cv.CAP_PROP_POS_FRAMES, 1)
             video = cv.VideoCapture(str(cfg.entropy_video))
