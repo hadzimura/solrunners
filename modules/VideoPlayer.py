@@ -423,7 +423,7 @@ async def entropy(cfg, aplayer):
             # Subtitles overlay
             current_audio_frame = round(aplayer.etime() * 25, 0)
             subtitle_cue = None
-            av_sync = current_audio_frame - frame_counter + 1
+            av_sync = current_audio_frame - frame_counter
 
             if overlays is True:
 
@@ -484,8 +484,6 @@ async def entropy(cfg, aplayer):
 
         if frame_time < 1:
             frame_time = 1
-        if frame_time > 1:
-            frame_time = 1
 
         if frame_time > fra_max:
             fra_max = frame_time
@@ -499,7 +497,7 @@ async def entropy(cfg, aplayer):
         #     video.set(cv.CAP_PROP_POS_FRAMES, current_audio_frame)
 
         # This actually controls the playback speed!
-        cv.waitKey(frame_time)
+        cv.waitKey(25)
         # if cfg.read_input(cv.waitKey(frame_time)) is False:
         #     # Method returns False for ESC key
         #     break
