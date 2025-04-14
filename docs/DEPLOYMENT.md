@@ -125,9 +125,10 @@ sudo apt-get install liblapack-dev gfortran libhdf5-dev
 sudo apt-get install libprotobuf-dev libgoogle-glog-dev libgflags-dev
 sudo apt-get install protobuf-compiler
 
+-D OPENCV_EXTRA_MODULES_PATH=~/opencv/opencv_contrib/modules \
+
 cmake -D CMAKE_BUILD_TYPE=RELEASE \
 -D CMAKE_INSTALL_PREFIX=/usr/local \
--D OPENCV_EXTRA_MODULES_PATH=~/opencv/opencv_contrib/modules \
 -D ENABLE_NEON=ON \
 -D WITH_OPENMP=ON \
 -D WITH_OPENCL=OFF \
@@ -136,7 +137,7 @@ cmake -D CMAKE_BUILD_TYPE=RELEASE \
 -D WITH_TBB=ON \
 -D BUILD_TBB=ON \
 -D WITH_GSTREAMER=ON \
--D HIGHGUI_PLUGIN_LIST=all \
+-D HIGHGUI_PLUGIN_LIST=gtk \
 -D VIDEOIO_PLUGIN_LIST=all \
 -D BUILD_TESTS=OFF \
 -D WITH_EIGEN=OFF \

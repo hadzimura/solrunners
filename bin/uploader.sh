@@ -5,12 +5,17 @@ set -e
 
 SOL_NETORK="10.0.0"
 
-SOURCE_PATH="/Users/zero/Develop/github.com/hadzimura/solrunners/media"
+BASE_PATH="/Users/zero/Develop/github.com/hadzimura/solrunners/"
+SOURCE_PATH="${BASE_PATH}/media"
 DEFAULT_DESTINATION_PATH="/home/zero/solrunners/media"
 VIDEO_DESTINATION_PATH="/home/zero/solrunners/media/video"
+AUDIO_DESTINATION_PATH="/home/zero/solrunners/media/audio"
 
-DEFAULT_SYNC=(audio fonts raspberry static templates)
-ENTROPY_FOLDER="video/entropy"
+BASHRC="/home/zero/.bashrc"
+
+DEFAULT_SYNC=(fonts raspberry static templates)
+ENTROPY_VIDEO_FOLDER="video/entropy"
+ENTROPY_AUDIO_FOLDER="audio/entropy"
 TATE_FOLDER="video/tate"
 HEADS_FOLDER="video/heads"
 
@@ -34,7 +39,6 @@ else
   echo "Running deployment scenario to '${DESTINATION_HOST}'"
 fi
 
-# DESTINATION="${DESTINATION_USER}@${DESTINATION_HOST}"
 DESTINATION="${DESTINATION_HOST}"
 
 echo "Syncing default media folders"
@@ -43,6 +47,11 @@ for FOLDER in "${DEFAULT_SYNC[@]}"; do
   rsync -azP --delete --mkpath ${SOURCE_PATH}/${FOLDER} ${DESTINATION}:${DEFAULT_DESTINATION_PATH}
 done
 echo "Done syncing default media folders"
+
+echo "Syncing .bashrc"
+  rsync -azP --delete --mkpath ${BASE_PATH}/configurations/.bashrc ${DESTINATION}:${BASHRC}
+echo "Done syncing default media folders"
+
 
 echo "Syncing additional media folders"
 case "${DESTINATION_IP}" in
@@ -53,8 +62,9 @@ case "${DESTINATION_IP}" in
     4) echo "Syncing folder '${TATE_FOLDER}' to host '${DESTINATION_HOST}'"
        rsync -azP --delete --mkpath ${SOURCE_PATH}/${TATE_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH} ;;
     5) echo "Syncing folder '${HEADS_FOLDER}' to host '${DESTINATION_HOST}'"
-       rsync -azP --delete --mkpath ${SOURCE_PATH}/${HEADS_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH}
-       rsync -azP --delete --mkpath ${SOURCE_PATH}/${ENTROPY_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH} ;;
+       # rsync -azP --delete --mkpath ${SOURCE_PATH}/${HEADS_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH}
+       rsync -azP --delete --mkpath ${SOURCE_PATH}/${ENTROPY_VIDEO_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH}
+       rsync -azP --delete --mkpath ${SOURCE_PATH}/${ENTROPY_AUDIO_FOLDER} ${DESTINATION}:${AUDIO_DESTINATION_PATH} ;;
     test) echo "Nothing to be done, only testing" ;;
 esac
 
