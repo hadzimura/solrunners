@@ -473,12 +473,19 @@ async def entropy(cfg, aplayer):
         else:
             print('End of cycle {}'.format(cycle))
             cycle += 1
+            print('releasing video')
             video.release()
+            print('released')
             # video.set(cv.CAP_PROP_POS_FRAMES, 1)
             video = cv.VideoCapture(str(cfg.entropy_video))
-            # aplayer.eplay(action='init')
-            frame_counter = 1
             print('New stream acquired')
+
+            print('resetting audio')
+            aplayer.eplay(action='init')
+            print('audio resetted')
+
+            frame_counter = 1
+
             # aplayer.stop_audio()
             # aplayer.play_audio(0, overlay=True)
             # aplayer.play_audio(1, overlay=True)
