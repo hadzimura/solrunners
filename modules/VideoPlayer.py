@@ -423,7 +423,7 @@ async def entropy(cfg, aplayer):
             # Subtitles overlay
             current_audio_frame = round(aplayer.etime() * 25, 0)
             subtitle_cue = None
-            av_sync = current_audio_frame - frame_counter
+            av_sync = current_audio_frame - frame_counter + 1
 
             if overlays is True:
 
@@ -506,7 +506,7 @@ async def entropy(cfg, aplayer):
 
         # Prepare data for next frame processing
         # eplayer.update()
-        await asyncio.sleep(0.0001)
+        await asyncio.sleep(0.00001)
 
 
     # Release everything
