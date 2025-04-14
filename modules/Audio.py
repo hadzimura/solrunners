@@ -59,7 +59,8 @@ class AudioLibrary(object):
         self.timeline = dict()
 
         # Player storage
-        self.p = {'L': list(), 'R': list()}
+        # self.p = {'L': list(), 'R': list()}
+        self.p = None
 
         # Load audio tracks using tracks metadata
         for album in self.tracks_info:
