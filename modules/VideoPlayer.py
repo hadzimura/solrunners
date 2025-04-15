@@ -169,7 +169,9 @@ async def entropy(cfg):
     except Exception as e:
         print(e)
 
+    print('init video')
     video = cv.VideoCapture(str(cfg.entropy_video))
+    print('init audio')
     audio = pyglet.media.StaticSource(pyglet.media.load(cfg.entropy_audio, streaming=False))
     # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
 
