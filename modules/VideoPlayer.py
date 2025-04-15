@@ -172,7 +172,7 @@ async def entropy(cfg):
     print('init video')
     video = cv.VideoCapture(str(cfg.entropy_video))
     print('init audio')
-    audio = pyglet.media.StaticSource(pyglet.media.load(cfg.entropy_audio, streaming=False))
+    audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_audio), streaming=False))
     # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
     print('----')
     # self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
