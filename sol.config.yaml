@@ -22,6 +22,8 @@ runners:
       pir: 15
       green: 19
       blue: 26
+    video:
+      - entropy
     audio:
       - entropy
   4:
