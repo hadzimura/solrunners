@@ -70,7 +70,7 @@ async def runtime_lifespan(app: FastAPI):
         asyncio.create_task(tate(app.c, app.a))
     elif room == 3:
         # asyncio.create_task(tate_linear(app.c, app.a))
-        asyncio.create_task(entropy(app.c, app.a))
+        asyncio.create_task(entropy(app.c))
     elif room == 4:
         # asyncio.create_task(tate_linear(app.c, app.a))
         asyncio.create_task(tate(app.c, app.a))

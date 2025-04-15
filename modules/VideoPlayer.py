@@ -18,6 +18,13 @@ from datetime import timedelta
 from screeninfo import get_monitors
 from random import randint, uniform
 
+from random import random, choice
+from scipy.io import wavfile
+import time
+
+# Run pyglet in headless mode
+pyglet.options['headless'] = True
+
 
 async def tate(config, aplayer):
 
@@ -64,7 +71,7 @@ async def tate(config, aplayer):
         if status is True:
 
             # Subtitles overlay
-            current_audio_frame = round(aplayer.etime() * 25, 0)
+            current_audio_frame = round(aplayer.time() * 25, 0)
             subtitle_cue = None
             # kladná čísla = audio je napřed
             # záporná čísla = audio je pozadu
@@ -150,7 +157,7 @@ async def tate(config, aplayer):
     video.release()
     cv.destroyAllWindows()
 
-async def entropy(cfg, aplayer):
+async def entropy(cfg):
 
     overlays = True
 
@@ -163,6 +170,7 @@ async def entropy(cfg, aplayer):
         print(e)
 
     video = cv.VideoCapture(str(cfg.entropy_video))
+    audio = pyglet.media.StaticSource(pyglet.media.load(cfg.entropy_audio, streaming=False))
     # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
 
     # self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
@@ -193,7 +201,7 @@ async def entropy(cfg, aplayer):
     cycle = 1
 
     # Run audio track
-    aplayer.eplay(action='init')
+    aplayer = audio.play()
 
     # Main video loop
     frame_counter = 1
@@ -205,7 +213,7 @@ async def entropy(cfg, aplayer):
         if status is True:
 
             # Subtitles overlay
-            current_audio_frame = round(aplayer.etime() * 25, 0)
+            current_audio_frame = round(round(aplayer.time, 6) * 25, 0)
             subtitle_cue = None
             # kladná čísla = audio je napřed
             # záporná čísla = audio je pozadu
@@ -215,7 +223,7 @@ async def entropy(cfg, aplayer):
             if overlays is True:
 
                 try:
-                    subtitle_cue = datetime.strptime(str(timedelta(seconds=aplayer.etime())), '%H:%M:%S.%f').time().replace(microsecond=0)
+                    subtitle_cue = datetime.strptime(str(timedelta(seconds=round(aplayer.time, 6))), '%H:%M:%S.%f').time().replace(microsecond=0)
                 except Exception as runtime_problem:
                     print('Runtime failing: {}'.format(runtime_problem))
 
@@ -233,10 +241,10 @@ async def entropy(cfg, aplayer):
                     cv.putText(frame, subtitle, coo, cv.FONT_HERSHEY_TRIPLEX, fs, (25, 190, 20), 2, cv.LINE_AA)
 
                 # Overlays
-                t = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(av_sync, frame_counter, current_audio_frame, frame_time,  subtitle_cue, aplayer.etime())
+                t = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(av_sync, frame_counter, current_audio_frame, frame_time,  subtitle_cue, round(aplayer.time, 6))
                 cv.putText(frame, t, font_status.org, font_status.name, font_status.scale, (0, 50, 200), font_status.thickness, font_status.type)
 
-                t = 'T={} // f{} // v: {} | min/max: <{}/{}>'.format(datetime.now().strftime("%H:%M:%S.%f"), frame_counter, aplayer.p.volume, fra_min, fra_max)
+                t = 'T={} // f{} // v: {} | min/max: <{}/{}>'.format(datetime.now().strftime("%H:%M:%S.%f"), frame_counter, aplayer.volume, fra_min, fra_max)
                 cv.putText(frame, t, (50, 75), font_status.name, font_status.scale, (0, 50, 200), font_status.thickness, font_status.type)
 
             try:
