@@ -174,7 +174,7 @@ async def entropy(cfg):
     print('init audio')
     audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_audio), streaming=False))
     # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
-    print('----')
+    print('Media initialized')
     # self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
     # video.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
     # video.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -192,6 +192,7 @@ async def entropy(cfg):
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
     # cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, 1)
 
+    av_sync = 0
     frame_time = 25
     frame_drops = 0
     fra_min = 25
@@ -266,24 +267,16 @@ async def entropy(cfg):
         else:
             print('End of cycle {}'.format(cycle))
             cycle += 1
-            print('releasing video')
+            print('Releasing video')
             video.release()
+            aplayer.delete()
             print('released')
-            # video.set(cv.CAP_PROP_POS_FRAMES, 1)
             video = cv.VideoCapture(str(cfg.entropy_video))
             print('New stream acquired')
-
-            print('resetting audio')
-            aplayer.eplay(action='init')
+            print('start audio')
+            aplayer = audio.play()
             print('audio resetted')
-
             frame_counter = 1
-
-            # aplayer.stop_audio()
-            # aplayer.play_audio(0, overlay=True)
-            # aplayer.play_audio(1, overlay=True)
-            # aplayer.play_audio(2, overlay=True)
-            # aplayer.play_audio(3, overlay=True)
 
         # cv.waitKey(0)
         if av_sync == 0:
@@ -305,24 +298,12 @@ async def entropy(cfg):
         if frame_time < fra_min:
             fra_min = frame_time
             print('min', fra_min)
-
-        # if frame_time == 1:
-        #     print("Moving {} frames ahead".format(current_audio_frame - video.get(cv.CAP_PROP_POS_FRAMES)))
-        #     video.set(cv.CAP_PROP_POS_FRAMES, current_audio_frame)
-
         # This actually controls the playback speed!
         cv.waitKey(frame_time)
-        # if cfg.read_input(cv.waitKey(frame_time)) is False:
-        #     # Method returns False for ESC key
-        #     break
 
-        # Prepare data for next frame processing
-        # eplayer.update()
         if frame_counter == 1:
             print('----')
         await asyncio.sleep(0.00001)
 
-
     # Release everything
-    video.release()
     cv.destroyAllWindows()
