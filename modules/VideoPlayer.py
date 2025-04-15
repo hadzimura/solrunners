@@ -301,8 +301,8 @@ async def entropy(cfg):
         # This actually controls the playback speed!
         cv.waitKey(frame_time)
 
-        if frame_counter % 125 == 0:
-            video.set(cv.CAP_PROP_POS_FRAMES, randint(1000,7000))
+        # if frame_counter % 125 == 0:
+        #     video.set(cv.CAP_PROP_POS_FRAMES, randint(1000,7000))
 
         if frame_counter == 1:
             print('----')
