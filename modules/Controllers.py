@@ -169,9 +169,9 @@ class Text(object):
         return np.array(pil_im)
 
 class Font(object):
-
-    def __init__(self, font_name=cv.FONT_HERSHEY_COMPLEX_SMALL, font_org=(50, 50), font_scale=1.5,
-                 font_color=(255, 255, 0), font_thickness=2, font_type=cv.LINE_AA):
+    # FONT_HERSHEY_COMPLEX_SMALL
+    def __init__(self, font_name=cv.FONT_HERSHEY_PLAIN, font_org=(50, 50), font_scale=1.5,
+                 font_color=(235, 202, 40), font_thickness=2, font_type=cv.LINE_AA):
         self.name = font_name
         self.org = font_org
         self.scale = font_scale

@@ -262,7 +262,7 @@ class AudioLibrary(object):
             # if 'voice.left' in file:
             #     print('Analyzing file: {}'.format(file))
             #     self.timeline = self.analyze(file)
-        # pprint(self.catalog, indent=2)
+        pprint(self.catalog, indent=2)
 
     def prepare_audio(self, album, library_path):
 
@@ -272,55 +272,17 @@ class AudioLibrary(object):
     def stop_audio(self):
         self.p.pause()
 
-    def eplay(self, action='status', start=0):
+    def eplay(self, name=None, tid=None):
 
-        left = [1, 1]
         if self.p is not None:
             print('deleting player instance')
             self.p.delete()
-        right = [1, 1]
-        self.p = self.entropy['music']['left']['stream'].play()
-        # if action == 'init':
-        #     try:
-        #         self.p['L'] = list()
-        #         self.p['P'] = list()
-        #         self.p['L'].append(self.entropy['music']['left']['stream'].play())
-        #         self.p['L'].append(self.entropy['vocals']['left']['stream'].play())
-        #         self.p['R'].append(self.entropy['music']['right']['stream'].play())
-        #         self.p['R'].append(self.entropy['vocals']['right']['stream'].play())
-        #         # self.esound.append(self.entropy['music']['left']['stream'].play())
-        #         # self.esound.append(self.entropy['music']['right']['stream'].play())
-        #         # self.esound.append(self.entropy['vocals']['left']['stream'].play())
-        #         # self.esound.append(self.entropy['vocals']['right']['stream'].play())
-        #         print('Initialized the Entropy Audio Player')
-        #     except Exception as e:
-        #         print('Failed to initialize the Entropy Audio Player')
-        #         print(e)
-        #         exit(1)
-        #
-        # elif action == 'swap':
-        #     if self.p['L'][0].volume == 0:
-        #         self.p['L'][0].volume = 0.5
-        #         self.p['L'][1].volume = 0.5
-        #         self.p['L'][0].volume = 1
-        #         self.p['L'][1].volume = 1
-        #         self.p['R'][0].volume = 0.7
-        #         self.p['R'][1].volume = 0.7
-        #         self.p['R'][0].volume = 0
-        #         self.p['R'][1].volume = 0
-        #     else:
-        #         self.p['L'][0].volume = 0.5
-        #         self.p['L'][1].volume = 0.5
-        #         self.p['L'][0].volume = 0
-        #         self.p['L'][1].volume = 0
-        #         self.p['R'][0].volume = 0.5
-        #         self.p['R'][1].volume = 0.5
-        #         self.p['R'][0].volume = 1
-        #         self.p['R'][1].volume = 1
-
+        if name == 'entropy':
+            self.p = self.entropy['music']['left']['stream'].play()
+        elif name == 'tate':
+            self.p = self.media[tid-1].play()
 
     def etime(self):
-
         return round(self.p.time, 6)
 
 

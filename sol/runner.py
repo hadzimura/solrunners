@@ -26,8 +26,7 @@ from ruamel.yaml import YAML
 from modules.Audio import AudioLibrary
 from modules.Config import Configuration
 from modules.Config import arg_parser
-from modules.VideoPlayer import tate_linear
-from modules.VideoPlayer import heads
+from modules.VideoPlayer import tate
 from modules.VideoPlayer import entropy
 
 from pydantic import BaseModel
@@ -65,19 +64,19 @@ async def runtime_lifespan(app: FastAPI):
     room = int(arg.room)
     if room == 1:
         # asyncio.create_task(tate_linear(app.c, app.a))
-        asyncio.create_task(tate_linear(app.c, app.a))
+        asyncio.create_task(tate(app.c, app.a))
     elif room == 2:
         # asyncio.create_task(tate_linear(app.c, app.a))
-        asyncio.create_task(tate_linear(app.c, app.a))
+        asyncio.create_task(tate(app.c, app.a))
     elif room == 3:
         # asyncio.create_task(tate_linear(app.c, app.a))
         asyncio.create_task(entropy(app.c, app.a))
     elif room == 4:
         # asyncio.create_task(tate_linear(app.c, app.a))
-        asyncio.create_task(tate_linear(app.c, app.a))
+        asyncio.create_task(tate(app.c, app.a))
     elif room == 5:
         # asyncio.create_task(tate_linear(app.c, app.a))
-        asyncio.create_task(heads(app.c, app.a))
+        asyncio.create_task(tate(app.c, app.a))
 
     if peripherals is True:
         asyncio.create_task(read_sensors())

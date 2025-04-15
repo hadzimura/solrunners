@@ -142,20 +142,20 @@ class Configuration(object):
             exit(1)
 
         # Heads audio tracks metadata (always loaded)
-        heads_metadata = self.project_root / Path('sol.audio.heads.yaml')
-        authors_metadata = self.project_root / Path('sol.authors.yaml')
-        try:
-            print("Loading audio heads metadata: {}".format(heads_metadata))
-            self.tracks['heads'] = dict(self.yaml.load(heads_metadata))
-            print("Loading authors metadata: {}".format(authors_metadata))
-            authors = dict(self.yaml.load(authors_metadata))
-            for head in self.tracks['heads']:
-                a = self.tracks['heads'][head]['author']
-                self.tracks['heads'][head]['fullname'] = authors[a]['name']
-        except FileNotFoundError as e:
-            print('Audio metadata config file not found')
-            print(e)
-            exit(1)
+        # heads_metadata = self.project_root / Path('sol.audio.heads.yaml')
+        # authors_metadata = self.project_root / Path('sol.authors.yaml')
+        # try:
+        #     print("Loading audio heads metadata: {}".format(heads_metadata))
+        #     self.tracks['heads'] = dict(self.yaml.load(heads_metadata))
+        #     print("Loading authors metadata: {}".format(authors_metadata))
+        #     authors = dict(self.yaml.load(authors_metadata))
+        #     for head in self.tracks['heads']:
+        #         a = self.tracks['heads'][head]['author']
+        #         self.tracks['heads'][head]['fullname'] = authors[a]['name']
+        # except FileNotFoundError as e:
+        #     print('Audio metadata config file not found')
+        #     print(e)
+        #     exit(1)
 
         # Total beats of the runtime
         self.beats = 0
@@ -203,7 +203,7 @@ class Configuration(object):
                                 thickness=3)
             }
 
-            # self._load_assets(self.runner['video'])
+            self._load_assets(self.runner['video'])
 
         # Subtitle acquisition is for both Audio / Video Nodes
         self.sub = dict()
@@ -289,18 +289,16 @@ class Configuration(object):
             try:
                 video_name = filename.split('/')[-1]
                 print("Importing video: '{}'".format(video_name))
-                if folder_name not in self.video:
-                    self.video[folder_name] = dict()
 
-                self.video[folder_name][video_name] = dict()
-                self.video[folder_name][video_name] = self._stream_metadata(cv.VideoCapture(filename), folder_name, video_name)
+                self.videos.append(cv.VideoCapture(filename))
 
             except Exception as error:
                 print('Problem acquiring video stream: {}'.format(filename))
                 print(error)
                 exit(1)
 
-        self._reset_queue(folder_name, 'main')
+        # pprint(self.video, indent=2)
+        # self._reset_queue(folder_name, 'main')
         # self._reset_queue(folder_name, 'overlay')
 
     def _get_entropy(self, filename):
@@ -452,8 +450,8 @@ class Configuration(object):
 
         """ Set playhead of Tate stream """
 
-        if len(self.mix_queues[category][layer]) == 0:
-            self._reset_queue(category, layer)
+        # if len(self.mix_queues[category][layer]) == 0:
+        #     self._reset_queue(category, layer)
         stream = choice(self.mix_queues[category][layer])
 
         # Set stream into the layer
