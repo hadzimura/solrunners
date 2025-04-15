@@ -237,7 +237,7 @@ async def entropy(cfg):
                 # Subtitles
                 if subtitle_cue in cfg.sub['entropy']:
                     subtitle = cfg.sub['entropy'][subtitle_cue]
-                    coo = (randint(5, 350), randint(200, 900))
+                    coo = (randint(5, 350), randint(200, 800))
                     fs = uniform(0.4, 1.4)
 
                 if subtitle is not None:
