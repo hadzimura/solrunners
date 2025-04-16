@@ -21,6 +21,7 @@ from random import randint, uniform
 from random import random, choice
 from scipy.io import wavfile
 import time
+from glob import glob
 
 # Run pyglet in headless mode
 pyglet.options['headless'] = True
@@ -28,59 +29,49 @@ pyglet.options['headless'] = True
 
 async def tate(config, aplayer):
 
-    available_videos = len(config.videos)
+    print('tate', config.tate_audio)
+    audios = list()
+    videos = list()
+    for filenumber in range(1, 36):
+        audioname = '{}/{}.wav'.format(config.tate_audio, filenumber)
+        audios.append(pyglet.media.StaticSource(pyglet.media.load(audioname, streaming=False)))
+        videoname = '{}/{}.mp4'.format(config.tate_video, filenumber)
+        videos.append(cv.VideoCapture(videoname))
 
-    get_video = choice((0, available_videos-1))
-
-    video = config.videos[get_video]
-    # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
-
-    # self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
-    # video.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
-    # video.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
-    # self.playing[layer]['stream'].set(cv.CAP_PROP_BUFFERSIZE, self.fps)
-    # video.set(cv.CAP_PROP_FPS, 25)
-
-    # video.set(cv.CAP_PROP_POS_FRAMES, 0)
+    random_play = randint(1, 36)
 
     # eplayer.set_entropy_playhead(start_frame=0)
-    cv.namedWindow('entropy', cv.WINDOW_NORMAL)
+    cv.namedWindow('tate', cv.WINDOW_NORMAL)
     # cv.namedWindow('entropy', cv.WND_PROP_FULLSCREEN)
-    cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
+    cv.namedWindow('tate', cv.WINDOW_FREERATIO)
 
     # cv.namedWindow('entropy', cv.WINDOW_AUTOSIZE)
-    cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+    cv.setWindowProperty('tate', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
     # cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, 1)
 
-    frame_time = 60
+    frame_time = 30
     frame_drops = 0
-    fra_min = 25
-    fra_max = 60
+    fra_min = 5
+    fra_max = 40
     cycle = 1
 
     # Run audio track
-    aplayer.eplay(name='tate', tid=get_video)
-
-    # Main video loop
+    aplayer = audios[random_play].play()
+    vplayer  = videos[random_play]
     frame_counter = 1
-    frame_average = 0
     while True:
 
-        status, frame = video.read()
+        status, frame = vplayer.read()
 
         if status is True:
 
-            # Subtitles overlay
-            current_audio_frame = round(aplayer.time() * 25, 0)
-            subtitle_cue = None
-            # kladná čísla = audio je napřed
-            # záporná čísla = audio je pozadu
+            current_audio_frame = round(round(aplayer.time, 6) * 25, 0)
             av_sync = current_audio_frame - frame_counter
-            # print(av_sync, current_audio_frame, frame_counter, frame_time)
+            print(av_sync, current_audio_frame, frame_counter, frame_time)
 
             try:
                 if frame_time > 5:
-                    cv.imshow('entropy', frame)
+                    cv.imshow('tate', frame)
                 else:
                     print('Dropping frame {} | ft={} | avsync={} | total_drops={}'.format(frame_counter, av_sync, frame_time, frame_drops))
                     # frame_drops += 1
@@ -96,15 +87,18 @@ async def tate(config, aplayer):
             print('End of cycle {}'.format(cycle))
             cycle += 1
             print('releasing video')
-            video.release()
+            vplayer.release()
+            aplayer.delete()
             print('released')
             # video.set(cv.CAP_PROP_POS_FRAMES, 1)
-            get_video = choice((0, available_videos - 1))
-            video = cv.VideoCapture(get_video)
+            random_play = randint(1, 36)
+            # Run audio track
+
+            vplayer = videos[random_play]
             print('New stream acquired')
 
             print('resetting audio')
-            aplayer.eplay(name='tate', tid=get_video)
+            aplayer = audios[random_play].play()
             print('audio resetted')
 
             frame_counter = 1
@@ -117,7 +111,7 @@ async def tate(config, aplayer):
 
         # cv.waitKey(0)
         if av_sync == 0:
-            pass
+            frame_time = 30
         elif av_sync > 0:
             frame_time -=1
         else:
@@ -126,8 +120,8 @@ async def tate(config, aplayer):
         if frame_time < 1:
             frame_time = 1
 
-        if frame_time > 35:
-            frame_time = 35
+        if frame_time > 40:
+            frame_time = 40
 
         if frame_time > fra_max:
             fra_max = frame_time
@@ -136,11 +130,6 @@ async def tate(config, aplayer):
             fra_min = frame_time
             print('min', fra_min)
 
-        # if frame_time == 1:
-        #     print("Moving {} frames ahead".format(current_audio_frame - video.get(cv.CAP_PROP_POS_FRAMES)))
-        #     video.set(cv.CAP_PROP_POS_FRAMES, current_audio_frame)
-
-        # This actually controls the playback speed!
         cv.waitKey(frame_time)
         # if cfg.read_input(cv.waitKey(frame_time)) is False:
         #     # Method returns False for ESC key
@@ -161,54 +150,36 @@ async def entropy(cfg):
 
     overlays = True
 
-    try:
-        print('Attached display info:')
-        screen = get_monitors()[0]
-        print(screen)
-        width, height = screen.width, screen.height
-    except Exception as e:
-        print(e)
-
-    print('init video')
+    print("Initializing video for the first time: '{}'".format(cfg.entropy_video))
     video = cv.VideoCapture(str(cfg.entropy_video))
-    print('init audio')
+    print("Initializing audio for the first time: '{}'".format(cfg.entropy_audio))
     audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_audio), streaming=False))
     # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
-    print('Media initialized')
-    # self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
-    # video.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
-    # video.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
-    # self.playing[layer]['stream'].set(cv.CAP_PROP_BUFFERSIZE, self.fps)
-    # video.set(cv.CAP_PROP_FPS, 25)
+    print('AV media initialized')
 
+    # Display setup
     video.set(cv.CAP_PROP_POS_FRAMES, 0)
-
-    # eplayer.set_entropy_playhead(start_frame=0)
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
-    # cv.namedWindow('entropy', cv.WND_PROP_FULLSCREEN)
     cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
-
-    # cv.namedWindow('entropy', cv.WINDOW_AUTOSIZE)
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
-    # cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, 1)
 
     av_sync = 0
+    frame_counter = 1
     frame_time = 25
     frame_drops = 0
     fra_min = 25
     fra_max = 25
 
-    font_status = cfg.font['status']
+    # font_status = cfg.font['status']
+    font_scale = 1
+    coord = (50, 50)
     subtitle = None
-
     cycle = 1
 
     # Run audio track
     aplayer = audio.play()
 
     # Main video loop
-    frame_counter = 1
-    frame_average = 0
     while True:
 
         status, frame = video.read()
@@ -218,10 +189,7 @@ async def entropy(cfg):
             # Subtitles overlay
             current_audio_frame = round(round(aplayer.time, 6) * 25, 0)
             subtitle_cue = None
-            # kladná čísla = audio je napřed
-            # záporná čísla = audio je pozadu
             av_sync = current_audio_frame - frame_counter
-            # print(av_sync, current_audio_frame, frame_counter, frame_time)
 
             if overlays is True:
 
@@ -237,18 +205,32 @@ async def entropy(cfg):
                 # Subtitles
                 if subtitle_cue in cfg.sub['entropy']:
                     subtitle = cfg.sub['entropy'][subtitle_cue]
-                    coo = (randint(5, 350), randint(200, 800))
-                    fs = uniform(0.4, 1.4)
+                    coord = (randint(5, 350), randint(200, 800))
+                    font_scale = uniform(0.4, 1.4)
 
                 if subtitle is not None:
-                    cv.putText(frame, subtitle, coo, cv.FONT_HERSHEY_TRIPLEX, fs, (25, 190, 20), 2, cv.LINE_AA)
+                    cv.putText(frame,
+                               subtitle,
+                               coord,
+                               cv.FONT_HERSHEY_TRIPLEX,
+                               font_scale,
+                               (25, 190, 20),
+                               2,
+                               cv.LINE_AA)
 
                 # Overlays
-                t = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(av_sync, frame_counter, current_audio_frame, frame_time,  subtitle_cue, round(aplayer.time, 6))
-                cv.putText(frame, t, font_status.org, font_status.name, font_status.scale, (0, 50, 200), font_status.thickness, font_status.type)
+                status = 'a-v: {} | v:{} a:{} ft: {} / {} / {}\n dfvasdf'.format(av_sync, frame_counter, current_audio_frame, frame_time,  subtitle_cue, round(aplayer.time, 6))
+                cv.putText(frame,
+                           status,
+                           (50, 50),
+                           cv.FONT_HERSHEY_PLAIN,
+                           1.5,
+                           (0, 50, 200),
+                           2,
+                           cv.LINE_AA)
 
-                t = 'T={} // f{} // v: {} | min/max: <{}/{}>'.format(datetime.now().strftime("%H:%M:%S.%f"), frame_counter, aplayer.volume, fra_min, fra_max)
-                cv.putText(frame, t, (50, 75), font_status.name, font_status.scale, (0, 50, 200), font_status.thickness, font_status.type)
+                # t = 'T={} // f{} // v: {} | min/max: <{}/{}>'.format(datetime.now().strftime("%H:%M:%S.%f"), frame_counter, aplayer.volume, fra_min, fra_max)
+                # cv.putText(frame, t, (50, 75), font_status.name, font_status.scale, (0, 50, 200), font_status.thickness, font_status.type)
 
             try:
                 if frame_time > 5:

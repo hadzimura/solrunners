@@ -97,14 +97,14 @@ To revert graphical session use
 sudo systemctl set-default graphical.target
 
    48  service --status-all
-   49  service cups disable
-   50  systemctl cups disable
-   51  systemctl cups.service disable
-   52  systemctl list-unit-files | grep enabled
+service cups disable
+systemctl cups disable
+systemctl cups.service disable
+systemctl list-unit-files | grep enabled
    53  systemctl disable cups
-   54  systemctl disable bluetooth
+systemctl disable bluetooth
    55  systemctl list-unit-files | grep enabled
-   56  systemctl disable nfs-client.target
+   systemctl disable nfs-client.target
    57  systemctl disable wayvnc
    58  systemctl disable sol.service
    59  systemctl disable lightdm.service

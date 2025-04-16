@@ -161,7 +161,7 @@ console=serial0,115200 console=tty1 root=PARTUUID=e75229ef-02 rootfstype=ext4 fs
 ```
 
 ## boot logo
-
+scp -r splash.png zero@10.0.0.211:/usr/share/plymouth/themes/pix/
 ``` 
 $ scp -r zero@10.0.0.211:/usr/share/plymouth/themes/pix/splash.png .
 $ scp -r splash.png zero@10.0.0.211:/usr/share/plymouth/themes/pix/

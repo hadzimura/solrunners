@@ -83,6 +83,8 @@ class Configuration(object):
         self.entropy_audio = self.media_root / Path('audio/entropy/1.wav')
         self.entropy_video = self.media_root / Path('video/entropy/entropy.mov')
         self.entropy_subtitles = self.media_root / Path('video/entropy/entropy.subtitles')
+        self.tate_audio = self.audio_path / Path('tate')
+        self.tate_video = self.video_path / Path('tate')
         self.entropy = False
         self.tate = False
 
@@ -126,20 +128,20 @@ class Configuration(object):
             print("Configuration file does not contain a pinout section: {}".format(error))
 
         # Global audio tracks metadata
-        tracks_metadata = self.project_root / Path('sol.audio.yaml')
-        try:
-            print("Loading global audio metadata: {}".format(tracks_metadata))
-            all_tracks = self.yaml.load(tracks_metadata)
-            for batch_name in all_tracks:
-                if batch_name in self.runner['audio']:
-                    print("Initializing tracks for: '{}'".format(batch_name))
-                    self.tracks[batch_name] = dict(all_tracks[batch_name])
-            self._verbose(self.tracks)
-        except KeyError as error:
-            print("Audio not configured".format(tracks_metadata))
-        except FileNotFoundError:
-            print("Audio metadata config file not found: '{}'".format(tracks_metadata))
-            exit(1)
+        # tracks_metadata = self.project_root / Path('sol.audio.yaml')
+        # try:
+        #     print("Loading global audio metadata: {}".format(tracks_metadata))
+        #     all_tracks = self.yaml.load(tracks_metadata)
+        #     for batch_name in all_tracks:
+        #         if batch_name in self.runner['audio']:
+        #             print("Initializing tracks for: '{}'".format(batch_name))
+        #             self.tracks[batch_name] = dict(all_tracks[batch_name])
+        #     self._verbose(self.tracks)
+        # except KeyError as error:
+        #     print("Audio not configured".format(tracks_metadata))
+        # except FileNotFoundError:
+        #     print("Audio metadata config file not found: '{}'".format(tracks_metadata))
+        #     exit(1)
 
         # Heads audio tracks metadata (always loaded)
         # heads_metadata = self.project_root / Path('sol.audio.heads.yaml')
