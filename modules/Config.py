@@ -80,7 +80,7 @@ class Configuration(object):
 
         self.audio_path = self.media_root / Path('audio')
         self.video_path = self.media_root / Path('video')
-        self.entropy_audio = self.media_root / Path('audio/entropy/1.wav')
+        self.entropy_audio = self.media_root / Path('audio/entropy/entropy.wav')
         self.entropy_video = self.media_root / Path('video/entropy/entropy.mov')
         self.entropy_subtitles = self.media_root / Path('video/entropy/entropy.subtitles')
         self.tate_audio = self.audio_path / Path('tate')

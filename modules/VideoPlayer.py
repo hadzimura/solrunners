@@ -217,22 +217,6 @@ async def entropy(cfg):
                                (25, 190, 20),
                                2,
                                cv.LINE_AA)
-                    cv.putText(frame,
-                               subtitle,
-                               coord,
-                               cv.FONT_HERSHEY_TRIPLEX,
-                               font_scale,
-                               (25, 190, 20),
-                               2,
-                               cv.LINE_AA)
-                    cv.putText(frame,
-                               subtitle,
-                               coord,
-                               cv.FONT_HERSHEY_SIMPLEX,
-                               font_scale,
-                               (0, 0, 0),
-                               1,
-                               cv.LINE_AA)
 
                 # Overlays
                 status_1 = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(av_sync,
