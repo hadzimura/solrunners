@@ -217,6 +217,22 @@ async def entropy(cfg):
                                (25, 190, 20),
                                2,
                                cv.LINE_AA)
+                    cv.putText(frame,
+                               subtitle,
+                               coord,
+                               cv.FONT_HERSHEY_TRIPLEX,
+                               font_scale,
+                               (25, 190, 20),
+                               2,
+                               cv.LINE_AA)
+                    cv.putText(frame,
+                               subtitle,
+                               coord,
+                               cv.FONT_HERSHEY_SIMPLEX,
+                               font_scale,
+                               (0, 0, 0),
+                               1,
+                               cv.LINE_AA)
 
                 # Overlays
                 status_1 = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(av_sync,
@@ -257,7 +273,6 @@ async def entropy(cfg):
                 else:
                     print('Dropping frame {} | ft={} | avsync={} | total_drops={}'.format(frame_counter, av_sync, frame_time, frame_drops))
                     frame_drops += 1
-                # cv.moveWindow('entropy', 0, 0)
 
             except Exception as playback:
                 print(playback)
@@ -268,15 +283,14 @@ async def entropy(cfg):
         else:
             print('End of cycle {}'.format(cycle))
             cycle += 1
-            print('Releasing video')
+            print('Releasing AV media')
             video.release()
             aplayer.delete()
-            print('released')
+            print('AV media released')
+            print('Acquiring new AV media')
             video = cv.VideoCapture(str(cfg.entropy_video))
-            print('New stream acquired')
-            print('start audio')
             aplayer = audio.play()
-            print('audio resetted')
+            print('New AV media acquired')
             frame_counter = 1
 
         # cv.waitKey(0)
@@ -295,10 +309,8 @@ async def entropy(cfg):
 
         if frame_time > fra_max:
             fra_max = frame_time
-            print('max', fra_max)
         if frame_time < fra_min:
             fra_min = frame_time
-            print('min', fra_min)
         # This actually controls the playback speed!
         cv.waitKey(frame_time)
 
@@ -306,7 +318,7 @@ async def entropy(cfg):
         #     video.set(cv.CAP_PROP_POS_FRAMES, randint(1000,7000))
 
         if frame_counter == 1:
-            print('----')
+            print('-----------------------------')
         await asyncio.sleep(0.00001)
 
     # Release everything
