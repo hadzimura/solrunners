@@ -219,9 +219,14 @@ async def entropy(cfg):
                                cv.LINE_AA)
 
                 # Overlays
-                status = 'a-v: {} | v:{} a:{} ft: {} / {} / {}\n dfvasdf'.format(av_sync, frame_counter, current_audio_frame, frame_time,  subtitle_cue, round(aplayer.time, 6))
+                status_1 = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(av_sync,
+                                                                       frame_counter,
+                                                                       current_audio_frame,
+                                                                       frame_time,
+                                                                       subtitle_cue,
+                                                                       round(aplayer.time, 6))
                 cv.putText(frame,
-                           status,
+                           status_1,
                            (50, 50),
                            cv.FONT_HERSHEY_PLAIN,
                            1.5,
@@ -229,8 +234,22 @@ async def entropy(cfg):
                            2,
                            cv.LINE_AA)
 
-                # t = 'T={} // f{} // v: {} | min/max: <{}/{}>'.format(datetime.now().strftime("%H:%M:%S.%f"), frame_counter, aplayer.volume, fra_min, fra_max)
-                # cv.putText(frame, t, (50, 75), font_status.name, font_status.scale, (0, 50, 200), font_status.thickness, font_status.type)
+                status_2 = 'T={} == c: {} // f{} // v: {} | min/max: <{}/{}>'.format(
+                    datetime.now().strftime("%H:%M:%S.%f"),
+                    cycle,
+                    frame_counter,
+                    aplayer.volume,
+                    fra_min,
+                    fra_max)
+
+                cv.putText(frame,
+                           status_2,
+                           (50, 75),
+                           cv.FONT_HERSHEY_PLAIN,
+                           1.5,
+                           (0, 50, 200),
+                           2,
+                           cv.LINE_AA)
 
             try:
                 if frame_time > 5:
