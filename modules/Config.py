@@ -83,8 +83,8 @@ class Configuration(object):
         self.entropy_audio = self.media_root / Path('audio/entropy/entropy.wav')
         self.entropy_video = self.media_root / Path('video/entropy/entropy.mov')
         self.entropy_subtitles = self.media_root / Path('video/entropy/entropy.subtitles')
-        self.tate_audio = self.audio_path / Path('tate')
-        self.tate_video = self.video_path / Path('tate')
+        self.silent_heads_audio = self.audio_path / Path('heads/silent_heads.wav')
+        self.silent_heads_video = self.video_path / Path('heads/silent_heads.mov')
         self.entropy = False
         self.tate = False
 
