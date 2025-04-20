@@ -1,14 +1,21 @@
 adela:
   name: Adéla Leinweberová
+  window: [1]
 barbora:
   name: Barbora Liška Karpíšková
+  window: [1000]
 denisa:
   name: Denisa Dimitrovová
+  window: [ 2000 ]
 jan:
   name: Jan Samec
+  window: [10000]
 lukas:
   name: Lukáš Georgiev
+  window: [ 3000 ]
 radim:
   name: Radim Kučera
+  window: [ 4000 ]
 roman:
   name: Roman Neruda
+  window: [ 5000 ]

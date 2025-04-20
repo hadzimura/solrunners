@@ -29,11 +29,6 @@ from modules.Config import arg_parser
 from modules.VideoPlayer import silent_heads
 from modules.VideoPlayer import entropy
 
-from pydantic import BaseModel
-
-class Queue(BaseModel):
-    play_time: datetime.datetime
-    track_id: int
 
 # Parse the runtime arguments to decide 'who we are'
 arg = arg_parser()

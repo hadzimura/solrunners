@@ -86,8 +86,8 @@ async def silent_heads(cfg):
                 #     aplayer.eplay(action='swap')
 
                 # Subtitles
-                if subtitle_cue in cfg.sub['entropy']:
-                    subtitle = cfg.sub['entropy'][subtitle_cue]
+                if subtitle_cue in cfg.sub['silent_heads']:
+                    subtitle = cfg.sub['silent_heads'][subtitle_cue]
                     coord = (randint(5, 350), randint(200, 800))
                     font_scale = uniform(0.4, 1.4)
 
@@ -198,6 +198,8 @@ async def entropy(cfg):
 
     print("Initializing video for the first time: '{}'".format(cfg.entropy_video))
     video = cv.VideoCapture(str(cfg.entropy_video))
+    print(video.get(cv.CAP_PROP_FRAME_COUNT))
+    exit(0)
     print("Initializing audio for the first time: '{}'".format(cfg.entropy_audio))
     audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_audio), streaming=False))
     # video.set(cv.CAP_PROP_BUFFERSIZE, 5)

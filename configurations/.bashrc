@@ -116,7 +116,8 @@ source /home/zero/solrunners/.venv/bin/activate
 export PYTHONPATH=$PYTHONPATH:/home/zero/solrunners/
 
 if [ -z $SSH_TTY ]; then
-  xinit /home/zero/solrunners/bin/autostart.sh -- vt$(fgconsole)
+    startx &>/dev/null
+  # xinit /home/zero/solrunners/bin/autostart.sh -- vt$(fgconsole)
 else
   echo "Not executing SoL Runner as we are logged over SSH"
 fi

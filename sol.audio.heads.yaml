@@ -1,64 +1,85 @@
 tohle_jsem:
+  id: 1
   author: jan
   text: "Tohle jsem ještě nezažil, ale záživné to bezesporu je!"
 jaka_skoda:
+  id: 2
   author: jan
   text: "Jaká škoda, že nejsem povahou sběratel a navíc si nic nepamatuji!"
 za_mnou_prazdno:
+  id: 3
   author: jan
   text: "Za mnou prázdno, přede mnou prázdno, nade mnou prázdno a pod sebe se podívat bojím."
 toto_je_me_rizoto:
+  id: 4
   author: radim
   text: "Toto je mé rizoto."
 vsechno_byti:
+  id: 5
   author: radim
   text: "Všechno bytí směřuje k nebytí."
 emanuelle:
+  id: 6
   author: radim
   text: "Lásku není možno udržet v náručí, láska je nekonečno, ke kterému se přibližujeme."
 entropie:
+  id: 7
   author: roman
   text: "Entropie nás nakonec stejně dostane."
 nevidime_veci:
+  id: 8
   author: roman
   text: "Nevidíme věci takové, jaké jsou, vidíme je takové, jací jsme my."
 nic_se_mi_nelibi:
+  id: 9
   author: roman
   text: "Nic se mi nelíbí."
 mira_korelace:
+  id: 10
   author: adela
   text: "Míra korelace našeho kruhu s ostatními kruhy zdá se možnou podstatou bytí, vytváří a boří proměnná jsoucna."
 krasno:
+  id: 11
   author: adela
   text: "Krásno v přesahu uměleckého díla pokládá otázku osobní interpretace, jestli si ho nenašel, zavři oči, otevři oči a jdi se podívat znovu. Teď."
 mista_kde_vladne:
+  id: 12
   author: adela
   text: "Místa, kde vládne bezčasí neexistují, pár jsem jich našla a posbírala."
 zustane_po_nas:
+  id: 13
   author: barbora
   text: "Zůstane po nás jen pocit červeného dotyku bez doby."
 kazda_rodina:
+  id: 14
   author: barbora
   text: "Každá rodina má své skryté poklady pod schody, co bolí jako sůl v ráně."
 den_noc_den_a_sen:
+  id: 15
   author: barbora
-  text: "Den noc den noc a sen a poslední sklenice bílého vína"
+  text: "Den noc den noc a sen a poslední sklenice bílého vína."
 magnet:
+  id: 16
   author: lukas
   text: "Člověk se vždycky děsně těší na párek. Dá si dva a pak zase měsíc nechce párek ani vidět – zvedá se mu z něj kufr. Špekáčky, punčový dezert, Bůh, milenky, chlast, sociálno jakbysmet. Magnet se neustále přepólovává."
 kdyz_uz_tlacit:
+  id: 17
   author: lukas
   text: "Když už tlačit, tak jen ob zub."
 decka_zejtra:
+  id: 18
   author: lukas
   text: "Děcka, zejtra už fakt pošlu. Fakt."
 prekracujeme_hranice:
+  id: 19
   author: denisa
   text: "Překračujeme hranice kolektivní imaginace."
 historie:
+  id: 20
   author: denisa
   text: "Historie opakující se napříč různými dimenzemi je něco jako optický klam."
 nezkusenost:
+  id: 21
   author: denisa
   text: "Nezkušenost není limitující, ale inspirující."
 
