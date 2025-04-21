@@ -34,12 +34,13 @@ from modules.Audio import AudioLibrary
 
 def player(cfg):
 
-    print("Initializing audio for the first time: '{}'".format(cfg.entropy_audio))
-    audio = pyglet.media.StaticSource(pyglet.media.load(str('/Users/zero/Develop/github.com/hadzimura/solrunners/media/audio/talking_heads/entropie-roman-3.wav'), streaming=False))
+    print("Initializing audio for the first time: '{}'".format(cfg.talking_heads))
+    audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.talking_heads), streaming=False))
     print('AV media initialized')
-
-    # Run audio track
     aplayer = audio.play()
+    # Run audio track
+    while True:
+        print('aaak')
 
 
 
