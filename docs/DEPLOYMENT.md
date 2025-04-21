@@ -70,6 +70,7 @@ source /home/zero/solrunners/.venv/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install -r /home/zero/solrunners/requirements.txt
 python3 -m pip install -r /home/zero/solrunners/requirements.gpio.txt
+python3 -m pip install -r /home/zero/solrunners/requirements.lite.txt
 sudo cp /home/zero/solrunners/media/raspberry/splash.png /usr/share/plymouth/themes/pix/
 ``` 
 

@@ -19,6 +19,7 @@ ENTROPY_AUDIO_FOLDER="audio/entropy"
 TATE_FOLDER="video/tate"
 HEADS_VIDEO_FOLDER="video/heads"
 HEADS_AUDIO_FOLDER="audio/heads"
+TALKING_HEADS_AUDIO_FOLDER="audio/talking_heads"
 
 if [[ -z "${1}" ]]; then
   echo "Need to specify the room to sync (1-5), exiting..."
@@ -52,7 +53,8 @@ case "${DESTINATION_IP}" in
        rsync -azP --delete --mkpath ${SOURCE_PATH}/${ENTROPY_VIDEO_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH}
        rsync -azP --delete --mkpath ${SOURCE_PATH}/${ENTROPY_AUDIO_FOLDER} ${DESTINATION}:${AUDIO_DESTINATION_PATH} ;;
     4) echo "Syncing folder '${TATE_FOLDER}' to host '${DESTINATION_HOST}'"
-       rsync -azP --delete --mkpath ${SOURCE_PATH}/${TATE_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH} ;;
+       # rsync -azP --delete --mkpath ${SOURCE_PATH}/${TATE_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH}
+       rsync -azP --delete --mkpath ${SOURCE_PATH}/${TALKING_HEADS_AUDIO_FOLDER} ${DESTINATION}:${AUDIO_DESTINATION_PATH} ;;
     5) echo "Syncing folder '${HEADS_VIDEO_FOLDER}' and '${HEADS_AUDIO_FOLDER}' to host '${DESTINATION_HOST}'"
        # rsync -azP --delete --mkpath ${SOURCE_PATH}/${HEADS_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH}
        rsync -azP --delete --mkpath ${SOURCE_PATH}/${HEADS_VIDEO_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH}

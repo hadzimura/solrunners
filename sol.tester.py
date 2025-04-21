@@ -3,13 +3,6 @@
 # Springs of Life (2025)# rkucera@gmail.com
 
 import platform
-import pyglet
-# Run pyglet in headless mode
-pyglet.options['headless'] = True
-# pyglet.options['audio'] = 'pulse'
-from time import sleep
-from scipy.io import wavfile
-from pprint import pprint
 
 from gpiozero import PWMLED
 from time import sleep
