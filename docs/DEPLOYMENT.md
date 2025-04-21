@@ -12,14 +12,16 @@ Image: `Raspberry PI OS (64 bit)`
 
 
 ``` shell
-apt-get install xinit x11-xserver-utils matchbox-window-manager xautomation unclutter
+sudo apt update
+sudo apt upgrade 
+sudo apt-get install xinit x11-xserver-utils matchbox-window-manager xautomation unclutter mc xterm
 ``` 
 
 /etc/systemd/system/getty@tty1.service.d/autologin.conf
 ```  text
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --autologin zero --noclear %I $TERM
+ExecStart=-/sbin/agetty -nonewline --noissue --autologin zero --noclear %I $TERM
 ExecStart=-/usr/bin/agetty --skip-login --nonewline --noissue --autologin zero --noclear %I $TERM
 ``` 
 
@@ -67,6 +69,8 @@ python3 -m venv /home/zero/solrunners/.venv
 source /home/zero/solrunners/.venv/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install -r /home/zero/solrunners/requirements.txt
+python3 -m pip install -r /home/zero/solrunners/requirements.gpio.txt
+sudo cp /home/zero/solrunners/media/raspberry/splash.png /usr/share/plymouth/themes/pix/
 ``` 
 
 .bashrc
