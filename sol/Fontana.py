@@ -6,18 +6,11 @@
 from pprint import pprint
 from random import choice
 from time import sleep
-from PIL.ImageChops import overlay
 import pyglet
 from random import randrange
-from PIL import ImageFont, ImageDraw, Image
-import numpy as np
-from datetime import datetime
-from datetime import timedelta
-from screeninfo import get_monitors
 from random import randint, uniform
 
 from random import random, choice
-from scipy.io import wavfile
 import time
 from glob import glob
 import platform

@@ -74,7 +74,8 @@ class Configuration(object):
         self.silent_heads_pix = self.video_path / Path('heads/subtitles')
         self.silent_heads_audio = self.audio_path / Path('heads/silent_heads.wav')
         self.silent_heads_video = self.video_path / Path('heads/silent_heads.mov')
-        self.talking_heads = self.audio_path / Path('heads/talking/entropie-roman-multiple.wav')
+        # self.talking_heads = self.audio_path / Path('heads/talking/entropie-roman-multiple.wav')
+        self.talking_heads = Path('/home/zero/solrunners/media/audio/talking_heads/entropie-roman-multiple.wav')
         self.heads = dict()
 
         # Load RPi configurations
