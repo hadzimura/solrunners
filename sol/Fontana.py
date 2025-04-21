@@ -39,13 +39,13 @@ def player(cfg):
 
 if __name__ == "__main__":
 
-    if platform.system() != "Darwin":
-        print('Waiting for the SHM storage to be available...')
-        storage_available = False
-        while storage_available is False:
-            if isfile('/storage/.ready'):
-                storage_available = True
-                print('Storage online, starting Runner')
+    # if platform.system() != "Darwin":
+    #     print('Waiting for the SHM storage to be available...')
+    #     storage_available = False
+    #     while storage_available is False:
+    #         if isfile('/storage/.ready'):
+    #             storage_available = True
+    #             print('Storage online, starting Runner')
 
     arg = arg_parser()
     configuration = Configuration(room=3)
