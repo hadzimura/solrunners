@@ -10,7 +10,6 @@ from os import environ
 from pathlib import Path
 from pprint import pprint
 from random import choice
-import requests
 from ruamel.yaml import YAML
 
 if system() != 'Darwin':
