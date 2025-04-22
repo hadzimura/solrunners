@@ -94,7 +94,7 @@ def player(cfg):
     cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
-    # countdown(cfg)
+    countdown(cfg)
 
     av_sync = 0
     frame_counter = 8000
