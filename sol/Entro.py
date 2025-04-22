@@ -36,10 +36,10 @@ def countdown(cfg):
     video = cv.VideoCapture(str(cfg.entropy_countdown_video))
     print(video.get(cv.CAP_PROP_FRAME_WIDTH), video.get(cv.CAP_PROP_FRAME_HEIGHT))
     total_frames = video.get(cv.CAP_PROP_FRAME_COUNT)
-    print("Initializing audio for the first time: '{}'".format(cfg.entropy_audio))
+    print("Initializing audio for countdown: '{}'".format(cfg.entropy_audio))
     audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_audio), streaming=False))
     # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
-    print('AV media initialized')
+    print('Countdown AV media initialized')
 
     # Display setup
     cv.namedWindow('countdown', cv.WINDOW_NORMAL)
@@ -71,8 +71,8 @@ def countdown(cfg):
         cv.COLORMAP_OCEAN,
         cv.COLORMAP_WINTER
     ]
-
-    while video.isOpened():
+    playback = True
+    while playback is True:
 
         status, frame = video.read()
 
@@ -150,14 +150,10 @@ def countdown(cfg):
             frame_counter += 1
 
         else:
-            print('End of cycle {}'.format(cycle))
-            cycle += 1
-            print('Releasing AV media')
+            print('End of the countdown')
+            playback = False
             video.release()
             aplayer.delete()
-            print('AV media released')
-            video = cv.VideoCapture(str(cfg.entropy_video))
-            aplayer = audio.play()
 
         # cv.waitKey(0)
         if av_sync == 0:
@@ -318,8 +314,9 @@ def player(cfg):
             video.release()
             aplayer.delete()
             print('AV media released')
-            video = cv.VideoCapture(str(cfg.entropy_video))
-            aplayer = audio.play()
+            playing = False
+            # video = cv.VideoCapture(str(cfg.entropy_video))
+            # aplayer = audio.play()
 
         # cv.waitKey(0)
         if av_sync == 0:
