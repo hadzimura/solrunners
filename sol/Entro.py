@@ -226,12 +226,19 @@ if __name__ == "__main__":
 
     a = 1
     while True:
-        sleep(0.3)
-        if pir.motion_detected is True:
-            # print('yesss', a)
-            a += 1
-        else:
-            print(a)
+        # sleep(0.3)
+        pir.wait_for_motion()
+        print('moved')
+
+        pir.wait_for_no_motion()
+        print('unmoved')
+
+        #
+        # if pir.motion_detected is True:
+        #     # print('yesss', a)
+        #     a += 1
+        # else:
+        #     print(a)
 
 
     while running is True:
