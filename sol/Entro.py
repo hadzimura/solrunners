@@ -227,8 +227,11 @@ if __name__ == "__main__":
     a = 1
     while True:
         if pir.motion_detected is True:
-            print('yesss', a)
+            # print('yesss', a)
             a += 1
+        else:
+            print(a)
+
 
     while running is True:
 
