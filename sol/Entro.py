@@ -89,15 +89,15 @@ def player(cfg):
     print('AV media initialized')
 
     # Display setup
-    video.set(cv.CAP_PROP_POS_FRAMES, 9500)
+    video.set(cv.CAP_PROP_POS_FRAMES, 8000)
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
     cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
-    countdown(cfg)
+    # countdown(cfg)
 
     av_sync = 0
-    frame_counter = 9500
+    frame_counter = 8000
     frame_time = 25
     frame_drops = 0
     fra_min = 25
