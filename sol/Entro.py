@@ -205,7 +205,8 @@ def player(cfg):
             video.release()
             aplayer.delete()
             print('AV media released')
-            playing = False
+            video = cv.VideoCapture(str(cfg.entropy_video))
+            aplayer = audio.play()
 
         # cv.waitKey(0)
         if av_sync == 0:
