@@ -89,7 +89,7 @@ def player(cfg):
     print('AV media initialized')
 
     # Display setup
-    video.set(cv.CAP_PROP_POS_FRAMES, 0)
+    video.set(cv.CAP_PROP_POS_FRAMES, 9500)
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
     cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
