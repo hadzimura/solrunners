@@ -5,7 +5,6 @@
 # rkucera@gmail.com
 import cv2 as cv
 from pprint import pprint
-from random import choice
 from time import sleep
 from PIL.ImageChops import overlay
 import pyglet
@@ -31,7 +30,19 @@ from modules.Config import arg_parser
 from modules.Config import Configuration
 from modules.Audio import AudioLibrary
 
+if platform.system() != 'Darwin':
+    from gpiozero import MotionSensor
 
+class FakeMotionSensor(object):
+
+    def __init__(self):
+
+        self.motion_detected = False
+
+    def on(self):
+        self.motion_detected = True
+    def off(self):
+        self.motion_detected = False
 
 def player(cfg):
 
@@ -206,8 +217,18 @@ if __name__ == "__main__":
 
     arg = arg_parser()
     configuration = Configuration(room=3)
+    if platform.system() != "Darwin":
+        pir = MotionSensor(15)
+    else:
+        pir = FakeMotionSensor()
 
     running = True
+
+    a = 1
+    while True:
+        if pir.motion_detected is True:
+            print('yesss', a)
+            a += 1
 
     while running is True:
 
