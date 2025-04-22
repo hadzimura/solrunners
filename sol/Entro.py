@@ -97,7 +97,7 @@ def player(cfg):
     countdown(cfg)
 
     av_sync = 0
-    frame_counter = 1
+    frame_counter = 9500
     frame_time = 25
     frame_drops = 0
     fra_min = 25
