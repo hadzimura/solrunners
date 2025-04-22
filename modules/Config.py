@@ -9,6 +9,7 @@ from glob import glob
 from os import environ
 from pathlib import Path
 from pprint import pprint
+from os.path import isdir
 from random import choice
 from ruamel.yaml import YAML
 
@@ -51,7 +52,7 @@ class Configuration(object):
         env_var = environ
         self.project_root = Path(env_var['PWD'])
 
-        if system() == 'Darwin':
+        if system() == 'Darwin' or not isdir('/storage'):
             self.media_root = self.project_root / Path('media')
         else:
             self.media_root = Path('/storage')
@@ -74,7 +75,7 @@ class Configuration(object):
         self.silent_heads_audio = self.audio_path / Path('heads/silent_heads.wav')
         self.silent_heads_video = self.video_path / Path('heads/silent_heads.mov')
         # self.talking_heads = self.audio_path / Path('heads/talking/entropie-roman-multiple.wav')
-        self.talking_heads = Path('/home/zero/solrunners/media/audio/talking_heads/entropie-roman-multiple.wav')
+        self.talking_heads = self.audio_path / Path('heads/talking/*.wav')
         self.heads = dict()
 
         # Load RPi configurations
