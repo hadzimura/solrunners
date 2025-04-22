@@ -235,7 +235,7 @@ def player(cfg):
             print('-----------------------------')
 
     # Release everything
-    cv.destroyAllWindows()
+    # cv.destroyAllWindows()
 
 
 if __name__ == "__main__":
