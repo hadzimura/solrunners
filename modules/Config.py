@@ -67,6 +67,7 @@ class Configuration(object):
         # Entropy
         self.entropy_audio = self.audio_path / Path('entropy/entropy.wav')
         self.entropy_video = self.video_path / Path('entropy/entropy.mov')
+        self.entropy_stills = self.video_path / Path('entropy/stills')
         self.entropy_subtitles = self.video_path / Path('entropy/entropy.subtitles')
 
         # Silent Heads

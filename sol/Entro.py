@@ -15,7 +15,7 @@ from datetime import datetime
 from datetime import timedelta
 from screeninfo import get_monitors
 from random import randint, uniform
-
+from pathlib import Path
 from random import random, choice
 from scipy.io import wavfile
 import time
@@ -44,6 +44,37 @@ class FakeMotionSensor(object):
     def off(self):
         self.motion_detected = False
 
+def countdown(cfg):
+
+    black_bg = cv.imread(str(cfg.entropy_stills / Path('black.png')))
+    white_bg = cv.imread(str(cfg.entropy_stills / Path('white.png')))
+    counter = 9
+    c = 1
+    while counter > 0 :
+        frame = white_bg.copy()
+        cv.putText(frame,
+                   str(counter),
+                   (400, 670),
+                   cv.FONT_HERSHEY_PLAIN,
+                   50,
+                   (0, 0, 0),
+                   100,
+                   cv.LINE_AA)
+        cv.putText(frame,
+                   str(counter),
+                   (400, 670),
+                   cv.FONT_HERSHEY_PLAIN,
+                   50,
+                   (255, 255, 255),
+                   90,
+                   cv.LINE_AA)
+        cv.imshow('entropy', frame)
+        cv.waitKey(25)
+        c += 1
+        if c % 50 == 0:
+            counter -= 1
+
+
 def player(cfg):
 
     overlays = True
@@ -62,6 +93,8 @@ def player(cfg):
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
     cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
     cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+
+    countdown(cfg)
 
     av_sync = 0
     frame_counter = 1
@@ -224,26 +257,8 @@ if __name__ == "__main__":
 
     running = True
 
-    a = 1
-    while True:
-        # sleep(0.3)
-        pir.wait_for_motion()
-        print('moved')
-
-        pir.wait_for_no_motion()
-        print('unmoved')
-
-        #
-        # if pir.motion_detected is True:
-        #     # print('yesss', a)
-        #     a += 1
-        # else:
-        #     print(a)
-
-
     while running is True:
 
         player(configuration)
-        running = False
 
     print('exited')
