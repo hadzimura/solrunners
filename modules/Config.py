@@ -36,7 +36,7 @@ def arg_parser():
                         help='Which room is this Runner in?')
     parser.add_argument('-f', '--fountain',
                         default=1,
-                        dest='fountain',
+                        dest='fountain_version',
                         help='Fountain version')
 
     return parser.parse_args()

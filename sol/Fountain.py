@@ -23,6 +23,22 @@ from modules.Config import arg_parser
 from modules.Config import Configuration
 
 
+def head_timer(fr, v=None):
+
+    variations = [
+        0,
+        0,
+        fr / 2,
+        fr - 3,
+        3
+    ]
+
+    if v == 0:
+        return variations[randint(2, len(variations) - 1)]
+    else:
+        return variations[v]
+
+
 def player():
 
     print("Fountain version: {}".format(configuration.fountain_version))
@@ -38,13 +54,7 @@ def player():
     if configuration.fountain_version != 1:
         head_audio = samples[randint(1, len(samples) - 1)]
         head_runtime = head_audio.duration
-
-    if configuration.fountain_version == 2:
-        head_start = fountain_runtime / 2
-    elif configuration.fountain_version == 3:
-        head_start = fountain_runtime - 3
-    elif configuration.fountain_version == 4:
-        head_start = 3
+        head_start = head_timer(fountain_runtime, configuration.fountain_version)
 
     if head_audio is not None:
         head_end = head_start + head_runtime
@@ -76,19 +86,25 @@ if __name__ == "__main__":
     #             print('Storage online, starting Runner')
 
     arg = arg_parser()
-    configuration = Configuration(room=arg.room, fountain_version=arg.fountain)
+    configuration = Configuration(room=arg.room, fountain_version=arg.fountain_version)
 
     print('Initializing Silent Heads samples...')
     samples = list()
+
     samples.append(pyglet.media.StaticSource(pyglet.media.load(configuration.fountain, streaming=False)))
+
     for sample in glob(str(configuration.talking_heads)):
         samples.append(pyglet.media.StaticSource(pyglet.media.load(sample, streaming=False)))
     print("All {} samples loaded".format(len(samples)))
-    print(configuration.fountain_version)
+
+    print("Running in the '{}' mode".format(configuration.fountain_version))
+
     while True:
 
         player()
-        sleep(10)
+        silenzio = randint(60, 300)
+        print('Being silent for: {} seconds...'.format(silenzio))
+        sleep(randint(60, 300))
 
 
     print('exited')
