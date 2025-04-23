@@ -19,7 +19,7 @@ ENTROPY_AUDIO_FOLDER="audio/entropy"
 TATE_FOLDER="video/tate"
 HEADS_VIDEO_FOLDER="video/heads"
 HEADS_AUDIO_FOLDER="audio/heads"
-TALKING_HEADS_AUDIO_FOLDER="audio/talking_heads"
+TALKING_HEADS_AUDIO_FOLDER="audio/heads/talking"
 
 if [[ -z "${1}" ]]; then
   echo "Need to specify the room to sync (1-5), exiting..."

@@ -64,6 +64,8 @@ def countdown(cfg):
     c = 1
     seconds = total_frames / 25
     frame_effect = None
+    counting = (seconds - 10) * 25
+
     effects = [
         cv.COLOR_BGR2GRAY,
         cv.COLORMAP_PLASMA,
@@ -72,6 +74,9 @@ def countdown(cfg):
         cv.COLORMAP_WINTER
     ]
     playback = True
+    text_up = 'THE ENTROPY WILL LAND IN'
+    text_down = 'PLEASE STAND BY'
+
     while playback is True:
 
         status, frame = video.read()
@@ -111,8 +116,13 @@ def countdown(cfg):
 
             th1 = randint(1, 3)
             th2 = randint(1, 3)
+
+            if frame_counter > counting:
+                text_up = 'TOUCHDOWN IN'
+                text_down = 'KEEP CALM'
+
             cv.putText(frame,
-                       'THE ENTROPY WILL LAND IN',
+                       text_up,
                        (100, 100),
                        cv.FONT_HERSHEY_TRIPLEX,
                        font_scale,
@@ -120,19 +130,14 @@ def countdown(cfg):
                        th1,
                        cv.LINE_AA)
 
-
-
             cv.putText(frame,
-                       'PLEASE STAND BY',
+                       text_down,
                        (100, 600),
                        cv.FONT_HERSHEY_TRIPLEX,
                        font_scale,
                        (25, 190, 20),
                        th2,
                        cv.LINE_AA)
-
-
-            # frame = cv.ad(frame, 0.1, black_bg, 0.1, 1)
 
 
             try:
