@@ -65,18 +65,20 @@ def player():
         fountain_player = fountain_audio.play()
 
         if configuration.fountain_version != 1:
-            print('Waiting for: {}'.format(head_start))
+            print('Head playback will start in: {} seconds'.format(head_start))
             sleep(head_start)
             head_player = head_audio.play()
             sleep(head_runtime)
             head_player.delete()
             sleep(fountain_delay)
         else:
+            print('Waiting for sample playback to end in: {} seconds'.format(fountain_runtime))
             sleep(fountain_runtime)
 
         fountain_player.delete()
     except Exception as e:
         print(e)
+    print('End of cycle')
 
 
 if __name__ == "__main__":
