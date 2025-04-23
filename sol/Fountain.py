@@ -41,60 +41,58 @@ def head_timer(fr, v=None):
 
 def player():
 
-    print("Fountain version: {}".format(configuration.fountain_version))
+    try:
 
-    fountain_audio = samples[0]
-    fountain_runtime = fountain_audio.duration
+        print("Fountain version: {}".format(configuration.fountain_version))
 
-    head_audio = None
-    head_runtime = None
-    head_start = None
-    fountain_delay = None
+        fountain_audio = samples[0]
+        fountain_runtime = fountain_audio.duration
 
-    if configuration.fountain_version != 1:
-        head_audio = samples[randint(1, len(samples) - 1)]
-        head_runtime = head_audio.duration
-        head_start = head_timer(fountain_runtime, configuration.fountain_version)
+        head_audio = None
+        head_runtime = None
+        head_start = None
+        fountain_delay = None
 
-    if head_audio is not None:
-        head_end = head_start + head_runtime
-        fountain_delay = fountain_runtime - head_end
+        if configuration.fountain_version != 1:
+            head_audio = samples[randint(1, len(samples) - 1)]
+            head_runtime = head_audio.duration
+            head_start = head_timer(fountain_runtime, configuration.fountain_version)
 
-    fountain_player = fountain_audio.play()
+        if head_audio is not None:
+            head_end = head_start + head_runtime
+            fountain_delay = fountain_runtime - head_end
 
-    if configuration.fountain_version != 1:
-        print('Waiting for: {}'.format(head_start))
-        sleep(head_start)
-        head_player = head_audio.play()
-        sleep(head_runtime)
-        head_player.delete()
-        sleep(fountain_delay)
-    else:
-        sleep(fountain_runtime)
+        fountain_player = fountain_audio.play()
 
-    fountain_player.delete()
+        if configuration.fountain_version != 1:
+            print('Waiting for: {}'.format(head_start))
+            sleep(head_start)
+            head_player = head_audio.play()
+            sleep(head_runtime)
+            head_player.delete()
+            sleep(fountain_delay)
+        else:
+            sleep(fountain_runtime)
+
+        fountain_player.delete()
+    except Exception as e:
+        print(e)
 
 
 if __name__ == "__main__":
 
-    # if platform.system() != "Darwin":
-    #     print('Waiting for the SHM storage to be available...')
-    #     storage_available = False
-    #     while storage_available is False:
-    #         if isfile('/storage/.ready'):
-    #             storage_available = True
-    #             print('Storage online, starting Runner')
-
     arg = arg_parser()
     configuration = Configuration(room=arg.room, fountain_version=arg.fountain_version)
 
-    print('Initializing Silent Heads samples...')
     samples = list()
 
+    print('Loading fountain sample: {}'.format(configuration.fountain))
     samples.append(pyglet.media.StaticSource(pyglet.media.load(configuration.fountain, streaming=False)))
 
+    print('Initializing Silent Heads samples from: {}'.format(configuration.talking_heads))
     for sample in glob(str(configuration.talking_heads)):
         samples.append(pyglet.media.StaticSource(pyglet.media.load(sample, streaming=False)))
+
     print("All {} samples loaded".format(len(samples)))
 
     print("Running in the '{}' mode".format(configuration.fountain_version))
@@ -106,5 +104,4 @@ if __name__ == "__main__":
         print('Being silent for: {} seconds...'.format(silenzio))
         sleep(randint(60, 300))
 
-
-    print('exited')
+    print('Exited gracefuly')
