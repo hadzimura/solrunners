@@ -54,10 +54,10 @@ def player(cfg):
     cv.namedWindow('heads', cv.WINDOW_FREERATIO)
 
 
-    cv.namedWindow('subs', cv.WINDOW_NORMAL)
-    cv.namedWindow('subs', cv.WINDOW_FREERATIO)
-    cv.moveWindow('subs',600,0)
-    # cv.setWindowProperty('heads', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+    # cv.namedWindow('subs', cv.WINDOW_NORMAL)
+    # cv.namedWindow('subs', cv.WINDOW_FREERATIO)
+    # cv.moveWindow('subs',600,0)
+    cv.setWindowProperty('heads', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
     av_sync = 0
     frame_counter = 1
@@ -199,7 +199,7 @@ def player(cfg):
             try:
                 if frame_time > 5:
                     cv.imshow('heads', frame)
-                    cv.imshow('subs', frame)
+                    # cv.imshow('subs', frame)
                 else:
                     print('Dropping frame {} | ft={} | avsync={} | total_drops={}'.format(frame_counter, av_sync, frame_time, frame_drops))
                     frame_drops += 1
