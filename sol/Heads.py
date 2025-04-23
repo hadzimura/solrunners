@@ -292,6 +292,5 @@ if __name__ == "__main__":
     while running is True:
 
         player(configuration)
-        # running = False
 
     print('exited')
