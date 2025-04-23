@@ -1,4 +1,10 @@
 from gpiozero import MotionSensor
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BOARD)
+
+# Suppress warnings
+GPIO.setwarnings(False)
 
 pir = MotionSensor(16)
 
