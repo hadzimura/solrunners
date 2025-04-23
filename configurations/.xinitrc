@@ -1,6 +1,7 @@
 # xrandr --output HDMI-1 --mode 1366x768 --rotate left
 # xrandr --output HDMI-1 --mode 1366x768 --rotate left
-xrandr --output HDMI-1 --mode 1366x768 --rotate left
+# xrandr --output HDMI-1 --mode 1920x1080 --rotate left
+xrandr --output HDMI-1 --rotate left
 cd /home/zero/solrunners
 export PYTHONPATH=$PYTHONPATH:/home/zero/solrunners
 export PYTHONUNBUFFERED=1

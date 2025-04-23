@@ -52,10 +52,15 @@ def player(cfg):
     video.set(cv.CAP_PROP_POS_FRAMES, 0)
     cv.namedWindow('heads', cv.WINDOW_NORMAL)
     cv.namedWindow('heads', cv.WINDOW_FREERATIO)
+
+
+    cv.namedWindow('subs', cv.WINDOW_NORMAL)
+    cv.namedWindow('subs', cv.WINDOW_FREERATIO)
+    cv.moveWindow('subs',600,0)
     # cv.setWindowProperty('heads', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
     av_sync = 0
-    frame_counter = 1950
+    frame_counter = 1
 
     frame_time = 25
     frame_drops = 0
@@ -89,7 +94,7 @@ def player(cfg):
     beat = 5
 
     transition = False
-    cuts = 12
+    cuts = 11
     cut_position = 1000
     cut_length = 40
     cut_in = list()
@@ -108,6 +113,7 @@ def player(cfg):
 
     pprint(cfg.sub['silent_heads'], indent=2)
     display_still = None
+    display_author = False
 
     # Main video loop
     video.set(cv.CAP_PROP_POS_FRAMES, frame_counter)
@@ -142,6 +148,7 @@ def player(cfg):
             if frame_counter % switch_off == 0:
                 print('off', frame_counter)
                 display_still = None
+                display_author = True
 
             if display_still is not None:
                 frame = cv.addWeighted(frame, 1.5,  display_still, 0.5, 0)
@@ -149,6 +156,7 @@ def player(cfg):
             # Blurring the persona transitions
             if frame_counter in cut_in:
                 transition = True
+                display_author = False
                 cutting = frame_counter
                 blur = 1
 
@@ -173,6 +181,8 @@ def player(cfg):
 
                     # e1 = cv.addWeighted(frame, 0.1, e1, 0.5, 0)
 
+            if display_author is True:
+                pass
             # Overlays
             status_1 = '{}'.format(frame_counter)
             # org = (randint(10, 1000), randint(10, 1900))
@@ -188,7 +198,8 @@ def player(cfg):
 
             try:
                 if frame_time > 5:
-                    cv.imshow('entropy', frame)
+                    cv.imshow('heads', frame)
+                    cv.imshow('subs', frame)
                 else:
                     print('Dropping frame {} | ft={} | avsync={} | total_drops={}'.format(frame_counter, av_sync, frame_time, frame_drops))
                     frame_drops += 1
