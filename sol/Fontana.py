@@ -21,58 +21,48 @@ pyglet.options['headless'] = True
 
 from modules.Config import arg_parser
 from modules.Config import Configuration
-from modules.Audio import AudioLibrary
 
 
+def player():
 
-def player(cfg):
+    print("Fountain version: {}".format(configuration.fountain_version))
 
-    # print("Initializing audio for the first time: '{}'".format(cfg.talking_heads))
-    # print(samples)
-    # aplayer = Player()
-    # for s in samples:
-    #     aplayer.queue(s)
-    samples = list()
-    for sample in glob(str(cfg.talking_heads)):
-        samples.append(pyglet.media.StaticSource(pyglet.media.load(sample, streaming=False)))
+    fountain_audio = samples[0]
+    fountain_runtime = fountain_audio.duration
 
-    playback = True
-    print( samples[0])
+    head_audio = None
+    head_runtime = None
+    head_start = None
+    fountain_delay = None
 
-    # last_sample = 0
-    # current_sample = 0
-    # while current_sample != last_sample:
-    #
-    #     current_sample = randint(0, len(samples))
-    #     print(current_sample, last_sample)
-    # else:
-    #     print('wtf')
-    # last_sample = current_sample
-    play_sample = None
-    play_sample = samples[0].play()
-    playing = True
-    a = 0
-    b = 0
-    while playing is True:
-        try:
-            a = play_sample.time
-            if a != b:
-                b = a
-                print('+++++', a, b)
+    if configuration.fountain_version != 1:
+        head_audio = samples[randint(1, len(samples) - 1)]
+        head_runtime = head_audio.duration
 
-            else:
-                print('else', a, b)
-                play_sample.delete()
-                playing = False
-        except Exception as e:
-            print(e)
-    play_sample.delete()
-    print('......')
-        # play_sample.delete()
-        # print('playing', current_sample)
-        # play_sample.play()
-        # Run audio track
-        # aplayer.on_player_eos = aplayer.next_source()
+    if configuration.fountain_version == 2:
+        head_start = fountain_runtime / 2
+    elif configuration.fountain_version == 3:
+        head_start = fountain_runtime - 3
+    elif configuration.fountain_version == 4:
+        head_start = 3
+
+    if head_audio is not None:
+        head_end = head_start + head_runtime
+        fountain_delay = fountain_runtime - head_end
+
+    fountain_player = fountain_audio.play()
+
+    if configuration.fountain_version != 1:
+        print('Waiting for: {}'.format(head_start))
+        sleep(head_start)
+        head_player = head_audio.play()
+        sleep(head_runtime)
+        head_player.delete()
+        sleep(fountain_delay)
+    else:
+        sleep(fountain_runtime)
+
+    fountain_player.delete()
 
 
 if __name__ == "__main__":
@@ -86,12 +76,19 @@ if __name__ == "__main__":
     #             print('Storage online, starting Runner')
 
     arg = arg_parser()
-    configuration = Configuration(room=4)
+    configuration = Configuration(room=arg.room, fountain_version=arg.fountain)
 
-    running = True
+    print('Initializing Silent Heads samples...')
+    samples = list()
+    samples.append(pyglet.media.StaticSource(pyglet.media.load(configuration.fountain, streaming=False)))
+    for sample in glob(str(configuration.talking_heads)):
+        samples.append(pyglet.media.StaticSource(pyglet.media.load(sample, streaming=False)))
+    print("All {} samples loaded".format(len(samples)))
+    print(configuration.fountain_version)
+    while True:
 
+        player()
+        sleep(10)
 
-    player(configuration)
-    running = False
 
     print('exited')

@@ -19,6 +19,7 @@ ENTROPY_AUDIO_FOLDER="audio/entropy"
 TATE_FOLDER="video/tate"
 HEADS_VIDEO_FOLDER="video/heads"
 HEADS_AUDIO_FOLDER="audio/heads"
+FOUNTAIN_HEADS_AUDIO_FOLDER="audio/fountain"
 TALKING_HEADS_AUDIO_FOLDER="audio/heads/talking"
 
 if [[ -z "${1}" ]]; then
@@ -55,6 +56,7 @@ case "${DESTINATION_IP}" in
     4) echo "Syncing folder '${TATE_FOLDER}' to host '${DESTINATION_HOST}'"
        # rsync -azP --delete --mkpath ${SOURCE_PATH}/${TATE_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH}
        rsync -azP --delete --mkpath ${SOURCE_PATH}/${TALKING_HEADS_AUDIO_FOLDER} ${DESTINATION}:${AUDIO_DESTINATION_PATH} ;;
+       rsync -azP --delete --mkpath ${SOURCE_PATH}/${FOUNTAIN_AUDIO_FOLDER} ${DESTINATION}:${AUDIO_DESTINATION_PATH} ;;
     5) echo "Syncing folder '${HEADS_VIDEO_FOLDER}' and '${HEADS_AUDIO_FOLDER}' to host '${DESTINATION_HOST}'"
        # rsync -azP --delete --mkpath ${SOURCE_PATH}/${HEADS_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH}
        rsync -azP --delete --mkpath ${SOURCE_PATH}/${HEADS_VIDEO_FOLDER} ${DESTINATION}:${VIDEO_DESTINATION_PATH}

@@ -34,19 +34,24 @@ def arg_parser():
                         default=None,
                         dest='room',
                         help='Which room is this Runner in?')
+    parser.add_argument('-f', '--fountain',
+                        default=1,
+                        dest='fountain',
+                        help='Fountain version')
 
     return parser.parse_args()
 
 
 class Configuration(object):
 
-    def __init__(self, room=None):
+    def __init__(self, room=None, fountain_version=None):
 
         if room is None:
             print('No room specified, exiting')
             exit(1)
 
         self.room = int(room)
+        self.fountain_version = int(fountain_version)
 
         # Running Environment locations
         env_var = environ
@@ -79,6 +84,7 @@ class Configuration(object):
         self.silent_heads_video = self.video_path / Path('heads/silent_heads.mov')
         # self.talking_heads = self.audio_path / Path('heads/talking/entropie-roman-multiple.wav')
         self.talking_heads = self.audio_path / Path('heads/talking/*.wav')
+        self.fountain = self.audio_path / Path('fountain/fountain.wav')
         self.heads = dict()
 
         # Load RPi configurations
