@@ -75,6 +75,7 @@ def player(cfg):
     stills = list()
     for file in range(1, 22):
         still = cv.imread(cfg.silent_heads_pix / Path('{}.png'.format(file)))
+        still = still.resize(1050, 1680)
         still = cv.blur(still, (5, 5))
         stills.append(still)
 
