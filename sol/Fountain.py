@@ -100,12 +100,12 @@ if __name__ == "__main__":
     print("Running in the '{}' mode".format(configuration.fountain_version))
 
     min_delay = 1
-    max_delay = 10
+    max_delay = 300
     while True:
 
         player()
-        silenzio = randint(min_delay, max_delay)
+        silenzio = randint(min_delay + 10, max_delay)
         print('Being silent for: {} seconds...'.format(silenzio))
-        sleep(randint(60, 300))
+        sleep(silenzio)
 
     print('Exited gracefuly')
