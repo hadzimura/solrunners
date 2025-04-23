@@ -52,7 +52,7 @@ def player(cfg):
     video.set(cv.CAP_PROP_POS_FRAMES, 0)
     cv.namedWindow('heads', cv.WINDOW_NORMAL)
     cv.namedWindow('heads', cv.WINDOW_FREERATIO)
-
+    print(video.get(cv.CAP_PROP_FRAME_HEIGHT), video.get(cv.CAP_PROP_FRAME_WIDTH))
 
     # cv.namedWindow('subs', cv.WINDOW_NORMAL)
     # cv.namedWindow('subs', cv.WINDOW_FREERATIO)
@@ -74,11 +74,16 @@ def player(cfg):
     print('Importing subtitle frames from: {}'.format(cfg.silent_heads_pix))
     stills = list()
     for file in range(1, 22):
+        print('Importing still ID: {} from: {}'.format(file, '{}/{}'.format(cfg.silent_heads_pix, Path('{}.png'.format(file)))))
         still = cv.imread(cfg.silent_heads_pix / Path('{}.png'.format(file)))
-        still = still.resize(1050, 1680)
-        still = cv.blur(still, (5, 5))
+        print(still)
+
+        still.resize(1050, 1680)
+        # still = cv.blur(still, (5, 5))
+        print(still.shape)
         stills.append(still)
 
+    pprint(cfg.heads, indent=4)
     # font_status = cfg.font['status']
     font_scale = 1
     coord = (50, 50)
@@ -100,12 +105,15 @@ def player(cfg):
     cut_length = 40
     cut_in = list()
     cut_out = list()
+    sub_in = list()
+    sub_out = list()
     cutting = 1
     for cut in range(1, cuts):
         cut_frame = cut * cut_position
         cut_in.append(cut_frame - 25)
         cut_out.append(cut_frame + 25)
-
+        sub_in.append(cut_frame - 800)
+        sub_out.append(cut_frame - 200)
     blur = 1
     blur_length = 25
     blur_max = 100
@@ -113,6 +121,7 @@ def player(cfg):
     switch = 50
 
     pprint(cfg.sub['silent_heads'], indent=2)
+
     display_still = None
     display_author = False
 
@@ -136,23 +145,28 @@ def player(cfg):
 
             if frame_counter in cfg.heads['timeline']:
                 current_head = cfg.heads['timeline'][frame_counter]
-                switch_on = frame_counter + 200
-                switch_off = frame_counter + 800
                 print('projected | on: {}, off: {}'.format(switch_on, switch_off))
 
             # # beta = overlay saturation (0.5)
-            if frame_counter / switch_on == 1:
+            if frame_counter in sub_in:
                 get_still = cfg.heads[current_head]['track'][randint(0, 2)]
                 print('on', frame_counter, get_still['text'])
-                display_still = stills[get_still['id'] - 1]
+                display_still = stills[randint(0, len(stills) - 1)]
+                print(display_still)
 
-            if frame_counter % switch_off == 0:
+            if frame_counter in sub_out:
                 print('off', frame_counter)
                 display_still = None
                 display_author = True
-
-            if display_still is not None:
-                frame = cv.addWeighted(frame, 1.5,  display_still, 0.5, 0)
+            #
+            # if display_still is not None:
+            #     print('subbing')
+            #     try:
+            #         aplayer.delete()
+            #     except Exception as e:
+            #         pass
+            #     frame = cv.addWeighted(frame, 1.5,  display_still, 0.5, 0)
+            #     aplayer = sample[randint(0, len(samples) - 1)].play()
 
             # Blurring the persona transitions
             if frame_counter in cut_in:
@@ -263,8 +277,15 @@ if __name__ == "__main__":
                 storage_available = True
                 print('Storage online, starting Runner')
 
+    heads = list()
+
     arg = arg_parser()
     configuration = Configuration(room=5)
+
+    samples = list()
+    print('Initializing Silent Heads samples from: {}'.format(configuration.talking_heads))
+    for sample in glob(str(configuration.talking_heads)):
+        samples.append(pyglet.media.StaticSource(pyglet.media.load(sample, streaming=False)))
 
     running = True
 
