@@ -31,9 +31,10 @@ pyglet.options['headless'] = True
 
 from modules.Config import arg_parser
 from modules.Config import Configuration
-from modules.Audio import AudioLibrary
 from pathlib import Path
 
+def credits(cfg):
+    pass
 
 
 def player(cfg):
@@ -42,17 +43,12 @@ def player(cfg):
 
     print("Initializing video for the first time: '{}'".format(cfg.silent_heads_video))
     video = cv.VideoCapture(str(cfg.silent_heads_video))
-    # print(video.get(cv.CAP_PROP_FRAME_COUNT))
-    print("Initializing audio for the first time: '{}'".format(cfg.silent_heads_audio))
-    audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.silent_heads_audio), streaming=False))
-    # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
-    print('AV media initialized')
+
 
     # Display setup
     video.set(cv.CAP_PROP_POS_FRAMES, 0)
     cv.namedWindow('heads', cv.WINDOW_NORMAL)
     cv.namedWindow('heads', cv.WINDOW_FREERATIO)
-    print(video.get(cv.CAP_PROP_FRAME_HEIGHT), video.get(cv.CAP_PROP_FRAME_WIDTH))
 
     # cv.namedWindow('subs', cv.WINDOW_NORMAL)
     # cv.namedWindow('subs', cv.WINDOW_FREERATIO)
@@ -67,23 +63,6 @@ def player(cfg):
     fra_min = 25
     fra_max = 25
 
-    width = 1080
-    height = 1920
-
-    # Subtitle frames impport
-    print('Importing subtitle frames from: {}'.format(cfg.silent_heads_pix))
-    stills = list()
-    for file in range(1, 22):
-        print('Importing still ID: {} from: {}'.format(file, '{}/{}'.format(cfg.silent_heads_pix, Path('{}.png'.format(file)))))
-        still = cv.imread(cfg.silent_heads_pix / Path('{}.png'.format(file)))
-        print(still)
-
-        still.resize(1050, 1680)
-        # still = cv.blur(still, (5, 5))
-        print(still.shape)
-        stills.append(still)
-
-    pprint(cfg.heads, indent=4)
     # font_status = cfg.font['status']
     font_scale = 1
     coord = (50, 50)
@@ -91,7 +70,11 @@ def player(cfg):
     cycle = 1
 
     # Run audio track
-    aplayer = audio.play()
+    aplayer = drone.play()
+
+    authors = {
+        0: 'adela'
+    }
 
     alpha = 0
     min_alpha = 0
@@ -112,7 +95,7 @@ def player(cfg):
         cut_frame = cut * cut_position
         cut_in.append(cut_frame - 25)
         cut_out.append(cut_frame + 25)
-        sub_in.append(cut_frame - 800)
+        sub_in.append(cut_frame - 850)
         sub_out.append(cut_frame - 200)
     blur = 1
     blur_length = 25
@@ -120,17 +103,20 @@ def player(cfg):
     blur_step = 8
     switch = 50
 
-    pprint(cfg.sub['silent_heads'], indent=2)
+    # pprint(cfg.sub['silent_heads'], indent=2)
 
     display_still = None
     display_author = False
 
     # Main video loop
-    video.set(cv.CAP_PROP_POS_FRAMES, frame_counter)
+    # video.set(cv.CAP_PROP_POS_FRAMES, frame_counter)
 
     current_head = None
     switch_on = 1
     switch_off = 1
+
+    splayer = None
+    kill_splayer = 0
 
     while playing is True:
 
@@ -138,93 +124,79 @@ def player(cfg):
 
         if status is True:
 
-            # Subtitles overlay
-            current_audio_frame = round(round(aplayer.time, 6) * 25, 0)
-            # subtitle_cue = None
-            av_sync = current_audio_frame - frame_counter
-
-            if frame_counter in cfg.heads['timeline']:
-                current_head = cfg.heads['timeline'][frame_counter]
-                print('projected | on: {}, off: {}'.format(switch_on, switch_off))
-
-            # # beta = overlay saturation (0.5)
-            if frame_counter in sub_in:
-                get_still = cfg.heads[current_head]['track'][randint(0, 2)]
-                print('on', frame_counter, get_still['text'])
-                display_still = stills[randint(0, len(stills) - 1)]
-                print(display_still)
-
-            if frame_counter in sub_out:
-                print('off', frame_counter)
-                display_still = None
-                display_author = True
-            #
-            # if display_still is not None:
-            #     print('subbing')
-            #     try:
-            #         aplayer.delete()
-            #     except Exception as e:
-            #         pass
-            #     frame = cv.addWeighted(frame, 1.5,  display_still, 0.5, 0)
-            #     aplayer = sample[randint(0, len(samples) - 1)].play()
-
-            # Blurring the persona transitions
-            if frame_counter in cut_in:
-                transition = True
-                display_author = False
-                cutting = frame_counter
-                blur = 1
-
-            if frame_counter in cut_out:
-                transition = False
-
-            if transition is True:
-                frame = cv.blur(frame, (int(blur), int(blur)))
-                blur += blur_step / 2
-
-            # This is the mischiefing
-           #  if frame_counter in range(int(cutting + (cut_length / 2) - 2), int(cutting + (cut_length / 2) + 4)):
-                # frame = cv.addWeighted(frame, 1.5, e1, alpha, 1)
-                # print(frame_counter, alpha)
-
-                    # if switch == 0:
-                    #     switch = 1
-                    #     frame = cv.addWeighted(e3, 0.1, frame, 0.3, alpha)
-                    # else:
-                    #     switch = 0
-                    #     frame = cv.addWeighted(e3, 0.1, frame, 0.3, alpha)
-
-                    # e1 = cv.addWeighted(frame, 0.1, e1, 0.5, 0)
-
-            if display_author is True:
-                pass
-            # Overlays
-            status_1 = '{}'.format(frame_counter)
-            # org = (randint(10, 1000), randint(10, 1900))
-            org = (50, 50)
-            cv.putText(frame,
-                       status_1,
-                       org,
-                       cv.FONT_HERSHEY_PLAIN,
-                       1.5,
-                       (0, 50, 200),
-                       2,
-                       cv.LINE_AA)
-
             try:
-                if frame_time > 5:
-                    cv.imshow('heads', frame)
-                    # cv.imshow('subs', frame)
-                else:
-                    print('Dropping frame {} | ft={} | avsync={} | total_drops={}'.format(frame_counter, av_sync, frame_time, frame_drops))
-                    frame_drops += 1
+                # Subtitles overlay
+                current_audio_frame = round(round(aplayer.time, 6) * 25, 0)
+                # subtitle_cue = None
+                av_sync = current_audio_frame - frame_counter
 
-            except Exception as playback_error:
-                print('Playback failed')
-                print('Playback error: {}'.format(playback_error))
-                exit(1)
+                # # beta = overlay saturation (0.5)
+                if frame_counter in sub_in:
+                    print('-----------')
+                    # get_still = cfg.heads[current_head]['track'][randint(0, 2)]
+                    # print(len(stills))
+                    over = randint(3, len(overlays))
+                    display_still = overlays[over]['sub']
+                    print(len(overlays[over]['tracks']) - 1)
+                    audio_var = randint(0, len(overlays[over]['tracks']) - 1)
+                    print(over, audio_var)
+                    try:
+                        splayer = overlays[over]['tracks'][audio_var].play()
+                        kill_splayer = splayer.time + overlays[over]['tracks'][audio_var].duration - 0.2
+                    except Exception as e:
+                        pass
+                if splayer is not None:
+                    #
+                    if splayer.time > kill_splayer:
+                        print(splayer.time, kill_splayer)
+                        print('killing splayer')
+                        splayer.pause()
+                        if splayer.playing is False:
+                            print('splayer was false')
+                            # splayer.delete()
+                            # splayer.delete()
+                            splayer = None
+                        else:
+                            print('splayer was true')
+                            splayer.delete()
+                            splayer = None
 
-            frame_counter += 1
+                if frame_counter in sub_out:
+                    print('off', frame_counter)
+                    display_still = None
+
+                if display_still is not None:
+                    frame = cv.addWeighted(frame, 1.5,  display_still, 0.5, 0)
+
+                # Blurring the persona transitions
+                if frame_counter in cut_in:
+                    transition = True
+                    cutting = frame_counter
+                    blur = 1
+
+                if frame_counter in cut_out:
+                    transition = False
+
+                if transition is True:
+                    frame = cv.blur(frame, (int(blur), int(blur)))
+                    blur += blur_step / 2
+
+                try:
+                    if frame_time > 5:
+                        cv.imshow('heads', frame)
+                        # cv.imshow('subs', frame)
+                    else:
+                        print('Dropping frame {} | ft={} | avsync={} | total_drops={}'.format(frame_counter, av_sync, frame_time, frame_drops))
+                        frame_drops += 1
+
+                except Exception as playback_error:
+                    print('Playback failed')
+                    print('Playback error: {}'.format(playback_error))
+                    exit(1)
+                frame_counter += 1
+            except Exception as error:
+                print('Error {}'.format(error))
+
 
         else:
             print('End of cycle {}'.format(cycle))
@@ -233,7 +205,9 @@ def player(cfg):
             video.release()
             aplayer.delete()
             print('AV media released')
-            playing = False
+            video = cv.VideoCapture(str(cfg.silent_heads_video))
+            aplayer = drone.play()
+            frame_counter = 1
 
         # cv.waitKey(0)
         if av_sync == 0:
@@ -257,12 +231,6 @@ def player(cfg):
         cv.waitKey(frame_time)
         # cv.waitKey(0)
 
-        # if frame_counter % 125 == 0:
-        #     video.set(cv.CAP_PROP_POS_FRAMES, randint(1000,7000))
-
-        if frame_counter == 1:
-            print('-----------------------------')
-
     # Release everything
     cv.destroyAllWindows()
 
@@ -281,11 +249,25 @@ if __name__ == "__main__":
 
     arg = arg_parser()
     configuration = Configuration(room=5)
+    drone = pyglet.media.StaticSource(pyglet.media.load(str(configuration.silent_heads_audio), streaming=False))
 
-    samples = list()
+    print('Importing subtitle frames from: {}'.format(configuration.silent_heads_pix))
+    overlays = dict()
+    for file in range(1, 22):
+        print('Importing still ID: {} from: {}'.format(file, '{}/{}'.format(configuration.silent_heads_pix, Path('{}.png'.format(file)))))
+        still = cv.imread(configuration.silent_heads_pix / Path('{}.png'.format(file)))
+        overlays[file] = dict()
+        overlays[file]['sub'] = still
+
     print('Initializing Silent Heads samples from: {}'.format(configuration.talking_heads))
     for sample in glob(str(configuration.talking_heads)):
-        samples.append(pyglet.media.StaticSource(pyglet.media.load(sample, streaming=False)))
+        sample_id = int(sample.split('/')[-1].split('.')[0])
+        sample_author = sample.split('/')[-1].split('.')[1]
+        print('Loading file: {}'.format(sample))
+        if 'tracks' not in overlays[sample_id]:
+            overlays[sample_id]['tracks'] = list()
+        l = pyglet.media.StaticSource(pyglet.media.load(sample, streaming=False))
+        overlays[sample_id]['tracks'].append(l)
 
     running = True
 
@@ -293,4 +275,4 @@ if __name__ == "__main__":
 
         player(configuration)
 
-    print('exited')
+    print('Exited')

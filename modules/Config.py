@@ -82,8 +82,8 @@ class Configuration(object):
 
         # Silent Heads
         self.silent_heads_subtitles = self.video_path / Path('heads/silent_heads.subtitles')
-        self.silent_heads_pix = self.video_path / Path('heads/subtitles')
-        self.silent_heads_audio = self.audio_path / Path('heads/silent/silent_heads.wav')
+        self.silent_heads_pix = self.video_path / Path('heads/subs')
+        self.silent_heads_audio = self.audio_path / Path('heads/drone.wav')
         self.silent_heads_video = self.video_path / Path('heads/silent_heads.mov')
         # self.talking_heads = self.audio_path / Path('heads/talking/entropie-roman-multiple.wav')
         self.talking_heads = self.audio_path / Path('heads/talking/*.wav')
