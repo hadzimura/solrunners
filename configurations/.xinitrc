@@ -11,3 +11,5 @@ xset s off     # disable screen saver
 xset s noblank # don't blank the video device
 exec matchbox-window-manager -use_titlebar no & unclutter & xterm
 # exec matchbox-window-manager -use_titlebar no & unclutter & xterm
+
+
