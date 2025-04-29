@@ -1,1 +1,0 @@
-* Raspberry Pi HAT: https://navody.dratek.cz/navody-k-produktum/waveshare-e-paper-driver-hat.html
