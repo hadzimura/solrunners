@@ -1,3 +1,0 @@
-[[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && exec startx &> /dev/null
-
-https://wiki.archlinux.org/title/Silent_boot

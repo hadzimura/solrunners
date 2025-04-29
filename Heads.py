@@ -1,27 +1,13 @@
 #!/usr/bin/env python3
 # coding=utf-8
-
 # Springs of Life (2025)
 # rkucera@gmail.com
+
 import cv2 as cv
 from pprint import pprint
-from random import choice
 from time import sleep
-from PIL.ImageChops import overlay
 import pyglet
-from random import randrange
-from PIL import ImageFont, ImageDraw, Image
-import numpy as np
-from datetime import datetime
-from datetime import timedelta
-
-from scipy.stats import alpha
-from screeninfo import get_monitors
-from random import randint, uniform
-
-from random import random, choice
-from scipy.io import wavfile
-import time
+from random import randint
 from glob import glob
 import platform
 from os.path import isfile
@@ -30,6 +16,7 @@ from os.path import isfile
 pyglet.options['headless'] = True
 
 from modules.Config import arg_parser
+from modules.Config import wait_for_storage
 from modules.Config import Configuration
 from pathlib import Path
 
@@ -70,7 +57,7 @@ def player(cfg):
     cycle = 1
 
     # Run audio track
-    aplayer = drone.play()
+    aplayer = bg_audio.play()
 
     authors = {
         0: 'adela'
@@ -206,7 +193,7 @@ def player(cfg):
             aplayer.delete()
             print('AV media released')
             video = cv.VideoCapture(str(cfg.silent_heads_video))
-            aplayer = drone.play()
+            aplayer = bg_audio.play()
             frame_counter = 1
 
         # cv.waitKey(0)
@@ -237,42 +224,15 @@ def player(cfg):
 
 if __name__ == "__main__":
 
-    if platform.system() != "Darwin":
-        print('Waiting for the SHM storage to be available...')
-        storage_available = False
-        while storage_available is False:
-            if isfile('/storage/.ready'):
-                storage_available = True
-                print('Storage online, starting Runner')
-
-    heads = list()
-
     arg = arg_parser()
-    configuration = Configuration(room=5)
-    drone = pyglet.media.StaticSource(pyglet.media.load(str(configuration.silent_heads_audio), streaming=False))
+    wait_for_storage()
 
-    print('Importing subtitle frames from: {}'.format(configuration.silent_heads_pix))
-    overlays = dict()
-    for file in range(1, 22):
-        print('Importing still ID: {} from: {}'.format(file, '{}/{}'.format(configuration.silent_heads_pix, Path('{}.png'.format(file)))))
-        still = cv.imread(configuration.silent_heads_pix / Path('{}.png'.format(file)))
-        overlays[file] = dict()
-        overlays[file]['sub'] = still
-
-    print('Initializing Silent Heads samples from: {}'.format(configuration.talking_heads))
-    for sample in glob(str(configuration.talking_heads)):
-        sample_id = int(sample.split('/')[-1].split('.')[0])
-        sample_author = sample.split('/')[-1].split('.')[1]
-        print('Loading file: {}'.format(sample))
-        if 'tracks' not in overlays[sample_id]:
-            overlays[sample_id]['tracks'] = list()
-        l = pyglet.media.StaticSource(pyglet.media.load(sample, streaming=False))
-        overlays[sample_id]['tracks'].append(l)
+    cfg = Configuration(runtime='heads')
 
     running = True
 
     while running is True:
 
-        player(configuration)
+        player(cfg)
 
     print('Exited')
