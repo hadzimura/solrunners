@@ -24,44 +24,31 @@ def credits(cfg):
     pass
 
 
-def player(cfg):
+def player():
 
     playing = True
 
-    print("Initializing video for the first time: '{}'".format(cfg.silent_heads_video))
-    video = cv.VideoCapture(str(cfg.silent_heads_video))
-
+    print("Initializing video: '{}'".format(cfg.heads_video))
+    video = cv.VideoCapture(str(cfg.heads_video))
 
     # Display setup
     video.set(cv.CAP_PROP_POS_FRAMES, 0)
     cv.namedWindow('heads', cv.WINDOW_NORMAL)
     cv.namedWindow('heads', cv.WINDOW_FREERATIO)
-
-    # cv.namedWindow('subs', cv.WINDOW_NORMAL)
-    # cv.namedWindow('subs', cv.WINDOW_FREERATIO)
     # cv.moveWindow('subs',600,0)
     cv.setWindowProperty('heads', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
     av_sync = 0
     frame_counter = 1
-
     frame_time = 25
     frame_drops = 0
     fra_min = 25
     fra_max = 25
-
-    # font_status = cfg.font['status']
-    font_scale = 1
-    coord = (50, 50)
-    subtitle = None
     cycle = 1
 
     # Run audio track
-    aplayer = bg_audio.play()
-
-    authors = {
-        0: 'adela'
-    }
+    print("Initializing audio: '{}'".format(cfg.heads_audio))
+    bg_music = cfg.heads_overlays[0].play()
 
     alpha = 0
     min_alpha = 0
@@ -90,19 +77,14 @@ def player(cfg):
     blur_step = 8
     switch = 50
 
-    # pprint(cfg.sub['silent_heads'], indent=2)
-
     display_still = None
     display_author = False
-
-    # Main video loop
-    # video.set(cv.CAP_PROP_POS_FRAMES, frame_counter)
 
     current_head = None
     switch_on = 1
     switch_off = 1
 
-    splayer = None
+    talking_head = None
     kill_splayer = 0
 
     while playing is True:
@@ -113,7 +95,7 @@ def player(cfg):
 
             try:
                 # Subtitles overlay
-                current_audio_frame = round(round(aplayer.time, 6) * 25, 0)
+                current_audio_frame = round(round(bg_music.time, 6) * 25, 0)
                 # subtitle_cue = None
                 av_sync = current_audio_frame - frame_counter
 
@@ -128,25 +110,25 @@ def player(cfg):
                     audio_var = randint(0, len(overlays[over]['tracks']) - 1)
                     print(over, audio_var)
                     try:
-                        splayer = overlays[over]['tracks'][audio_var].play()
-                        kill_splayer = splayer.time + overlays[over]['tracks'][audio_var].duration - 0.2
+                        talking_head = overlays[over]['tracks'][audio_var].play()
+                        kill_splayer = talking_head.time + overlays[over]['tracks'][audio_var].duration - 0.2
                     except Exception as e:
                         pass
-                if splayer is not None:
+                if talking_head is not None:
                     #
-                    if splayer.time > kill_splayer:
-                        print(splayer.time, kill_splayer)
+                    if talking_head.time > kill_splayer:
+                        print(talking_head.time, kill_splayer)
                         print('killing splayer')
-                        splayer.pause()
-                        if splayer.playing is False:
+                        talking_head.pause()
+                        if talking_head.playing is False:
                             print('splayer was false')
                             # splayer.delete()
                             # splayer.delete()
-                            splayer = None
+                            talking_head = None
                         else:
                             print('splayer was true')
-                            splayer.delete()
-                            splayer = None
+                            talking_head.delete()
+                            talking_head = None
 
                 if frame_counter in sub_out:
                     print('off', frame_counter)
@@ -190,10 +172,10 @@ def player(cfg):
             cycle += 1
             print('Releasing AV media')
             video.release()
-            aplayer.delete()
+            bg_music.delete()
             print('AV media released')
             video = cv.VideoCapture(str(cfg.silent_heads_video))
-            aplayer = bg_audio.play()
+            bg_music = cfg.heads_overlays[0].play()
             frame_counter = 1
 
         # cv.waitKey(0)
@@ -214,6 +196,7 @@ def player(cfg):
             fra_max = frame_time
         if frame_time < fra_min:
             fra_min = frame_time
+
         # This actually controls the playback speed!
         cv.waitKey(frame_time)
         # cv.waitKey(0)
@@ -229,10 +212,6 @@ if __name__ == "__main__":
 
     cfg = Configuration(runtime='heads')
 
-    running = True
+    while True:
+        player()
 
-    while running is True:
-
-        player(cfg)
-
-    print('Exited')

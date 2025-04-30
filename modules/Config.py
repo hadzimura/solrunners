@@ -102,7 +102,7 @@ class Configuration(object):
         if runtime == 'heads':
             self._get_heads_data()
             self._get_heads_overlays()
-            self.heads_bg_music = pyglet.media.StaticSource(pyglet.media.load(str(self.heads_audio),
+            self.heads_overlays[0] = pyglet.media.StaticSource(pyglet.media.load(str(self.heads_audio),
                                                                               streaming=False))
 
     def _get_heads_data(self):
@@ -153,20 +153,27 @@ class Configuration(object):
         for sub_id in range(1, total_subs + 1):
             self.heads_overlays[sub_id] = dict()
             sub_file = self.heads_subtitles / Path('{}.png'.format(sub_id))
-            print("Importing: {}".format(sub_file))
-            self.heads_overlays[sub_id]['sub'] = cv.imread(str(sub_file))
+            if isfile(sub_file):
+                print("Importing: {}".format(sub_file))
+                self.heads_overlays[sub_id]['sub'] = cv.imread(str(sub_file))
+            else:
+                print('Not found HEADS overlay frame: {}'.format(sub_id))
         print('Done importing HEADS overlay frames')
 
         print('Importing HEADS overlays samples from: {}'.format(self.heads_samples))
+        sample_count = 0
         for sample_file in glob(str(self.heads_samples)):
-            sample_id = int(sample_file.split('/')[-1].split('.')[0])
+            sub_id = int(sample_file.split('/')[-1].split('.')[0])
             sample_author = sample_file.split('/')[-1].split('.')[1]
             print('Importing: {}'.format(sample_file))
-            if 'tracks' not in self.heads_overlays[sample_id]:
-                self.heads_overlays[sample_id]['tracks'] = list()
-            l = pyglet.media.StaticSource(pyglet.media.load(sample, streaming=False))
-            overlays[sample_id]['tracks'].append(l)
+            if 'tracks' not in self.heads_overlays[sub_id]:
+                self.heads_overlays[sub_id]['tracks'] = dict()
+            self.heads_overlays[sub_id]['tracks'][sample_author] = pyglet.media.StaticSource(pyglet.media.load(sample_file, streaming=False))
+            sample_count += 1
+        print('Found {} HEADS overlay samples'.format(sample_count))
         print('Done importing HEADS overlays')
+        # pprint(self.heads_overlays, indent=4)
+
 
     def _get_entropy_subtitles(self):
 
