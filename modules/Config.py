@@ -25,10 +25,11 @@ def arg_parser():
     parser = ArgumentParser(description='Sol Audio Runner',
                             epilog='Author: rkucera@gmail.com',
                             formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-f', '--fountain',
-                        default=1,
-                        dest='fv',
-                        help='Fountain version?')
+    parser.add_argument('-f', '--fullscreen',
+                        action=BooleanOptionalAction,
+                        default=False,
+                        dest='fullscreen',
+                        help='Play in fullscreen window')
 
     return parser.parse_args()
 
@@ -48,11 +49,13 @@ def wait_for_storage(location='/storage'):
 
 class Configuration(object):
 
-    def __init__(self, runtime=None, fountain_version=1):
+    def __init__(self, fullscreen, runtime=None, fountain_version=1):
 
         if runtime is None:
             print('Need to select runtime from (entropy|heads|fountain), exiting...')
             exit(1)
+
+        self.fullscreen = fullscreen
 
         self.fountain_version = int(fountain_version)
 

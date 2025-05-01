@@ -3,9 +3,7 @@
 # Springs of Life (2025) / rkucera@gmail.com
 
 import asyncio
-import datetime
 from contextlib import asynccontextmanager
-from copy import deepcopy
 from datetime import datetime as dt
 from datetime import timedelta
 from fastapi import FastAPI
@@ -26,8 +24,8 @@ from ruamel.yaml import YAML
 from modules.Audio import AudioLibrary
 from modules.Config import Configuration
 from modules.Config import arg_parser
-from modules.VideoPlayer import silent_heads
-from modules.VideoPlayer import entropy
+from _removing.VideoPlayer import silent_heads
+from _removing.VideoPlayer import entropy
 
 
 # Parse the runtime arguments to decide 'who we are'

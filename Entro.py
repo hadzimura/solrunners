@@ -6,159 +6,182 @@
 import cv2 as cv
 from pprint import pprint
 from time import sleep
-from PIL.ImageChops import overlay
 import pyglet
 from random import randrange
-from PIL import ImageFont, ImageDraw, Image
 import numpy as np
 from datetime import datetime
 from datetime import timedelta
-from screeninfo import get_monitors
 from random import randint, uniform
 from pathlib import Path
 from random import random, choice
 from scipy.io import wavfile
 import time
 from glob import glob
-import platform
+from platform import system
+from platform import node
+from threading import Thread
 from os.path import isfile
 
 # Run pyglet in headless mode
 pyglet.options['headless'] = True
 
 from modules.Config import arg_parser
+from modules.Config import wait_for_storage
 from modules.Config import Configuration
 
 
-def countdown(cfg):
+def countdown(total_playtime=None):
 
-    print("Initializing countdown file: '{}'".format(cfg.entropy_countdown_video))
-    video = cv.VideoCapture(str(cfg.entropy_countdown_video))
-    print(video.get(cv.CAP_PROP_FRAME_WIDTH), video.get(cv.CAP_PROP_FRAME_HEIGHT))
-    total_frames = video.get(cv.CAP_PROP_FRAME_COUNT)
-    print("Initializing audio for countdown: '{}'".format(cfg.entropy_audio))
-    audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_audio), streaming=False))
+    print("Initializing COUNTDOWN video file: '{}'".format(cfg.entropy_countdown_video))
+    c_video = cv.VideoCapture(str(cfg.entropy_countdown_video))
+    screen_width = int(c_video.get(cv.CAP_PROP_FRAME_WIDTH))
+    screen_height = int(c_video.get(cv.CAP_PROP_FRAME_HEIGHT))
+    print('Video resolution detected as: {}x{}'.format(screen_width, screen_height))
+
+    print("Initializing COUNTDOWN audio file: '{}'".format(cfg.entropy_countdown_audio))
+    bg_audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_countdown_audio), streaming=False))
     # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
-    print('Countdown AV media initialized')
+    print('All the COUNTDOWN media loaded')
 
     # Display setup
     cv.namedWindow('countdown', cv.WINDOW_NORMAL)
     cv.namedWindow('countdown', cv.WINDOW_FREERATIO)
-    cv.setWindowProperty('countdown', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+
+    if cfg.fullscreen is True:
+        print('Running in fullscreen mode')
+        cv.setWindowProperty('countdown', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+    else:
+        print("Running in windowed mode (use '--fullscreen' runtime arg for fullscreen mode)")
+
+    if node() == 'zeromini.local':
+        print('Running at zeromini, sending window to another display')
+        cv.moveWindow('countdown', 2600, 0)
 
     av_sync = 0
     frame_counter = 1
     frame_time = 25
     frame_drops = 0
-    fra_min = 25
-    fra_max = 25
+    fra_min = 20
+    fra_max = 30
 
-    # font_status = cfg.font['status']
-    font_scale = 1
-    coord = (50, 50)
-    subtitle = None
-    cycle = 1
-
-    # Run audio track
-    aplayer = audio.play()
-    c = 1
-    seconds = total_frames / 25
+    total_frames = c_video.get(cv.CAP_PROP_FRAME_COUNT)
     frame_effect = None
-    counting = (seconds - 10) * 25
 
-    effects = [
-        cv.COLOR_BGR2GRAY,
-        cv.COLORMAP_PLASMA,
-        cv.COLORMAP_TWILIGHT,
-        cv.COLORMAP_OCEAN,
-        cv.COLORMAP_WINTER
-    ]
+    bg_player = bg_audio.play()
     playback = True
-    text_up = 'THE ENTROPY WILL LAND IN'
-    text_down = 'PLEASE STAND BY'
+
+    countdown_seconds = int(total_frames / 25)
+    countdown_coords = (30, 550)
+    final_countdown = (countdown_seconds - 10) * 25
+    countdown_sequence = False
+    countdown_mask_master = np.zeros((screen_height, screen_width), dtype="uint8")
+
+    scroll = screen_width
+    change_effect_interval = 300
 
     while playback is True:
 
-        status, frame = video.read()
+        # Get next video frame
+        status, frame = c_video.read()
 
+        if total_playtime is not None and frame_counter == total_playtime:
+            status = False
 
         if status is True:
 
-            # Subtitles overlay
-            current_audio_frame = round(round(aplayer.time, 6) * 25, 0)
+            # AV Syncing
+            current_audio_frame = round(round(bg_player.time, 6) * 25, 0)
             av_sync = current_audio_frame - frame_counter
 
-            if c == 25:
-                seconds -= 1
-                c = 0
+            # Countdown number
+            if frame_counter % 25 == 0:
+                countdown_seconds -= 1
 
-            mask = np.zeros(frame.shape[:2], dtype="uint8")
-            cv.putText(mask,
-                       str(int(seconds)),
-                       (100, 510),
+            if countdown_seconds < 100:
+                countdown_coords = (240, 550)
+
+            # Create blank countdown mask
+            countdown_mask = countdown_mask_master.copy()
+            cv.putText(countdown_mask,
+                       str(countdown_seconds),
+                       countdown_coords,
                        cv.FONT_HERSHEY_PLAIN,
-                       30,
+                       43,
                        (255, 255, 255),
-                       80,
+                       125,
                        cv.LINE_AA)
-            c += 1
 
+            # Generate random lines over the mask layer (Atari 800 tape loading)
+            axe_y = 0
+            for line_number in range(0, 100):
+                line_position = randint(10, 13)
+                axe_y += line_position
+                cv.line(countdown_mask, (0, axe_y), (screen_width, axe_y), (255, 255, 255), 2)
+                if axe_y > screen_height:
+                    break
 
-            if frame_counter % 300 == 0:
-                frame_effect = randint(0, 4)
+            # Apply different color tone every X seconds
+            if frame_counter % change_effect_interval == 0:
+                frame_effect = randint(0, len(effects) - 1)
 
             if frame_effect is not None:
-                frame = frame = cv.applyColorMap(frame, effects[frame_effect])
+                cv.applyColorMap(src=frame, colormap=effects[frame_effect], dst=frame)
 
-            # cv.circle(mask, (145, 200), 100, 255, -1)
-            frame = cv.blur(frame, (5, 5), 0)
-            frame = cv.bitwise_and(frame, frame, mask=mask)
+            # Blur background layer
+            cv.blur(src=frame, ksize=(10, 10), dst=frame)
 
-            th1 = randint(1, 3)
-            th2 = randint(1, 3)
+            # Apply countdown mask
+            frame = cv.bitwise_and(frame, frame, mask=countdown_mask)
 
-            if frame_counter > counting:
-                text_up = 'TOUCHDOWN IN'
-                text_down = 'KEEP CALM'
+            # Bottom ticker strip
+            thickness_bottom = randint(1, 3)
 
-            cv.putText(frame,
-                       text_up,
-                       (100, 100),
-                       cv.FONT_HERSHEY_TRIPLEX,
-                       font_scale,
-                       (25, 190, 20),
-                       th1,
-                       cv.LINE_AA)
+            if frame_counter > final_countdown:
+                countdown_sequence =  True
 
-            cv.putText(frame,
-                       text_down,
-                       (100, 600),
-                       cv.FONT_HERSHEY_TRIPLEX,
-                       font_scale,
-                       (25, 190, 20),
-                       th2,
-                       cv.LINE_AA)
+            # Make thick black strip
+            cv.line(frame, (0, 645), (screen_width, 645), (0, 0, 0), 70)
 
+            if countdown_sequence is False:
+                cv.putText(frame,
+                           '+   {}   +   {} {} SECONDS     +'.format(countdown_text_1, countdown_text_2, countdown_seconds),
+                           # (300, 660),
+                           (scroll, 660),
+                           cv.FONT_HERSHEY_TRIPLEX,
+                           1.5,
+                           (25, 190, 20),
+                           thickness_bottom,
+                           cv.LINE_AA)
+                scroll -= 3
+                if scroll < -2100:
+                    scroll = screen_width
+            else:
+                cv.putText(frame,
+                           'COUNTDOWN',
+                           # (300, 660),
+                           (330, 660),
+                           cv.FONT_HERSHEY_TRIPLEX,
+                           1.5,
+                           (25, 190, 20),
+                           thickness_bottom,
+                           cv.LINE_AA)
 
             try:
-                if frame_time > 5:
-                    cv.imshow('countdown', frame)
-                else:
-                    print('Dropping frame {} | ft={} | avsync={} | total_drops={}'.format(frame_counter, av_sync, frame_time, frame_drops))
-                    frame_drops += 1
-
+                cv.imshow('countdown', frame)
             except Exception as playback_error:
-                print('Playback failed')
-                print('Playback error: {}'.format(playback_error))
-                exit(1)
+                print('Playback failing...')
+                print(playback_error)
 
             frame_counter += 1
 
         else:
-            print('End of the countdown')
+            print('End of the countdown, releasing audio and video streams')
+            c_video.release()
+            cv.destroyAllWindows()
+            cv.waitKey(1)  # Need this line to wait for the destroy actions to complete
+            bg_player.delete()
+            print('AV streams released, countdown finished')
             playback = False
-            video.release()
-            aplayer.delete()
 
         # cv.waitKey(0)
         if av_sync == 0:
@@ -181,41 +204,40 @@ def countdown(cfg):
         # This actually controls the playback speed!
         cv.waitKey(frame_time)
 
-        # if frame_counter % 125 == 0:
-        #     video.set(cv.CAP_PROP_POS_FRAMES, randint(1000,7000))
+def entropy(total_playtime=None):
 
-        if frame_counter == 1:
-            print('-----------------------------')
-
-    # Release everything
-    # cv.destroyAllWindows()
-
-def player(cfg):
-
-    overlays = True
-    playing = True
-
-    print("Initializing video for the first time: '{}'".format(cfg.entropy_video))
-    video = cv.VideoCapture(str(cfg.entropy_video))
-    print(video.get(cv.CAP_PROP_FRAME_WIDTH), video.get(cv.CAP_PROP_FRAME_HEIGHT))
+    print("Initializing ENTROPY video file: '{}'".format(cfg.entropy_main_video))
+    e_video = cv.VideoCapture(str(cfg.entropy_main_video))
+    screen_width = int(e_video.get(cv.CAP_PROP_FRAME_WIDTH))
+    screen_height = int(e_video.get(cv.CAP_PROP_FRAME_HEIGHT))
+    print('Video resolution detected as: {}x{}'.format(screen_width, screen_height))
+    total_frames = e_video.get(cv.CAP_PROP_FRAME_COUNT)
+    print('Total video frames: {}'.format(total_frames))
     # print(video.get(cv.CAP_PROP_FRAME_COUNT))
-    print("Initializing audio for the first time: '{}'".format(cfg.entropy_audio))
-    audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_audio), streaming=False))
+    print("Initializing ENTROPY audio file: '{}'".format(cfg.entropy_main_audio))
+    audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_main_audio), streaming=False))
     # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
-    print('AV media initialized')
+    print('All the ENTROPY media loaded')
 
     # Display setup
-    # video.set(cv.CAP_PROP_POS_FRAMES, 5000)
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
     cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
-    cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+    if cfg.fullscreen is True:
+        print('Running in fullscreen mode')
+        cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+    else:
+        print("Running in windowed mode (use '--fullscreen' runtime arg for fullscreen mode)")
+
+    if node() == 'zeromini.local':
+        print('Running at zeromini, sending window to another display')
+        cv.moveWindow('entropy', 2600, 0)
 
     av_sync = 0
     frame_counter = 1
     frame_time = 25
     frame_drops = 0
-    fra_min = 25
-    fra_max = 25
+    fra_min = 5
+    fra_max = 30
 
     # font_status = cfg.font['status']
     font_scale = 1
@@ -225,78 +247,117 @@ def player(cfg):
 
     # Run audio track
     aplayer = audio.play()
+    playback = True
+
+    intro = (50, 850)
+    outro = (7600, 8100)
+    entropy_motto = None
 
     # Main video loop
-    while playing is True:
+    while playback is True:
 
-        status, frame = video.read()
+        # Get next video frame
+        status, frame = e_video.read()
+
+        if total_playtime is not None and frame_counter * 25 == total_playtime:
+            status = False
 
         if status is True:
 
-            # Subtitles overlay
             current_audio_frame = round(round(aplayer.time, 6) * 25, 0)
-            subtitle_cue = None
             av_sync = current_audio_frame - frame_counter
 
-            if overlays is True:
+            # Intro and outro
+            if frame_counter == intro[0]:
+                entropy_motto = entropy_intro
+            elif frame_counter == intro[1]:
+                entropy_motto = None
+            elif frame_counter == outro[0]:
+                entropy_motto = entropy_outro
+            elif frame_counter == outro[1]:
+                entropy_motto = None
 
-                try:
-                    subtitle_cue = datetime.strptime(str(timedelta(seconds=round(aplayer.time, 6))), '%H:%M:%S.%f').time().replace(microsecond=0)
-                except Exception as runtime_problem:
-                    print('Runtime failing: {}'.format(runtime_problem))
-
-                # if frame_counter % 100 == 0:
-                #     print('swap')
-                #     aplayer.eplay(action='swap')
-
-                # Subtitles
-                if subtitle_cue in cfg.sub['entropy']:
-                    subtitle = cfg.sub['entropy'][subtitle_cue]
-                    coord = (randint(5, 350), randint(200, 800))
-                    font_scale = uniform(0.4, 1.4)
-
-                if subtitle is not None:
+            if entropy_motto is not None:
+                axe_y = int(screen_height / 3)
+                for quote in entropy_motto:
+                    thickness_intro = randint(1, 3)
+                    # Get the size of the text box
+                    text_box = cv.getTextSize(quote, cv.FONT_HERSHEY_TRIPLEX, 1.5, thickness_intro)
+                    axe_x = int((screen_width - text_box[0][0]) / 2)
+                    axe_y += text_box[0][1] + 50
                     cv.putText(frame,
-                               subtitle,
-                               coord,
+                               quote,
+                               (axe_x, axe_y),
                                cv.FONT_HERSHEY_TRIPLEX,
-                               font_scale,
+                               1.5,
                                (25, 190, 20),
-                               2,
+                               thickness_intro,
                                cv.LINE_AA)
 
-                # Overlays
-                status_1 = 'a-v: {} | v:{} a:{} ft: {} / {} / {}'.format(av_sync,
-                                                                       frame_counter,
-                                                                       current_audio_frame,
-                                                                       frame_time,
-                                                                       subtitle_cue,
-                                                                       round(aplayer.time, 6))
+            # Lyrics subtitle overlay
+            subtitle_cue = None
+
+            try:
+                subtitle_cue = datetime.strptime(str(timedelta(seconds=round(aplayer.time, 6))), '%H:%M:%S.%f').time().replace(microsecond=0)
+            except Exception as runtime_problem:
+                print('Runtime failing: {}'.format(runtime_problem))
+
+            if subtitle_cue in cfg.entropy_subs:
+                subtitle = cfg.entropy_subs[subtitle_cue]
+                coord = (randint(5, 350), randint(200, 700))
+                font_scale = uniform(0.6, 1.4)
+                text_box = cv.getTextSize(subtitle, cv.FONT_HERSHEY_TRIPLEX, font_scale, 3)
+                if text_box[0][0] > screen_width - coord[0]:
+                    coord = (screen_width - text_box[0][0] - 10, randint(200, 800))
+
+            if subtitle is not None:
+                thickness_subtitle = randint(1, 3)
                 cv.putText(frame,
-                           status_1,
-                           (50, 50),
-                           cv.FONT_HERSHEY_PLAIN,
-                           1.5,
-                           (0, 50, 200),
-                           2,
+                           subtitle,
+                           coord,
+                           cv.FONT_HERSHEY_TRIPLEX,
+                           font_scale,
+                           (25, 190, 20),
+                           thickness_subtitle,
                            cv.LINE_AA)
 
-                status_2 = 'T={} == c: {} // f{} // v: {} | min/max: <{}/{}>'.format(
-                    datetime.now().strftime("%H:%M:%S.%f"),
-                    cycle,
-                    frame_counter,
-                    aplayer.volume,
-                    fra_min,
-                    fra_max)
+            # Statistics Overlays
+            status_1 = 'a-v sync: {} ++ v{} / a{} / ft{} ++ {} / {}'.format(av_sync,
+                                                                   frame_counter,
+                                                                   current_audio_frame,
+                                                                   frame_time,
+                                                                   subtitle_cue,
+                                                                   round(aplayer.time, 6))
+            status_2 = 'mission time: {} ++ expedition: {} (f{} | v:{}) ++ min/max thr: <{}/{}>'.format(
+                datetime.now().strftime("%H:%M:%S.%f"),
+                cycle,
+                frame_counter,
+                aplayer.volume,
+                fra_min,
+                fra_max)
 
-                cv.putText(frame,
-                           status_2,
-                           (50, 75),
-                           cv.FONT_HERSHEY_PLAIN,
-                           1.5,
-                           (0, 50, 200),
-                           2,
-                           cv.LINE_AA)
+            cv.putText(frame,
+                       status_1,
+                       (50, 50),
+                       cv.FONT_HERSHEY_PLAIN,
+                       1.5,
+                       (0, 50, 200),
+                       2,
+                       cv.LINE_AA)
+
+            cv.putText(frame,
+                       status_2,
+                       (50, 75),
+                       cv.FONT_HERSHEY_PLAIN,
+                       1.5,
+                       (0, 50, 200),
+                       2,
+                       cv.LINE_AA)
+
+            # Display GUI
+            gui_thickness = randint(1, 3)
+            cv.rectangle(frame, (10, 10), (screen_width - 10, screen_height - 10), (0, 50, 200), gui_thickness)
+            cv.line(frame, (10, 100), (screen_width - 10, 100), (0, 50, 200), gui_thickness)
 
             try:
                 if frame_time > 5:
@@ -306,22 +367,25 @@ def player(cfg):
                     frame_drops += 1
 
             except Exception as playback_error:
-                print('Playback failed')
-                print('Playback error: {}'.format(playback_error))
-                exit(1)
+                print('Playback failing...')
+                print(playback_error)
 
             frame_counter += 1
+            # print(frame_counter)
 
         else:
-            print('End of cycle {}'.format(cycle))
+            print('End of cycle {} frame_counter={}'.format(cycle, frame_counter))
             cycle += 1
             print('Releasing AV media')
-            video.release()
-            aplayer.delete()
-            print('AV media released')
-            playing = False
-            # video = cv.VideoCapture(str(cfg.entropy_video))
-            # aplayer = audio.play()
+            try:
+                e_video.release()
+                cv.destroyAllWindows()
+                cv.waitKey(1)  # Need this line to wait for the destroy actions to complete
+                aplayer.delete()
+                print('AV media released')
+            except Exception as av_error:
+                print('AV media releasing fail: {}'.format(av_error))
+            playback = False
 
         # cv.waitKey(0)
         if av_sync == 0:
@@ -344,32 +408,42 @@ def player(cfg):
         # This actually controls the playback speed!
         cv.waitKey(frame_time)
 
-        # if frame_counter % 125 == 0:
-        #     video.set(cv.CAP_PROP_POS_FRAMES, randint(1000,7000))
-
-        if frame_counter == 1:
-            print('-----------------------------')
-
-    # Release everything
-    # cv.destroyAllWindows()
 
 if __name__ == "__main__":
 
-    if platform.system() != "Darwin":
-        print('Waiting for the SHM storage to be available...')
-        storage_available = False
-        while storage_available is False:
-            if isfile('/storage/.ready'):
-                storage_available = True
-                print('Storage online, starting Runner')
-
     arg = arg_parser()
-    configuration = Configuration(room=3)
+    wait_for_storage()
+
+    cfg = Configuration(arg.fullscreen, runtime='entropy')
+
+    effects = [
+        cv.COLOR_BGR2GRAY,
+        cv.COLORMAP_PLASMA,
+        cv.COLORMAP_TWILIGHT,
+        cv.COLORMAP_OCEAN,
+        cv.COLORMAP_WINTER
+    ]
+
+    countdown_text_1 = 'PLEASE STAND BY'
+    countdown_text_2 = 'THE ENTROPY WILL LAND IN'
+
+    entropy_intro = [
+        'WE ARE SEARCHING',
+        'FOR ANYTHING',
+        'THAT IS LEFT']
+    entropy_outro = [
+        'WE ARE SEARCHING',
+        'FOR THE THINGS',
+        'THAT ARE STILL RIGHT'
+    ]
 
     running = True
 
+
     while running is True:
-        countdown(configuration)
-        player(configuration)
+
+        countdown_thread = Thread(target=countdown())
+        entropy_thread = Thread(target=entropy())
+
 
     print('exited')
