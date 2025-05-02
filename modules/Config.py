@@ -80,12 +80,14 @@ class Configuration(object):
         self.entropy_main_subtitles = self.entropy_path / Path('entropy.subtitles')
         self.entropy_countdown_video = self.entropy_path / Path('countdown.mov')
         self.entropy_countdown_audio = self.entropy_path / Path('countdown.wav')
+        self.entropy_qr_code = self.entropy_path / Path('entropy_qr.png')
 
         # Heads
         self.heads_video = self.heads_path / Path('silent_heads.mov')
-        self.heads_audio = self.heads_path / Path('heads.wav')
-        self.heads_subtitles = self.heads_path / Path('subtitles')
+        self.heads_audio = self.heads_path / Path('silent_heads.wav')
+        self.heads_subtitles = self.heads_path / Path('subs-1050x1680')
         self.heads_samples = self.heads_path / Path('talking/*.wav')
+        self.heads_qr_code = self.heads_path / Path('heads_qr.png')
 
         # Fountain
         self.fountain = self.fountain_path / Path('fountain.wav')

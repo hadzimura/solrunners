@@ -219,6 +219,10 @@ def entropy(total_playtime=None):
     # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
     print('All the ENTROPY media loaded')
 
+    e_video.set(cv.CAP_PROP_POS_FRAMES, 7445)
+
+    qr_code = cv.imread(str(cfg.entropy_qr_code))
+
     # Display setup
     cv.namedWindow('entropy', cv.WINDOW_NORMAL)
     cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
@@ -233,7 +237,7 @@ def entropy(total_playtime=None):
         cv.moveWindow('entropy', 2600, 0)
 
     av_sync = 0
-    frame_counter = 1
+    frame_counter = 7445
     frame_time = 25
     frame_drops = 0
     fra_min = 5
@@ -252,6 +256,12 @@ def entropy(total_playtime=None):
     intro = (50, 850)
     outro = (7600, 8100)
     entropy_motto = None
+
+    alpha = 0.1
+
+    # Show QR Code
+    cv.imshow('entropy', qr_code)
+    cv.waitKey(10000)
 
     # Main video loop
     while playback is True:
@@ -407,6 +417,7 @@ def entropy(total_playtime=None):
             fra_min = frame_time
         # This actually controls the playback speed!
         cv.waitKey(frame_time)
+        # cv.waitKey(0)
 
 
 if __name__ == "__main__":
@@ -437,13 +448,6 @@ if __name__ == "__main__":
         'THAT ARE STILL RIGHT'
     ]
 
-    running = True
-
-
-    while running is True:
-
+    while True:
         countdown_thread = Thread(target=countdown())
         entropy_thread = Thread(target=entropy())
-
-
-    print('exited')
