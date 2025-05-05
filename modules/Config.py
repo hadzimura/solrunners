@@ -98,7 +98,7 @@ class Configuration(object):
 
         # Entropy subtitles acquisition
         self.entropy_subs = dict()
-        if runtime == 'entropy':
+        if runtime == 'ent **ropy':
             self._get_entropy_subtitles()
 
         # Heads samples
