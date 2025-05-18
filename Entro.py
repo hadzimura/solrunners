@@ -3,24 +3,17 @@
 
 # Springs of Life (2025)
 # rkucera@gmail.com
+
 import cv2 as cv
 from pprint import pprint
-from time import sleep
 import pyglet
-from random import randrange
 import numpy as np
 from datetime import datetime
 from datetime import timedelta
 from random import randint, uniform
-from pathlib import Path
 from random import random, choice
-from scipy.io import wavfile
-import time
-from glob import glob
-from platform import system
 from platform import node
 from threading import Thread
-from os.path import isfile
 
 # Run pyglet in headless mode
 pyglet.options['headless'] = True
@@ -30,7 +23,7 @@ from modules.Config import wait_for_storage
 from modules.Config import Configuration
 
 
-def countdown(total_playtime=None):
+def countdown(total_playtime=None, start_playtime=None):
 
     print("Initializing COUNTDOWN video file: '{}'".format(cfg.entropy_countdown_video))
     c_video = cv.VideoCapture(str(cfg.entropy_countdown_video))
@@ -42,6 +35,9 @@ def countdown(total_playtime=None):
     bg_audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_countdown_audio), streaming=False))
     # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
     print('All the COUNTDOWN media loaded')
+
+    if start_playtime is not None:
+        c_video.set(cv.CAP_PROP_POS_FRAMES, start_playtime)
 
     # Display setup
     cv.namedWindow('countdown', cv.WINDOW_NORMAL)
@@ -67,9 +63,6 @@ def countdown(total_playtime=None):
     total_frames = c_video.get(cv.CAP_PROP_FRAME_COUNT)
     frame_effect = None
 
-    bg_player = bg_audio.play()
-    playback = True
-
     countdown_seconds = int(total_frames / 25)
     countdown_coords = (30, 550)
     final_countdown = (countdown_seconds - 10) * 25
@@ -78,6 +71,9 @@ def countdown(total_playtime=None):
 
     scroll = screen_width
     change_effect_interval = 300
+
+    playback = True
+    bg_player = bg_audio.play()
 
     while playback is True:
 
@@ -122,19 +118,16 @@ def countdown(total_playtime=None):
 
             # Apply different color tone every X seconds
             if frame_counter % change_effect_interval == 0:
-                frame_effect = randint(0, len(effects) - 1)
+                frame_effect = choice(cfg.color_effect)
 
             if frame_effect is not None:
-                cv.applyColorMap(src=frame, colormap=effects[frame_effect], dst=frame)
+                cv.applyColorMap(src=frame, colormap=frame_effect, dst=frame)
 
             # Blur background layer
             cv.blur(src=frame, ksize=(10, 10), dst=frame)
 
             # Apply countdown mask
             frame = cv.bitwise_and(frame, frame, mask=countdown_mask)
-
-            # Bottom ticker strip
-            thickness_bottom = randint(1, 3)
 
             if frame_counter > final_countdown:
                 countdown_sequence =  True
@@ -144,13 +137,14 @@ def countdown(total_playtime=None):
 
             if countdown_sequence is False:
                 cv.putText(frame,
-                           '+   {}   +   {} {} SECONDS     +'.format(countdown_text_1, countdown_text_2, countdown_seconds),
-                           # (300, 660),
+                           '+   {}   +   {} {} SECONDS     +'.format(cfg.entropy_overlays['countdown'][0],
+                                                                     cfg.entropy_overlays['countdown'][1],
+                                                                     countdown_seconds),
                            (scroll, 660),
                            cv.FONT_HERSHEY_TRIPLEX,
                            1.5,
                            (25, 190, 20),
-                           thickness_bottom,
+                           randint(1, 3),
                            cv.LINE_AA)
                 scroll -= 3
                 if scroll < -2100:
@@ -163,7 +157,7 @@ def countdown(total_playtime=None):
                            cv.FONT_HERSHEY_TRIPLEX,
                            1.5,
                            (25, 190, 20),
-                           thickness_bottom,
+                           randint(1, 3),
                            cv.LINE_AA)
 
             try:
@@ -204,7 +198,7 @@ def countdown(total_playtime=None):
         # This actually controls the playback speed!
         cv.waitKey(frame_time)
 
-def entropy(total_playtime=None):
+def entropy(total_playtime=None, start_playtime=0):
 
     print("Initializing ENTROPY video file: '{}'".format(cfg.entropy_main_video))
     e_video = cv.VideoCapture(str(cfg.entropy_main_video))
@@ -219,7 +213,7 @@ def entropy(total_playtime=None):
     # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
     print('All the ENTROPY media loaded')
 
-    e_video.set(cv.CAP_PROP_POS_FRAMES, 7445)
+    e_video.set(cv.CAP_PROP_POS_FRAMES, start_playtime)
 
     qr_code = cv.imread(str(cfg.entropy_qr_code))
 
@@ -237,7 +231,7 @@ def entropy(total_playtime=None):
         cv.moveWindow('entropy', 2600, 0)
 
     av_sync = 0
-    frame_counter = 7445
+    frame_counter = 1
     frame_time = 25
     frame_drops = 0
     fra_min = 5
@@ -247,11 +241,6 @@ def entropy(total_playtime=None):
     font_scale = 1
     coord = (50, 50)
     subtitle = None
-    cycle = 1
-
-    # Run audio track
-    aplayer = audio.play()
-    playback = True
 
     intro = (50, 850)
     outro = (7600, 8100)
@@ -261,7 +250,12 @@ def entropy(total_playtime=None):
 
     # Show QR Code
     cv.imshow('entropy', qr_code)
-    cv.waitKey(10000)
+    cv.waitKey(100)
+
+
+    # Run audio track
+    aplayer = audio.play()
+    playback = True
 
     # Main video loop
     while playback is True:
@@ -279,11 +273,11 @@ def entropy(total_playtime=None):
 
             # Intro and outro
             if frame_counter == intro[0]:
-                entropy_motto = entropy_intro
+                entropy_motto = cfg.entropy_overlays['intro']
             elif frame_counter == intro[1]:
                 entropy_motto = None
             elif frame_counter == outro[0]:
-                entropy_motto = entropy_outro
+                entropy_motto = cfg.entropy_overlays['outro']
             elif frame_counter == outro[1]:
                 entropy_motto = None
 
@@ -298,7 +292,8 @@ def entropy(total_playtime=None):
                     cv.putText(frame,
                                quote,
                                (axe_x, axe_y),
-                               cv.FONT_HERSHEY_TRIPLEX,
+                               # cv.FONT_HERSHEY_TRIPLEX,
+                               cfg.font[2],
                                1.5,
                                (25, 190, 20),
                                thickness_intro,
@@ -314,21 +309,21 @@ def entropy(total_playtime=None):
 
             if subtitle_cue in cfg.entropy_subs:
                 subtitle = cfg.entropy_subs[subtitle_cue]
-                coord = (randint(5, 350), randint(200, 700))
-                font_scale = uniform(0.6, 1.4)
-                text_box = cv.getTextSize(subtitle, cv.FONT_HERSHEY_TRIPLEX, font_scale, 3)
-                if text_box[0][0] > screen_width - coord[0]:
-                    coord = (screen_width - text_box[0][0] - 10, randint(200, 800))
+                if subtitle is not None:
+                    coord = (randint(5, 350), randint(200, 700))
+                    font_scale = uniform(0.6, 1.4)
+                    text_box = cv.getTextSize(subtitle, cv.FONT_HERSHEY_TRIPLEX, font_scale, 3)
+                    if text_box[0][0] > screen_width - coord[0]:
+                        coord = (screen_width - text_box[0][0] - 10, randint(200, 800))
 
             if subtitle is not None:
-                thickness_subtitle = randint(1, 3)
                 cv.putText(frame,
                            subtitle,
                            coord,
                            cv.FONT_HERSHEY_TRIPLEX,
                            font_scale,
                            (25, 190, 20),
-                           thickness_subtitle,
+                           randint(1, 3),
                            cv.LINE_AA)
 
             # Statistics Overlays
@@ -340,7 +335,7 @@ def entropy(total_playtime=None):
                                                                    round(aplayer.time, 6))
             status_2 = 'mission time: {} ++ expedition: {} (f{} | v:{}) ++ min/max thr: <{}/{}>'.format(
                 datetime.now().strftime("%H:%M:%S.%f"),
-                cycle,
+                cfg.entropy_expedition,
                 frame_counter,
                 aplayer.volume,
                 fra_min,
@@ -381,11 +376,10 @@ def entropy(total_playtime=None):
                 print(playback_error)
 
             frame_counter += 1
-            # print(frame_counter)
 
         else:
-            print('End of cycle {} frame_counter={}'.format(cycle, frame_counter))
-            cycle += 1
+            print('End of cycle {} frame_counter={}'.format(cfg.entropy_expedition, frame_counter))
+            cfg.entropy_expedition += 1
             print('Releasing AV media')
             try:
                 e_video.release()
@@ -427,27 +421,6 @@ if __name__ == "__main__":
 
     cfg = Configuration(arg.fullscreen, runtime='entropy')
 
-    effects = [
-        cv.COLOR_BGR2GRAY,
-        cv.COLORMAP_PLASMA,
-        cv.COLORMAP_TWILIGHT,
-        cv.COLORMAP_OCEAN,
-        cv.COLORMAP_WINTER
-    ]
-
-    countdown_text_1 = 'PLEASE STAND BY'
-    countdown_text_2 = 'THE ENTROPY WILL LAND IN'
-
-    entropy_intro = [
-        'WE ARE SEARCHING',
-        'FOR ANYTHING',
-        'THAT IS LEFT']
-    entropy_outro = [
-        'WE ARE SEARCHING',
-        'FOR THE THINGS',
-        'THAT ARE STILL RIGHT'
-    ]
-
     while True:
-        countdown_thread = Thread(target=countdown())
+        countdown_thread = Thread(target=countdown(total_playtime=10))
         entropy_thread = Thread(target=entropy())

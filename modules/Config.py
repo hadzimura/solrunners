@@ -11,14 +11,12 @@ from pathlib import Path
 from pprint import pprint
 from os.path import isdir
 from os.path import isfile
-from random import choice
 from ruamel.yaml import YAML, YAMLError
 from platform import system
 
 # Run pyglet in headless mode
 import pyglet
 pyglet.options['headless'] = True
-
 
 def arg_parser():
     # Parse the runtime arguments to decide 'who we are'
@@ -52,7 +50,7 @@ class Configuration(object):
     def __init__(self, fullscreen, runtime=None, fountain_version=1):
 
         if runtime is None:
-            print('Need to select runtime from (entropy|heads|fountain), exiting...')
+            print('Need to select runtime from (entropy|heads), exiting...')
             exit(1)
 
         self.fullscreen = fullscreen
@@ -68,11 +66,28 @@ class Configuration(object):
         else:
             self.media_root = Path('/storage')
 
-        # Path definitions
-        self.fonts = self.media_root / Path('fonts')
+        # Base Path definitions
         self.entropy_path = self.media_root / Path('entropy')
         self.heads_path = self.media_root / Path('heads')
-        self.fountain_path = self.media_root / Path('fountain')
+
+        # Video Color Effects
+        self.color_effect = [
+            cv.COLOR_BGR2GRAY,
+            cv.COLORMAP_PLASMA,
+            cv.COLORMAP_TWILIGHT,
+            cv.COLORMAP_OCEAN,
+            cv.COLORMAP_WINTER
+        ]
+
+        # text Fonts
+        self.font = [
+            cv.FONT_HERSHEY_SIMPLEX,
+            cv.FONT_HERSHEY_PLAIN,
+            cv.FONT_HERSHEY_TRIPLEX,
+            cv.FONT_HERSHEY_COMPLEX,
+            cv.FONT_HERSHEY_DUPLEX,
+            cv.FONT_HERSHEY_COMPLEX_SMALL
+        ]
 
         # Entropy
         self.entropy_main_audio = self.entropy_path / Path('entropy.wav')
@@ -83,47 +98,67 @@ class Configuration(object):
         self.entropy_qr_code = self.entropy_path / Path('entropy_qr.png')
 
         # Heads
-        self.heads_video = self.heads_path / Path('silent_heads.mov')
-        self.heads_audio = self.heads_path / Path('silent_heads.wav')
-        self.heads_subtitles = self.heads_path / Path('subs-1050x1680')
+        # self.heads_video = self.heads_path / Path('silent_heads.mov')
+        self.heads_video = self.heads_path / Path('heads.mm.1050x1680.mov')
+        # self.heads_audio = self.heads_path / Path('silent_heads.short.wav')
+        # self.heads_audio = self.heads_path / Path('silent_heads.wav')
+        self.heads_audio = self.heads_path / Path('silent_heads.cut.wav')
+        # self.heads_subtitles = self.heads_path / Path('subs-1050x1680')
+        self.heads_subtitles = self.heads_path / Path('subs-1050x1680-lex')
         self.heads_samples = self.heads_path / Path('talking/*.wav')
         self.heads_qr_code = self.heads_path / Path('heads_qr.png')
+        self.heads_metadata = self.project_root / Path('sol.heads.yaml')
+        self.authors_metadata = self.project_root / Path('sol.authors.yaml')
 
-        # Fountain
-        self.fountain = self.fountain_path / Path('fountain.wav')
+        # Face Recognition models
+        self.fr = self.media_root / Path('haarcascade_frontalface_alt.xml')
+        self.fre = self.media_root / Path('haarcascade_eye_tree_eyeglasses.xml')
+        self.frex = self.media_root / Path('haarcascade_frontalcatface_extended.xml')
+        self.lbp = self.media_root / Path('lbpcascade_frontalface_improved.xml')
 
         # Initialize YAM parser
         self.yaml = YAML()
         self.yaml.preserve_quotes = True
 
-        # Entropy subtitles acquisition
-        self.entropy_subs = dict()
-        if runtime == 'ent **ropy':
+        # Entropy initialization
+        if runtime == 'entropy':
+            self.entropy_subs = dict()
+            self.entropy_expedition = 1
+            # Entropy runtime text overlays
+            self.entropy_overlays = {
+                'countdown': ['PLEASE STAND BY', 'THE ENTROPY WILL LAND IN'],
+                'intro': ['WE ARE SEARCHING', 'FOR ANYTHING', 'THAT IS LEFT'],
+                'outro': ['WE ARE SEARCHING', 'FOR THE THINGS', 'THAT ARE STILL RIGHT']
+            }
             self._get_entropy_subtitles()
 
-        # Heads samples
-        self.heads = dict()
-        self.heads_overlays = dict()
+        # Heads initialization
         if runtime == 'heads':
+            self.heads_framecode = dict()
+            self.heads_authors = dict()
+            self.heads_overlays = {
+                0: {
+                    'author_name_long': 'Roman Neruda',
+                    'author_name_short': 'roman',
+                    'text': 'Podkresová audio stopa',
+                    'subtitle': None,
+                    'sample': [pyglet.media.StaticSource(pyglet.media.load(str(self.heads_audio), streaming=False))],
+                    'sample_author': [['roman', 'Roman Neruda']]
+                }
+            }
             self._get_heads_data()
             self._get_heads_overlays()
-            self.heads_overlays[0] = pyglet.media.StaticSource(pyglet.media.load(str(self.heads_audio),
-                                                                              streaming=False))
 
     def _get_heads_data(self):
 
         """ Load the Heads samples metadata for runtime """
-
-        heads_metadata = self.project_root / Path('sol.heads.yaml')
-        authors_metadata = self.project_root / Path('sol.authors.yaml')
         quotes = dict()
-        authors = dict()
         print('Importing HEADS metadata')
         try:
-            print("Loading HEADS audio metadata from: {}".format(heads_metadata))
-            quotes = dict(self.yaml.load(heads_metadata))
-            print("Loading HEADS authors metadata from: {}".format(authors_metadata))
-            authors = dict(self.yaml.load(authors_metadata))
+            print("Loading HEADS audio metadata from: {}".format(self.heads_metadata))
+            quotes = dict(self.yaml.load(self.heads_metadata))
+            print("Loading HEADS authors metadata from: {}".format(self.authors_metadata))
+            self.heads_authors = dict(self.yaml.load(self.authors_metadata))
         except FileNotFoundError as fnf:
             print('Not found HEADS metadata, exiting...')
             print(fnf)
@@ -133,21 +168,23 @@ class Configuration(object):
             print(yamlerr)
             exit(1)
         except Exception as e:
-            print('Problem exnountered, exiting...')
+            print('Problem encountered, exiting...')
             print(e)
             exit(1)
 
-        for sample, data in quotes.items():
+        for sub_id, data in quotes.items():
             author = data['author']
-            sub_id = data['id']
-            if author not in self.heads:
-                self.heads[author] = {
-                    'name': authors[author]['name'],
-                    'track': list()
-                }
-            self.heads[author]['track'].append(data)
+            self.heads_overlays[int(sub_id)] = {
+                'author_name_long': self.heads_authors[author]['name'],
+                'author_name_short': data['author'],
+                'text': data['text'],
+                'placeholder': data['placeholder']
+            }
+
+            # Prepare TIMECODE for Silent Heada video
+            for f_code in self.heads_authors[author]['position']:
+                self.heads_framecode[f_code] = self.heads_authors[author]['sucher']
         print('Done importing HEADS metadata')
-        # pprint(self.heads, indent=4)
 
     def _get_heads_overlays(self):
 
@@ -156,11 +193,10 @@ class Configuration(object):
         print('Importing HEADS overlays frames from: {}'.format(self.heads_subtitles))
         total_subs = 21
         for sub_id in range(1, total_subs + 1):
-            self.heads_overlays[sub_id] = dict()
             sub_file = self.heads_subtitles / Path('{}.png'.format(sub_id))
             if isfile(sub_file):
                 print("Importing: {}".format(sub_file))
-                self.heads_overlays[sub_id]['sub'] = cv.imread(str(sub_file))
+                self.heads_overlays[sub_id]['subtitle'] = cv.imread(str(sub_file))
             else:
                 print('Not found HEADS overlay frame: {}'.format(sub_id))
         print('Done importing HEADS overlay frames')
@@ -171,14 +207,14 @@ class Configuration(object):
             sub_id = int(sample_file.split('/')[-1].split('.')[0])
             sample_author = sample_file.split('/')[-1].split('.')[1]
             print('Importing: {}'.format(sample_file))
-            if 'tracks' not in self.heads_overlays[sub_id]:
-                self.heads_overlays[sub_id]['tracks'] = dict()
-            self.heads_overlays[sub_id]['tracks'][sample_author] = pyglet.media.StaticSource(pyglet.media.load(sample_file, streaming=False))
+            if 'sample' not in self.heads_overlays[sub_id]:
+                self.heads_overlays[sub_id]['sample'] = list()
+                self.heads_overlays[sub_id]['sample_author'] = list()
+            self.heads_overlays[sub_id]['sample'].append(pyglet.media.StaticSource(pyglet.media.load(sample_file, streaming=False)))
+            self.heads_overlays[sub_id]['sample_author'].append([sample_author, self.heads_authors[sample_author]['name']])
             sample_count += 1
         print('Found {} HEADS overlay samples'.format(sample_count))
         print('Done importing HEADS overlays')
-        # pprint(self.heads_overlays, indent=4)
-
 
     def _get_entropy_subtitles(self):
 
@@ -194,49 +230,4 @@ class Configuration(object):
                 self.entropy_subs[start_time] = line.split('|')[2].strip()
                 self.entropy_subs[stop_time] = None
         print('Done importing ENTROPY subtitles')
-        pprint(self.entropy_subs, indent=4)
-
-
-    def action(self):
-        pass
-
-    def update(self):
-        pass
-
-    def read_input(self, input_key):
-
-        match input_key:
-
-            case -1:
-                # Nothing pressed
-                # zc.volume = None
-                return True
-            # case 9:
-            #     # 'tab'
-            #     self.control.active()
-            case 27:
-                # 'esc'
-                return False
-            case 102:
-                # 'f'
-                self.flip.enabled = not self.flip.enabled
-            case 103:
-                # 'g'
-                self.gray.enabled = not self.gray.enabled
-            case 111:
-                # 'o'
-                self.offset.enabled = not self.offset.enabled
-            case 109:
-                # 'm'
-                self.mix.enabled = not self.mix.enabled
-                print('Mix: {}'.format(self.mix.enabled))
-            case 98:
-                # 'b'
-                self.blur.enabled = not self.blur.enabled
-            case _:
-                # if input_key in self.volumes:
-                #     self.volume = self.volumes[input_key]
-                # else:
-                print("Undefined key pressed: '{}'".format(input_key))
-        return True
-
+        # pprint(self.entropy_subs, indent=4)

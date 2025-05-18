@@ -2,7 +2,7 @@
 
 "The Entropy" is part of the `Springs of Life: From the Sucher's family archives` exhibition. 
 
-It consists of two pre-rendered `H.264` movies that run at `1366x768` resolution and the [Entro.py](Entro.py) controller script that uses [OpenCV](https://opencv.org) version `4.11.0` for runtime per-frame visual enhancements. Audio streams are handled via [pyglet](https://pyglet.readthedocs.io/en/latest/) framework (`1.5.27`). 
+It consists of two pre-rendered `H.264` movies that run at `1366x768` resolution and the [Entro.py](../Entro.py) controller script that uses [OpenCV](https://opencv.org) version `4.11.0` for runtime per-frame visual enhancements. Audio streams are handled via [pyglet](https://pyglet.readthedocs.io/en/latest/) framework (`1.5.27`). 
 
 Playback itself is hosted on top of [Raspberry Pi 5](https://www.raspberrypi.com/products/raspberry-pi-5/) (sporting `8GB` of RAM) microcomputer connected to an LCD TV screen. It is powered by the [Raspberry Pi OS (64-bit)](https://www.raspberrypi.com/software/operating-systems/) that runs in `kiosk-mode` using [matchbox-window-manager](https://github.com/NetPLC/matchbox-window-manager). 
 
