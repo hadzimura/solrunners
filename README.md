@@ -51,7 +51,7 @@ Even though the python's `OpenCV` library is mostly "just" a bunch of clever wra
 
 ### pyglet 
 
-Even though it's quite overkill, as you can quite easily write complex videogames using the `pyglet` and you need to overcome the urge to use the latest version of anything: because the `2.0.x` mainline version has (to be fair) great prospects ahead itself, but... You do not solve all your problems by simply downgrading the module you use on daily basis. I suppose. Took me two epiphany-like moments to downgrade deep enough my code just started working. There is also the fact a lots of audio-editors save your `WAV` your downgrading comes in play, as it easily can be started in headless mode and plays 16-bit 44.1 kHz audio samples natively. 
+Even though it's quite overkill, as you can quite easily write complex videogames using the `pyglet`; and you need to overcome the urge to use the latest version of anything: because the `2.0.x` mainline version has (to be fair) great prospects ahead itself, but... You do not solve all your problems by simply downgrading the module you use on daily basis. I suppose. Took me two epiphany-like moments to downgrade deep enough my code just started working. There is also the fact a lots of audio-editors save your `WAV` your downgrading comes in play, as it easily can be started in headless mode and plays 16-bit 44.1 kHz audio samples natively. 
 
 ---
 
