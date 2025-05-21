@@ -333,8 +333,6 @@ def heads(total_playtime=None):
     fra_max = 25
     cycle = 1
 
-
-
     # Run audio track
     print("Initializing audio: '{}'".format(cfg.heads_audio))
 
@@ -437,7 +435,7 @@ def heads(total_playtime=None):
                     audio_sample = overlay['sample'][get_audio]
                     talking_head = audio_sample.play()
                     kill_splayer = talking_head.time + audio_sample.duration - 0.2
-                    # Set the timer for rising the Background Audio volume
+                    # Set the timer for raising the Background Audio volume
                     volume_up = int(audio_sample.duration * 25) + frame_counter
 
                     # First frame to start blurring the Display Still frame (when the Audio Sample ends)
