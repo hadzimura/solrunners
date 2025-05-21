@@ -617,8 +617,8 @@ def heads(total_playtime=None):
             fra_min = frame_time
 
         # This actually controls the playback speed!
-        # cv.waitKey(frame_time)
-        cv.waitKey(0)
+        cv.waitKey(frame_time)
+        # cv.waitKey(0)
 
 
 if __name__ == "__main__":
