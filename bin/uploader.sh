@@ -15,7 +15,7 @@ FOUNTAIN="${BASE_MEDIA_PATH}/fountain"
 HEADS="${BASE_MEDIA_PATH}/heads"
 TATE="${BASE_MEDIA_PATH}/tate"
 EXIT="${BASE_MEDIA_PATH}/exit"
-TEST="${BASE_MEDIA_PATH}/test"
+TEST="${BASE_MEDIA_PATH}/heads"
 
 # Service
 BASHRC="/home/zero/.bashrc"
@@ -64,7 +64,7 @@ case "${INSTANCE}" in
   exit)     SOURCE_PATH+="/${EXIT}"
             DESTINATION_HOST="10.0.0.5:${DESTINATION_PATH}" ;;
   test)     SOURCE_PATH+="/${TEST}"
-            DESTINATION_HOST="10.0.0.5:${DESTINATION_PATH}" ;;
+            DESTINATION_HOST="test:${DESTINATION_PATH}" ;;
   *)        echo "Undefined INSTANCE (1), needs to be (entropy|fountain|heads|tate|exit). Exiting."
             exit 1 ;;
 esac

@@ -9,7 +9,7 @@ source /home/zero/solrunners/.venv/bin/activate
 xset -dpms
 xset s off
 xset s noblank
-exec matchbox-window-manager -use_titlebar no & unclutter & python3
+exec matchbox-window-manager -use_titlebar no & unclutter & xterm
 # exec matchbox-window-manager -use_titlebar no & unclutter & xterm
 
 
