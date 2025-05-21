@@ -517,12 +517,13 @@ def heads(total_playtime=None):
             # Display FR bounding box
             if overlay is None and transition is False:
                 detect_bounding_box(frame, current_head_name)
-            if overlay is not None and transition is False:
-                print('here')
-                try:
-                    detect_bounding_box(frame, current_head_name, still_name=cfg.heads_authors[overlay['author_name_short']]['sucher'], sample_name=cfg.heads_authors[audio_author[0]]['sucher'], location=overlay['placeholder'][0])
-                except Exception as e:
-                    print('failing FD')
+
+            # if overlay is not None and transition is False:
+            #     print('here')
+            #     try:
+            #         detect_bounding_box(frame, current_head_name, still_name=cfg.heads_authors[overlay['author_name_short']]['sucher'], sample_name=cfg.heads_authors[audio_author[0]]['sucher'], location=overlay['placeholder'][0])
+            #     except Exception as e:
+            #         print('failing FD')
             # ------------------------------------
 
             # Blending Subtitle Overlay
