@@ -515,8 +515,8 @@ def heads(total_playtime=None):
             if frame_counter in cfg.heads_framecode:
                 current_head_name = cfg.heads_framecode[frame_counter]
             # Display FR bounding box
-            if overlay is None and transition is False:
-                detect_bounding_box(frame, current_head_name)
+            # if overlay is None and transition is False:
+            #     detect_bounding_box(frame, current_head_name)
 
             # if overlay is not None and transition is False:
             #     print('here')
