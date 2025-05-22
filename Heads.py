@@ -137,6 +137,7 @@ def heads(total_playtime=None, face_detection=False):
     slide_time = 800
     slide_in = int((cut_position - slide_time) / 2)
     slide_out = cut_position - slide_in
+    slide_blur_portion = 0.5
     # head = 0-1000
     # slide_in = 100
     # slide_out = 900
@@ -183,7 +184,7 @@ def heads(total_playtime=None, face_detection=False):
 
     blur_value = 1
     blur_interval = 0
-    blur_steps = 6
+    blur_steps = 5
     blur_step = 1
     blur_change_frame = 0
     blur_first_frame = 0
@@ -246,7 +247,7 @@ def heads(total_playtime=None, face_detection=False):
 
                     # First frame to start blurring the Display Still frame (when the Audio Sample ends)
                     # blur_total_frames = (slide_time - audio_frames) * 0.6
-                    blur_total_frames = int((slide_time - audio_frames) * 0.6)
+                    blur_total_frames = int((slide_time - audio_frames) * slide_blur_portion)
                     blur_change_frame = int(blur_total_frames / blur_steps)
                     # blur_first_frame = frame_counter + (slide_time - audio_frames) - blur_total_frames
                     # blur_first_frame = volume_up + blur_change_frame
