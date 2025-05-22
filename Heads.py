@@ -139,7 +139,7 @@ def heads(total_playtime=None, face_detection=False):
     slide_time = 800
     slide_in = int((cut_position - slide_time) / 2)
     slide_out = cut_position - slide_in
-    slide_blur_portion = 0.4
+    slide_blur_portion = 0.3
     # head = 0-1000
     # slide_in = 100
     # slide_out = 900
@@ -181,7 +181,7 @@ def heads(total_playtime=None, face_detection=False):
 
     blur_value = 1
     blur_interval = 0
-    blur_steps = 6
+    blur_steps = 10
     blur_step = 1
     blur_change_frame = 0
     blur_first_frame = 0
