@@ -358,8 +358,8 @@ def heads(total_playtime=None, face_detection=False):
 
 
             cv.line(frame, (0, 1670), (line_width, 1670), (255, 255, 255), 10)
-            line_width += line_counter
-            if line_width > screen_width:
+            line_width += +1
+            if frame_counter % screen_width == 0:
                 line_width = 1
             # Display current frame
             try:
