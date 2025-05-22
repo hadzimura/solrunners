@@ -182,7 +182,7 @@ def heads(total_playtime=None, face_detection=False):
 
     current_head_name = None
 
-    blur_value = 1
+    blur_value = 0
     blur_interval = 0
     blur_steps = 5
     blur_step = 1
@@ -290,7 +290,7 @@ def heads(total_playtime=None, face_detection=False):
             if frame_counter in sub_out:
                 print('Disabling Subtitle Overlay at: {}'.format(frame_counter))
                 overlay = None
-                blur_value = 1
+                blur_value = 0
                 blur_interval = 0
 
             if talking_head is not None:
