@@ -189,7 +189,7 @@ def heads(total_playtime=None, face_detection=False):
     cmap = 0
 
     audio_author = None
-
+    line_counter = int((screen_width / 1000))
     overlay = None
     display_slide = None
 
@@ -355,8 +355,11 @@ def heads(total_playtime=None, face_detection=False):
                            3,
                            cv.LINE_AA)
 
-            cv.line(frame, (0, 645), (int(screen_width / (total_frames - frame_counter)), 645), (0, 0, 0), 70)
 
+            cv.line(frame, (0, 645), (line_counter, 645), (0, 0, 0), 70)
+            line_counter += line_counter
+            if line_counter > screen_width:
+                line_counter = 1
             # Display current frame
             try:
                 cv.imshow('heads', frame)
