@@ -28,6 +28,11 @@ def arg_parser():
                         default=False,
                         dest='fullscreen',
                         help='Play in fullscreen window')
+    parser.add_argument('-r', '--recognition',
+                        action=BooleanOptionalAction,
+                        default=False,
+                        dest='recognition',
+                        help='Enable Face Recognition runtime')
 
     return parser.parse_args()
 

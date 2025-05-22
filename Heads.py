@@ -628,15 +628,6 @@ if __name__ == "__main__":
     arg = arg_parser()
     wait_for_storage()
 
-    effects = [
-        cv.COLOR_BGR2GRAY,
-        cv.COLORMAP_PLASMA,
-        cv.COLORMAP_TWILIGHT,
-        cv.COLORMAP_OCEAN,
-        cv.COLORMAP_WINTER
-    ]
-
-
     cfg = Configuration(runtime='heads', fullscreen=arg.fullscreen)
     # face_classifier = cv.CascadeClassifier(cfg.fr)
     # face_classifier = cv.CascadeClassifier(cfg.fr)
@@ -644,5 +635,5 @@ if __name__ == "__main__":
     cycle = 1
     while True:
         print('Cycle: {}'.format(cycle))
-        heads_thread = Thread(target=heads(total_playtime=None))
+        heads_thread = Thread(target=heads(total_playtime=None, face_detection=arg.recognition))
         cycle += 1
