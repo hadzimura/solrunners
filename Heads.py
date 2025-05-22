@@ -177,7 +177,7 @@ def heads(total_playtime=None, face_detection=False):
     volume_up = 0
 
     current_head_name = None
-    verbose_debug = False
+    verbose_debug = True
 
     blur_value = 1
     blur_interval = 0
@@ -357,7 +357,7 @@ def heads(total_playtime=None, face_detection=False):
                            cv.LINE_AA)
 
 
-            cv.line(frame, (0, 645), (line_width, 645), (0, 0, 0), 70)
+            cv.line(frame, (0, 1040), (line_width, 1040), (255, 255, 255), 5)
             line_width += line_counter
             if line_width > screen_width:
                 line_width = 1
