@@ -434,6 +434,7 @@ def heads(total_playtime=None, face_detection=False):
                     get_audio = randint(0, len(cfg.heads_overlays[overlay_id]['sample']) - 1)
                     audio_author = overlay['sample_author'][get_audio]
                     audio_sample = overlay['sample'][get_audio]
+                    blur_vector = choice(overlay['placeholder'])
                     talking_head = audio_sample.play()
                     kill_splayer = talking_head.time + audio_sample.duration - 0.2
                     # Set the timer for raising the Background Audio volume
@@ -517,9 +518,12 @@ def heads(total_playtime=None, face_detection=False):
                     detect_bounding_box(frame, current_head_name)
 
                 if overlay is not None and transition is False:
-                    print('here')
                     try:
-                        detect_bounding_box(frame, current_head_name, still_name=cfg.heads_authors[overlay['author_name_short']]['sucher'], sample_name=cfg.heads_authors[audio_author[0]]['sucher'], location=overlay['placeholder'][0])
+                        detect_bounding_box(frame,
+                                            current_head_name,
+                                            still_name=cfg.heads_authors[overlay['author_name_short']]['sucher'],
+                                            sample_name=cfg.heads_authors[audio_author[0]]['sucher'],
+                                            location=overlay['placeholder'][0])
                     except Exception as e:
                         print('failing FD')
             # ------------------------------------
@@ -557,8 +561,6 @@ def heads(total_playtime=None, face_detection=False):
                 frame = cv.blur(frame, (int(blur), int(blur)))
                 blur += 10
             # ------------------------------------
-
-
             cv.putText(frame,
                        'av:{} fc:{} bac: {} caf: {} ft:{}'.format(av_sync, frame_counter, bg_audio_compensation, current_audio_frame, frame_time),
                        (10, 30),
@@ -567,7 +569,6 @@ def heads(total_playtime=None, face_detection=False):
                        (255, 255, 255),
                        3,
                        cv.LINE_AA)
-
 
             # Display current frame
             try:
@@ -579,8 +580,7 @@ def heads(total_playtime=None, face_detection=False):
             frame_counter += 1
 
         else:
-            # print('End of cycle {}'.format(cycle))
-            # cycle += 1
+            print('End of cycle')
             print('Releasing AV media')
             try:
                 h_video.release()
@@ -589,11 +589,6 @@ def heads(total_playtime=None, face_detection=False):
                 print('AV media released')
             except Exception as av_error:
                 print('AV media releasing fail: {}'.format(av_error))
-
-            # TODO: restart here or...?
-            # h_video = cv.VideoCapture(str(cfg.heads_video))
-            # bg_music = cfg.heads_overlays[0].play()
-            # frame_counter = 1
             playback = False
 
         # cv.waitKey(0)
@@ -631,6 +626,6 @@ if __name__ == "__main__":
     face_classifier = cv.CascadeClassifier(cfg.lbp)
     cycle = 1
     while True:
-        print('Cycle: {}'.format(cycle))
+        print('Start of cycle: {}'.format(cycle))
         heads_thread = Thread(target=heads(total_playtime=None, face_detection=arg.recognition))
         cycle += 1

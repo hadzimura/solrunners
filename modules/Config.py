@@ -110,6 +110,12 @@ class Configuration(object):
         self.heads_qr_code = self.heads_path / Path('heads_qr.png')
         self.heads_metadata = self.project_root / Path('sol.heads.yaml')
         self.authors_metadata = self.project_root / Path('sol.authors.yaml')
+        self.heads_vector = {
+            'top': 1,
+            'bottom': 2,
+            'left': 3,
+            'right': 4
+        }
 
         # Face Recognition models
         self.fr = self.heads_path / Path('face_detections/haarcascade_frontalface_alt.xml')
