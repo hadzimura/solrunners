@@ -562,7 +562,7 @@ def heads(total_playtime=None, face_detection=False):
                 blur += 10
             # ------------------------------------
             cv.putText(frame,
-                       'av:{} fc:{} bac: {} caf: {} ft:{}'.format(av_sync, frame_counter, bg_audio_compensation, current_audio_frame, frame_time),
+                       'av:{} fc:{} bac: {} caf: {} ft:{} a_auth:'.format(av_sync, frame_counter, bg_audio_compensation, current_audio_frame, frame_time, audio_author),
                        (10, 30),
                        cv.FONT_HERSHEY_COMPLEX,
                        1,
