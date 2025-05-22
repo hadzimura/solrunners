@@ -356,11 +356,11 @@ def heads(total_playtime=None, face_detection=False):
                            3,
                            cv.LINE_AA)
 
-
-            cv.line(frame, (0, 1670), (line_width, 1670), (255, 255, 255), 10)
-            line_width += +1
-            if frame_counter % screen_width == 0:
-                line_width = 1
+            if transition is False:
+                cv.line(frame, (0, 1670), (line_width, 1670), (255, 255, 255), 10)
+                line_width += +1
+            if transition is True:
+                line_width = 25
             # Display current frame
             try:
                 cv.imshow('heads', frame)
