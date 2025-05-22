@@ -133,6 +133,8 @@ def heads(total_playtime=None, face_detection=False):
     cuts = 14
     cut_position = 1000
     cut_length = 25
+    cut_blur_step = 10
+    cut_blur_value = 1
 
     slide_time = 800
     slide_in = int((cut_position - slide_time) / 2)
@@ -155,12 +157,6 @@ def heads(total_playtime=None, face_detection=False):
         sub_out.append(cut_frame - slide_in)
         volume_down.append(cut_frame - slide_out)
 
-    pprint(sub_in, indent=4)
-    pprint(cut_in, indent=4)
-    pprint(sub_out, indent=4)
-    pprint(cut_out, indent=4)
-    # exit(0)
-
     blur = 1
     blur_length = 25
     blur_max = 100
@@ -181,6 +177,7 @@ def heads(total_playtime=None, face_detection=False):
     volume_up = 0
 
     current_head_name = None
+    verbose_debug = False
 
     blur_value = 1
     blur_interval = 0
@@ -335,23 +332,28 @@ def heads(total_playtime=None, face_detection=False):
             # Start blur marker
             if frame_counter in cut_in:
                 transition = True
-                blur = 1
+                cut_blur_value = 1
+                blur = 10
             # Stop blur marker
             if frame_counter in cut_out:
                 transition = False
             # Blur itself
             if transition is True:
-                frame = cv.blur(frame, (int(blur), int(blur)))
-                blur += 10
+                frame = cv.blur(frame, (int(cut_blur_value), int(cut_blur_value)))
+                if cut_blur_value > cut_length * cut_blur_step:
+                    blur = -10
+                cut_blur_value += blur
             # ------------------------------------
-            cv.putText(frame,
-                       'av:{} fc:{} bac: {} caf: {} ft:{} a_auth: {}'.format(av_sync, frame_counter, bg_audio_compensation, current_audio_frame, frame_time, str(audio_author)),
-                       (10, 30),
-                       cv.FONT_HERSHEY_COMPLEX,
-                       1,
-                       (255, 255, 255),
-                       3,
-                       cv.LINE_AA)
+
+            if verbose_debug is True:
+                cv.putText(frame,
+                           'av:{} fc:{} bac: {} caf: {} ft:{} a_auth: {}'.format(av_sync, frame_counter, bg_audio_compensation, current_audio_frame, frame_time, str(audio_author)),
+                           (10, 30),
+                           cv.FONT_HERSHEY_COMPLEX,
+                           1,
+                           (255, 255, 255),
+                           3,
+                           cv.LINE_AA)
 
             cv.line(frame, (0, 645), (screen_width, 645), (0, 0, 0), 70)
 
