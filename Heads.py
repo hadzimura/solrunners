@@ -262,7 +262,7 @@ def heads(total_playtime=None, face_detection=False):
                 except KeyError:
                     print('Skipping audio for subtitle: {}'.format(overlay_id))
                     pprint(cfg.heads_overlays[overlay_id], indent=4)
-                    blur_change_frame = int(650 / blur_steps)
+                    # blur_change_frame = int(650 / blur_steps)
                 except Exception as e:
                         print('Enabling Audio Overlay FAILURE: {}/{}'.format(overlay_id, audio_var))
                         print(e)
@@ -301,8 +301,8 @@ def heads(total_playtime=None, face_detection=False):
 
                     # Calculate time left for blurring out the subtitle
 
-                    blur_interval = frame_counter + blur_change_frame
-                    print('Setting f:{} bi:{} bs: {} bchf: {}'.format(frame_counter, blur_interval, blur_step, blur_change_frame))
+                    # blur_interval = frame_counter + blur_change_frame
+                    # print('Setting f:{} bi:{} bs: {} bchf: {}'.format(frame_counter, blur_interval, blur_step, blur_change_frame))
 
             # Facial recognition for author's name
             # Needs to be here bc of the subtitle blender
@@ -345,7 +345,7 @@ def heads(total_playtime=None, face_detection=False):
                     if frame_counter == blur_first_frame or frame_counter == blur_interval:
                         blur_value += blur_step
                         blur_interval = frame_counter + blur_change_frame
-                        print('Blur Value: {}'.format(blur_value))
+                        print('Blur Value: {} | fc: {} bff: {} bi: {}'.format(blur_value, frame_counter, blur_first_frame, blur_interval))
 
             # Blurring transition
             # -------------------
