@@ -275,8 +275,8 @@ def heads(total_playtime=None, face_detection=False):
 
                     # Calculate time left for blurring out the subtitle
 
-                    blur_interval = frame_counter + blur_step
-                    print('Setting f:{} bi:{} bs: {}'.format(frame_counter, blur_interval, blur_step))
+                    blur_interval = frame_counter + blur_change_frame
+                    print('Setting f:{} bi:{} bs: {} bchf: {}'.format(frame_counter, blur_interval, blur_step, blur_change_frame))
 
             # Facial recognition for author's name
             # Needs to be here bc of the subtitle blender
