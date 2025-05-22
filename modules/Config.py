@@ -112,10 +112,10 @@ class Configuration(object):
         self.authors_metadata = self.project_root / Path('sol.authors.yaml')
 
         # Face Recognition models
-        self.fr = self.media_root / Path('face_detections/haarcascade_frontalface_alt.xml')
-        self.fre = self.media_root / Path('face_detections/haarcascade_eye_tree_eyeglasses.xml')
-        self.frex = self.media_root / Path('face_detections/haarcascade_frontalcatface_extended.xml')
-        self.lbp = self.media_root / Path('face_detections/lbpcascade_frontalface_improved.xml')
+        self.fr = self.heads_path / Path('face_detections/haarcascade_frontalface_alt.xml')
+        self.fre = self.heads_path / Path('face_detections/haarcascade_eye_tree_eyeglasses.xml')
+        self.frex = self.heads_path / Path('face_detections/haarcascade_frontalcatface_extended.xml')
+        self.lbp = self.heads_path / Path('face_detections/lbpcascade_frontalface_improved.xml')
 
         # Initialize YAM parser
         self.yaml = YAML()
