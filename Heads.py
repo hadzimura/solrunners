@@ -329,14 +329,14 @@ def heads(total_playtime=None, face_detection=False):
     frame_counter = 1
     frame_time = 25
     frame_drops = 0
-    fra_min = 25
-    fra_max = 25
-    cycle = 1
+    fra_min = 20
+    fra_max = 30
 
     # Run audio track
     print("Initializing audio: '{}'".format(cfg.heads_audio))
 
     bg_audio_frames = int(round(round(cfg.heads_overlays[0]['sample'][0].duration, 2) * 25, 0))
+    bg_audio_compensation = 0
     bg_music = cfg.heads_overlays[0]['sample'][0].play()
 
     transition = False
@@ -401,7 +401,7 @@ def heads(total_playtime=None, face_detection=False):
         if status is True:
 
             # AV Syncing
-            current_audio_frame = round(round(bg_music.time, 6) * 25, 0)
+            current_audio_frame = round(round(bg_music.time, 6) * 25, 0) + bg_audio_compensation
             av_sync = current_audio_frame - frame_counter
 
             # Monitor if the background audio track is still playing, re-enable if ain't
@@ -409,6 +409,7 @@ def heads(total_playtime=None, face_detection=False):
                 print('Restarting Background Audio Player at: {}'.format(frame_counter))
                 bg_music.delete()
                 bg_music = cfg.heads_overlays[0]['sample'][0].play()
+                bg_audio_compensation += bg_audio_frames
 
             # Control the volume of background music
             if frame_counter in volume_down:
@@ -443,8 +444,6 @@ def heads(total_playtime=None, face_detection=False):
                     blur_first_frame = frame_counter + (650 - int(audio_sample.duration * 25)) - blur_total_frames
                     # blur_change_frame = int((650 - int(audio_sample.duration * 25)) / blur_steps)
                     blur_change_frame = int(blur_total_frames / blur_steps)
-
-
                     print('Enabling Audio Overlay: {}/{} blur_change_frame: {}'.format(overlay_id, audio_author, blur_change_frame))
                 except KeyError:
                     print('Skipping audio for subtitle: {}'.format(overlay_id))
@@ -503,8 +502,6 @@ def heads(total_playtime=None, face_detection=False):
 
                     blur_interval = frame_counter + blur_step
                     print('Setting f:{} bi:{} bs: {}'.format(frame_counter, blur_interval, blur_step))
-
-
 
             # Facial recognition for author's name
             # Needs to be here bc of the subtitle blender
@@ -582,8 +579,8 @@ def heads(total_playtime=None, face_detection=False):
             frame_counter += 1
 
         else:
-            print('End of cycle {}'.format(cycle))
-            cycle += 1
+            # print('End of cycle {}'.format(cycle))
+            # cycle += 1
             print('Releasing AV media')
             try:
                 h_video.release()
@@ -601,7 +598,7 @@ def heads(total_playtime=None, face_detection=False):
 
         # cv.waitKey(0)
         if av_sync == 0:
-            pass
+            frame_time = 25
         elif av_sync > 0:
             frame_time -=1
         else:
