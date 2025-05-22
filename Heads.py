@@ -378,6 +378,9 @@ def heads(total_playtime=None, face_detection=False):
                 cv.waitKey(1)
                 bg_music.delete()
                 print('AV media released')
+                h_video = None
+                bg_music = None
+                talking_head = None
             except Exception as av_error:
                 print('AV media releasing fail: {}'.format(av_error))
             playback = False
