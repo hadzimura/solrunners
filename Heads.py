@@ -130,8 +130,17 @@ def heads(total_playtime=None, face_detection=False):
     bg_music = cfg.heads_overlays[0]['sample'][0].play()
 
     transition = False
-    cuts = 12
+    cuts = 14
     cut_position = 1000
+    cut_length = 25
+
+    slide_time = 800
+    slide_in = int((cut_position - slide_time) / 2)
+    slide_out = cut_position - slide_in
+    # head = 0-1000
+    # slide_in = 100
+    # slide_out = 900
+
     cut_in = list()
     cut_out = list()
     sub_in = list()
@@ -139,11 +148,17 @@ def heads(total_playtime=None, face_detection=False):
     volume_down = list()
     for cut in range(1, cuts):
         cut_frame = cut * cut_position
-        cut_in.append(cut_frame - 25)
-        cut_out.append(cut_frame + 25)
-        sub_in.append(cut_frame - 850)
-        sub_out.append(cut_frame - 200)
-        volume_down.append(cut_frame - 860)
+        cut_in.append(cut_frame - cut_length)
+        cut_out.append(cut_frame + cut_length)
+        sub_in.append(cut_frame - slide_out)
+        sub_out.append(cut_frame - slide_in)
+        volume_down.append(cut_frame - slide_out)
+
+    pprint(sub_in, indent=4)
+    pprint(cut_in, indent=4)
+    pprint(sub_out, indent=4)
+    pprint(cut_out, indent=4)
+    # exit(0)
 
     blur = 1
     blur_length = 25
@@ -221,17 +236,28 @@ def heads(total_playtime=None, face_detection=False):
                     get_audio = randint(0, len(cfg.heads_overlays[overlay_id]['sample']) - 1)
                     audio_author = overlay['sample_author'][get_audio]
                     audio_sample = overlay['sample'][get_audio]
+                    audio_frames = int(audio_sample.duration * 25)
                     blur_vector = choice(overlay['placeholder'])
                     talking_head = audio_sample.play()
                     kill_splayer = talking_head.time + audio_sample.duration - 0.2
+
                     # Set the timer for raising the Background Audio volume
-                    volume_up = int(audio_sample.duration * 25) + frame_counter
+                    volume_up = frame_counter + audio_frames
 
                     # First frame to start blurring the Display Still frame (when the Audio Sample ends)
-                    blur_total_frames = (650 - int(audio_sample.duration * 25)) * 0.6
-                    blur_first_frame = frame_counter + (650 - int(audio_sample.duration * 25)) - blur_total_frames
-                    # blur_change_frame = int((650 - int(audio_sample.duration * 25)) / blur_steps)
+                    # blur_total_frames = (slide_time - audio_frames) * 0.6
+                    blur_total_frames = int((slide_time - audio_frames) * 0.6)
                     blur_change_frame = int(blur_total_frames / blur_steps)
+                    # blur_first_frame = frame_counter + (slide_time - audio_frames) - blur_total_frames
+                    # blur_first_frame = volume_up + blur_change_frame
+                    blur_first_frame = frame_counter + slide_time - blur_total_frames
+                    # blur_change_frame = int((650 - int(audio_sample.duration * 25)) / blur_steps)
+
+
+                    print(volume_up, blur_total_frames, blur_first_frame, blur_change_frame)
+                    # 900 - 392 = 508
+                    exit(0)
+
                     print('Enabling Audio Overlay: {}/{} blur_change_frame: {}'.format(overlay_id, audio_author, blur_change_frame))
                 except KeyError:
                     print('Skipping audio for subtitle: {}'.format(overlay_id))
