@@ -222,6 +222,8 @@ class Configuration(object):
             sample_count += 1
         print('Found {} HEADS overlay samples'.format(sample_count))
         print('Done importing HEADS overlays')
+        pprint(self.heads_overlays, indent=4)
+        exit(0)
 
     def _get_entropy_subtitles(self):
 
