@@ -560,7 +560,7 @@ def heads(total_playtime=None, face_detection=False):
 
 
             cv.putText(frame,
-                       'av:{} f:{} ft:{}'.format(av_sync, frame_counter, frame_time),
+                       'av:{} fc:{} bac: {} caf: {} ft:{}'.format(av_sync, frame_counter, bg_audio_compensation, current_audio_frame, frame_time),
                        (10, 30),
                        cv.FONT_HERSHEY_COMPLEX,
                        1,
