@@ -137,7 +137,7 @@ def heads(total_playtime=None, face_detection=False):
     slide_time = 800
     slide_in = int((cut_position - slide_time) / 2)
     slide_out = cut_position - slide_in
-    slide_blur_portion = 0.5
+    slide_blur_portion = 0.4
     # head = 0-1000
     # slide_in = 100
     # slide_out = 900
@@ -182,7 +182,7 @@ def heads(total_playtime=None, face_detection=False):
 
     current_head_name = None
 
-    blur_value = 0
+    blur_value = 1
     blur_interval = 0
     blur_steps = 5
     blur_step = 1
@@ -290,7 +290,7 @@ def heads(total_playtime=None, face_detection=False):
             if frame_counter in sub_out:
                 print('Disabling Subtitle Overlay at: {}'.format(frame_counter))
                 overlay = None
-                blur_value = 0
+                blur_value = 1
                 blur_interval = 0
 
             if talking_head is not None:
@@ -343,7 +343,10 @@ def heads(total_playtime=None, face_detection=False):
                     # cv.GaussianBlur(src=display_still, dst=display_still, ksize=(blur_value, blur_value), borderType=cv.BORDER_WRAP)
                     cv.addWeighted(src1=frame, alpha=1, src2=overlay['subtitle'], beta=1, gamma=1, dst=frame)
                     # print(frame_counter, blur_interval, blur_step)
-                    if frame_counter == blur_first_frame or frame_counter == blur_interval:
+                    if frame_counter == blur_first_frame:
+                        blur_interval = frame_counter + blur_change_frame
+                        print('Blur Value: {} | fc: {} bff: {} bi: {}'.format(blur_value, frame_counter, blur_first_frame, blur_interval))
+                    if frame_counter == blur_interval:
                         blur_value += blur_step
                         blur_interval = frame_counter + blur_change_frame
                         print('Blur Value: {} | fc: {} bff: {} bi: {}'.format(blur_value, frame_counter, blur_first_frame, blur_interval))
