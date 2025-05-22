@@ -7,7 +7,8 @@ set -e
 BASE_DEVEL_PATH="/Users/zero/Develop/github.com/hadzimura"
 BASE_SSD_PATH="/Volumes/springs"
 BASE_RPI_PATH="/home/zero/"
-BASE_MEDIA_PATH="solrunners/media"
+PROJECT_ROOT="solrunners"
+BASE_MEDIA_PATH="${PROJECT_ROOT}/media"
 
 # Media
 ENTROPY="${BASE_MEDIA_PATH}/entropy"
@@ -21,7 +22,7 @@ TEST="${BASE_MEDIA_PATH}/heads"
 BASHRC="/home/zero/.bashrc"
 
 if [[ -z "${1}" ]]; then
-  echo "Need to specify the instance to sync (entropy|fountain|heads|tate|exit), exiting..."
+  echo "Need to specify the instance to sync (all|entropy|fountain|heads|tate|exit), exiting..."
   exit 1
 fi
 INSTANCE="${1}"
@@ -46,36 +47,42 @@ case "${SOURCE}" in
 esac
 
 case "${DESTINATION}" in
+  devel)  DESTINATION_PATH="${BASE_DEVEL_PATH}/${PROJECT_ROOT}" ;;
   rpi)    DESTINATION_PATH="${BASE_RPI_PATH}/${BASE_MEDIA_PATH}" ;;
   ssd)    DESTINATION_PATH="${BASE_SSD_PATH}/${BASE_MEDIA_PATH}" ;;
   *)      echo "Undefined DESTINATION (3), needs to be (rpi|ssd). Exiting."
           exit 1 ;;
 esac
 
+
 case "${INSTANCE}" in
   entropy)  SOURCE_PATH+="/${ENTROPY}"
-            DESTINATION_HOST="10.0.0.3:${DESTINATION_PATH}" ;;
+            DESTINATION_HOST="10.0.0.3" ;;
   fountain) SOURCE_PATH+="/${FOUNTAIN}"
-            DESTINATION_HOST="10.0.0.1:${DESTINATION_PATH}" ;;
+            DESTINATION_HOST="10.0.0.1" ;;
   heads)    SOURCE_PATH+="/${HEADS}"
-            DESTINATION_HOST="10.0.0.4:${DESTINATION_PATH}" ;;
+            DESTINATION_HOST="10.0.0.4" ;;
   tate)     SOURCE_PATH+="/${TATE}"
-            DESTINATION_HOST="10.0.0.2:${DESTINATION_PATH}" ;;
+            DESTINATION_HOST="10.0.0.2" ;;
   exit)     SOURCE_PATH+="/${EXIT}"
-            DESTINATION_HOST="10.0.0.5:${DESTINATION_PATH}" ;;
+            DESTINATION_HOST="10.0.0.5" ;;
   test)     SOURCE_PATH+="/${TEST}"
-            DESTINATION_HOST="test:${DESTINATION_PATH}" ;;
+            DESTINATION_HOST="test" ;;
+  all)      SOURCE_PATH+="/${BASE_MEDIA_PATH}"
+            DESTINATION_HOST="xxx" ;;
   *)        echo "Undefined INSTANCE (1), needs to be (entropy|fountain|heads|tate|exit). Exiting."
             exit 1 ;;
 esac
+DESTINATION_HOST+=":${DESTINATION_PATH}"
 
 echo -e "--------------------------
 Running sync operation for
   instance : ${INSTANCE}
   from     : ${SOURCE_PATH}"
 case "${DESTINATION}" in
-  rpi) echo "  to       : ${DESTINATION_HOST}" ;;
-  ssd) echo "  to       : ${DESTINATION_PATH}" ;;
+  devel) echo "  to       : ${DESTINATION_PATH}" ;;
+  rpi)   echo "  to       : ${DESTINATION_HOST}" ;;
+  ssd)   echo "  to       : ${DESTINATION_PATH}" ;;
 esac
 echo "--------------------------"
 read -p "Hit ENTER to sync..."
@@ -87,6 +94,7 @@ read -p "Hit ENTER to sync..."
 echo "Starting sync..."
 
 case "${DESTINATION}" in
+  devel)  rsync -azP --delete --mkpath ${SOURCE_PATH} ${DESTINATION_PATH} ;;
   rpi)  rsync -azP --delete --mkpath ${SOURCE_PATH} ${DESTINATION_HOST} ;;
   ssd)  rsync -azP --delete --mkpath ${SOURCE_PATH} ${DESTINATION_PATH} ;;
   test) rsync -azP --delete --mkpath ${SOURCE_PATH} ${DESTINATION_PATH} ;;

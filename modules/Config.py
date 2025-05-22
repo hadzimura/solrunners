@@ -98,23 +98,19 @@ class Configuration(object):
         self.entropy_qr_code = self.entropy_path / Path('entropy_qr.png')
 
         # Heads
-        # self.heads_video = self.heads_path / Path('silent_heads.mov')
-        self.heads_video = self.heads_path / Path('heads.mm.1050x1680.mov')
-        # self.heads_audio = self.heads_path / Path('silent_heads.short.wav')
-        # self.heads_audio = self.heads_path / Path('silent_heads.wav')
-        self.heads_audio = self.heads_path / Path('silent_heads.cut.wav')
-        # self.heads_subtitles = self.heads_path / Path('subs-1050x1680')
-        self.heads_subtitles = self.heads_path / Path('subs-1050x1680-lex')
-        self.heads_samples = self.heads_path / Path('talking/*.wav')
+        self.heads_video = self.heads_path / Path('silent_heads.mov')
+        self.heads_audio = self.heads_path / Path('silent_heads.wav')
+        self.heads_subtitles = self.heads_path / Path('quotes')
+        self.heads_samples = self.heads_path / Path('samples/*.wav')
         self.heads_qr_code = self.heads_path / Path('heads_qr.png')
         self.heads_metadata = self.project_root / Path('sol.heads.yaml')
         self.authors_metadata = self.project_root / Path('sol.authors.yaml')
 
         # Face Recognition models
-        self.fr = self.media_root / Path('haarcascade_frontalface_alt.xml')
-        self.fre = self.media_root / Path('haarcascade_eye_tree_eyeglasses.xml')
-        self.frex = self.media_root / Path('haarcascade_frontalcatface_extended.xml')
-        self.lbp = self.media_root / Path('lbpcascade_frontalface_improved.xml')
+        self.fr = self.media_root / Path('face_detections/haarcascade_frontalface_alt.xml')
+        self.fre = self.media_root / Path('face_detections/haarcascade_eye_tree_eyeglasses.xml')
+        self.frex = self.media_root / Path('face_detections/haarcascade_frontalcatface_extended.xml')
+        self.lbp = self.media_root / Path('face_detections/lbpcascade_frontalface_improved.xml')
 
         # Initialize YAM parser
         self.yaml = YAML()

@@ -299,7 +299,7 @@ def detect_bounding_box(video_frame, head_name, still_name=None, sample_name=Non
 #         cv.waitKey(frame_time)
 #         # cv.waitKey(0)
 
-def heads(total_playtime=None):
+def heads(total_playtime=None, face_detection=False):
 
     playback = True
 
@@ -512,16 +512,19 @@ def heads(total_playtime=None):
             # Set current head's name
             if frame_counter in cfg.heads_framecode:
                 current_head_name = cfg.heads_framecode[frame_counter]
-            # Display FR bounding box
-            # if overlay is None and transition is False:
-            #     detect_bounding_box(frame, current_head_name)
 
-            # if overlay is not None and transition is False:
-            #     print('here')
-            #     try:
-            #         detect_bounding_box(frame, current_head_name, still_name=cfg.heads_authors[overlay['author_name_short']]['sucher'], sample_name=cfg.heads_authors[audio_author[0]]['sucher'], location=overlay['placeholder'][0])
-            #     except Exception as e:
-            #         print('failing FD')
+            # Display FR bounding box
+            if face_detection is True:
+
+                if overlay is None and transition is False:
+                    detect_bounding_box(frame, current_head_name)
+
+                if overlay is not None and transition is False:
+                    print('here')
+                    try:
+                        detect_bounding_box(frame, current_head_name, still_name=cfg.heads_authors[overlay['author_name_short']]['sucher'], sample_name=cfg.heads_authors[audio_author[0]]['sucher'], location=overlay['placeholder'][0])
+                    except Exception as e:
+                        print('failing FD')
             # ------------------------------------
 
             # Blending Subtitle Overlay
