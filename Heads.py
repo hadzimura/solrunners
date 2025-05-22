@@ -256,7 +256,7 @@ def heads(total_playtime=None, face_detection=False):
 
                     print(volume_up, blur_total_frames, blur_first_frame, blur_change_frame)
                     # 900 - 392 = 508
-                    exit(0)
+                    # exit(0)
 
                     print('Enabling Audio Overlay: {}/{} blur_change_frame: {}'.format(overlay_id, audio_author, blur_change_frame))
                 except KeyError:
