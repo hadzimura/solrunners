@@ -98,7 +98,7 @@ def heads(total_playtime=None, face_detection=False):
     screen_width = int(h_video.get(cv.CAP_PROP_FRAME_WIDTH))
     screen_height = int(h_video.get(cv.CAP_PROP_FRAME_HEIGHT))
     print('Video resolution detected as: {}x{}'.format(screen_width, screen_height))
-    total_frames = h_video.get(cv.CAP_PROP_FRAME_COUNT)
+    total_frames = int(h_video.get(cv.CAP_PROP_FRAME_COUNT))
     print('Total video frames: {}'.format(total_frames))
 
     # Display setup
@@ -177,7 +177,7 @@ def heads(total_playtime=None, face_detection=False):
     volume_up = 0
 
     current_head_name = None
-    verbose_debug = True
+    verbose_debug = False
 
     blur_value = 1
     blur_interval = 0
