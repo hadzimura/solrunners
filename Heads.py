@@ -181,7 +181,7 @@ def heads(total_playtime=None, face_detection=False):
 
     blur_value = 1
     blur_interval = 0
-    blur_steps = 10
+    blur_steps = 20
     blur_step = 1
     blur_change_frame = 0
     blur_first_frame = 0
