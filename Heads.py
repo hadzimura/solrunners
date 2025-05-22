@@ -194,6 +194,7 @@ def heads(total_playtime=None, face_detection=False):
     audio_author = None
 
     overlay = None
+    display_slide = None
 
     while playback is True:
 
@@ -233,10 +234,10 @@ def heads(total_playtime=None, face_detection=False):
                 print('Enabling Subtitle Overlay at frame {}: {} | still_author: {}'.format(frame_counter, overlay_id, overlay['author_name_long']))
                 audio_author = None
                 try:
-                    # audio_author = choice(list(cfg.heads_overlays[overlay_id]['tracks']))
                     get_audio = randint(0, len(cfg.heads_overlays[overlay_id]['sample']) - 1)
                     audio_author = overlay['sample_author'][get_audio]
                     audio_sample = overlay['sample'][get_audio]
+                    display_slide = overlay['subtitle'].copy()
                     audio_frames = int(audio_sample.duration * 25)
                     blur_vector = choice(overlay['placeholder'])
                     talking_head = audio_sample.play()
@@ -246,19 +247,9 @@ def heads(total_playtime=None, face_detection=False):
                     volume_up = frame_counter + audio_frames
 
                     # First frame to start blurring the Display Still frame (when the Audio Sample ends)
-                    # blur_total_frames = (slide_time - audio_frames) * 0.6
                     blur_total_frames = int((slide_time - audio_frames) * slide_blur_portion)
                     blur_change_frame = int(blur_total_frames / blur_steps)
-                    # blur_first_frame = frame_counter + (slide_time - audio_frames) - blur_total_frames
-                    # blur_first_frame = volume_up + blur_change_frame
                     blur_first_frame = frame_counter + slide_time - blur_total_frames
-                    # blur_change_frame = int((650 - int(audio_sample.duration * 25)) / blur_steps)
-
-
-                    print(volume_up, blur_total_frames, blur_first_frame, blur_change_frame)
-                    # 900 - 392 = 508
-                    # exit(0)
-
                     print('Enabling Audio Overlay: {}/{} blur_change_frame: {}'.format(overlay_id, audio_author, blur_change_frame))
                 except KeyError:
                     print('Skipping audio for subtitle: {}'.format(overlay_id))
@@ -289,21 +280,16 @@ def heads(total_playtime=None, face_detection=False):
             # Subtitles and Audio Overlays Disabler
             if frame_counter in sub_out:
                 print('Disabling Subtitle Overlay at: {}'.format(frame_counter))
-                overlay = None
                 blur_value = 1
                 blur_interval = 0
+                display_slide = None
 
             if talking_head is not None:
                 if talking_head.time > kill_splayer:
-                    # print(talking_head.time, kill_splayer)
                     print('Disabling Head Samples Audio Player at: {}'.format(frame_counter))
                     talking_head.pause()
                     talking_head = None
 
-                    # Calculate time left for blurring out the subtitle
-
-                    # blur_interval = frame_counter + blur_change_frame
-                    # print('Setting f:{} bi:{} bs: {} bchf: {}'.format(frame_counter, blur_interval, blur_step, blur_change_frame))
 
             # Facial recognition for author's name
             # Needs to be here bc of the subtitle blender
@@ -315,41 +301,34 @@ def heads(total_playtime=None, face_detection=False):
             # Display FR bounding box
             if face_detection is True:
 
-                if overlay is None and transition is False:
+                if display_slide is None and transition is False:
                     detect_bounding_box(frame, current_head_name)
-
-                if overlay is not None and transition is False:
-                    try:
-                        detect_bounding_box(frame,
-                                            current_head_name,
-                                            still_name=cfg.heads_authors[overlay['author_name_short']]['sucher'],
-                                            sample_name=cfg.heads_authors[audio_author[0]]['sucher'],
-                                            location=overlay['placeholder'][0])
-                    except Exception as e:
-                        print('failing FD')
+                #
+                # if display_slide is not None and transition is False:
+                #     try:
+                #         detect_bounding_box(frame,
+                #                             current_head_name,
+                #                             still_name=cfg.heads_authors[overlay['author_name_short']]['sucher'],
+                #                             sample_name=cfg.heads_authors[audio_author[0]]['sucher'],
+                #                             location=overlay['placeholder'][0])
+                #     except Exception as e:
+                #         print('failing FD')
             # ------------------------------------
 
             # Blending Subtitle Overlay
-            if overlay is not None:
-                # frame = cv.addWeighted(frame, 1.5,  display_still, 0.5, 0)
+            if display_slide is not None:
                 if talking_head is not None:
-                    cv.addWeighted(src1=frame, alpha=1, src2=overlay['subtitle'], beta=1, gamma=1, dst=frame)
+                    cv.addWeighted(src1=frame, alpha=1, src2=display_slide, beta=1, gamma=1, dst=frame)
                 else:
-                    # cv.addWeighted(src1=frame, alpha=1.5, src2=display_still, beta=0.5, gamma=0, dst=frame)
-                    # cv.blur(src=display_still, dst=display_still, ksize=(blur_value, blur_value), borderType=cv.BORDER_REFLECT101)
-                    cv.blur(src=overlay['subtitle'], dst=overlay['subtitle'], ksize=(blur_value, blur_value))
-                    # cv.blur(src=display_still, dst=display_still, ksize=(blur_value, blur_value), borderType=cv.BORDER_CONSTANT)
-                    # cv.blur(src=display_still, dst=display_still, ksize=(blur_value, blur_value), borderType=cv.BORDER_ISOLATED)
-                    # cv.GaussianBlur(src=display_still, dst=display_still, ksize=(blur_value, blur_value), borderType=cv.BORDER_WRAP)
-                    cv.addWeighted(src1=frame, alpha=1, src2=overlay['subtitle'], beta=1, gamma=1, dst=frame)
-                    # print(frame_counter, blur_interval, blur_step)
+                    cv.blur(src=display_slide, dst=display_slide, ksize=(blur_value, blur_value))
+                    cv.addWeighted(src1=frame, alpha=1, src2=display_slide, beta=1, gamma=1, dst=frame)
                     if frame_counter == blur_first_frame:
                         blur_interval = frame_counter + blur_change_frame
-                        print('Blur Value: {} | fc: {} bff: {} bi: {}'.format(blur_value, frame_counter, blur_first_frame, blur_interval))
+                        # print('Blur Value: {} | fc: {} bff: {} bi: {}'.format(blur_value, frame_counter, blur_first_frame, blur_interval))
                     if frame_counter == blur_interval:
                         blur_value += blur_step
                         blur_interval = frame_counter + blur_change_frame
-                        print('Blur Value: {} | fc: {} bff: {} bi: {}'.format(blur_value, frame_counter, blur_first_frame, blur_interval))
+                        # print('Blur Value: {} | fc: {} bff: {} bi: {}'.format(blur_value, frame_counter, blur_first_frame, blur_interval))
 
             # Blurring transition
             # -------------------
@@ -373,6 +352,8 @@ def heads(total_playtime=None, face_detection=False):
                        (255, 255, 255),
                        3,
                        cv.LINE_AA)
+
+            cv.line(frame, (0, 645), (screen_width, 645), (0, 0, 0), 70)
 
             # Display current frame
             try:
