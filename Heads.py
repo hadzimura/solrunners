@@ -419,7 +419,7 @@ if __name__ == "__main__":
     # face_classifier = cv.CascadeClassifier(cfg.fr)
     face_classifier = cv.CascadeClassifier(cfg.lbp)
     cycle = 1
-    while cycle < 7:
+    while cycle < 2:
         print('Start of cycle: {}'.format(cycle))
         heads_thread = Thread(target=heads(total_playtime=None, face_detection=arg.recognition))
         cycle += 1
