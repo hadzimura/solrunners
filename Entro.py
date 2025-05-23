@@ -422,5 +422,5 @@ if __name__ == "__main__":
     cfg = Configuration(arg.fullscreen, runtime='entropy')
 
     while True:
-        countdown_thread = Thread(target=countdown(total_playtime=10))
+        countdown_thread = Thread(target=countdown())
         entropy_thread = Thread(target=entropy())

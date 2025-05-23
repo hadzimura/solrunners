@@ -254,7 +254,7 @@ def heads(total_playtime=None, face_detection=False):
                     pprint(cfg.heads_overlays[overlay_id], indent=4)
                     # blur_change_frame = int(650 / blur_steps)
                 except Exception as e:
-                        print('Enabling Audio Overlay FAILURE: {}/{}'.format(overlay_id, audio_var))
+                        print('Enabling Audio Overlay FAILURE: {}'.format(overlay_id))
                         print(e)
 
             try:
