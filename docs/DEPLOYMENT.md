@@ -10,6 +10,7 @@ Image: `Raspberry PI OS (64 bit)`
 | room4    | 10.0.0.4   | `2C:CF:67:AB:95:2A` |
 | room5    | 10.0.0.5   | `2C:CF:67:5B:80:DB` |
 
+# Apps
 
 ``` shell
 sudo apt update
@@ -17,13 +18,7 @@ sudo apt upgrade
 sudo apt-get install xinit x11-xserver-utils matchbox-window-manager xautomation unclutter mc xterm
 ``` 
 
-/etc/systemd/system/getty@tty1.service.d/autologin.conf
-```  text
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty -nonewline --noissue --autologin zero --noclear %I $TERM
-ExecStart=-/usr/bin/agetty --skip-login --nonewline --noissue --autologin zero --noclear %I $TERM
-``` 
+# Keys
 
 ``` shell
 mkdir /home/zero/.ssh
@@ -49,6 +44,8 @@ echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINqhhcw3svD9s4+GniljpF7yGH6LnW/0K7PQUT
 chmod 600 /home/zero/.ssh/id*
 ```
 
+# Hosts
+
 `/etc/hosts`
 
 ``` text
@@ -69,8 +66,6 @@ python3 -m venv /home/zero/solrunners/.venv
 source /home/zero/solrunners/.venv/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install -r /home/zero/solrunners/requirements.txt
-python3 -m pip install -r /home/zero/solrunners/requirements.gpio.txt
-python3 -m pip install -r /home/zero/solrunners/requirements.lite.txt
 sudo cp /home/zero/solrunners/media/raspberry/splash.png /usr/share/plymouth/themes/pix/
 ``` 
 
@@ -80,6 +75,8 @@ sudo cp /home/zero/solrunners/media/raspberry/splash.png /usr/share/plymouth/the
 echo "source /home/zero/solrunners/.venv/bin/activate" >> /home/zero/.bashrc
 echo "export PYTHONPATH=$PYTHONPATH:/home/zero/solrunners/" >> /home/zero/.bashrc
 ``` 
+
+# Monitoring
 
 https://repos.influxdata.com/debian/
 ``` 
@@ -94,9 +91,9 @@ cp /home/zero/solrunners/telegraf.conf /etc/telegraf
 !!!! sudo usermod -a -G video telegraf
 service telegraf start
 ``` 
-influx token: Si5w9T32qtMKfHvjzY2xAS-UuubDxqK7Roqo6jXOrh0rJ24_GGQXWfzwq6ym-376zdY7bkkxhNfYU16daFWNWA==
+Influx token: `Si5w9T32qtMKfHvjzY2xAS-UuubDxqK7Roqo6jXOrh0rJ24_GGQXWfzwq6ym-376zdY7bkkxhNfYU16daFWNWA==`
 
-kiosk mode
+# Kiosk mode
 https://www.raspberrypi.com/tutorials/how-to-use-a-raspberry-pi-in-kiosk-mode/
 https://reelyactive.github.io/diy/pi-kiosk/  
 

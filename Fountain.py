@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # coding=utf-8
-
 # Springs of Life (2025)
 # rkucera@gmail.com
+
 from pprint import pprint
 from random import choice
 from time import sleep

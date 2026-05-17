@@ -1,1 +1,0 @@
-https://www.teachmemicro.com/interfacing-hc-sr04-ultrasonic-sensor-with-raspberry-pi-pico/

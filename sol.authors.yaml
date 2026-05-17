@@ -1,21 +1,28 @@
 adela:
   name: Adéla Leinweberová
-  window: [1]
+  sucher: natascha
+  position: [1, 8000]
 barbora:
   name: Barbora Liška Karpíšková
-  window: [1000]
+  sucher: adina
+  position: [1000, 6000]
 denisa:
   name: Denisa Dimitrovová
-  window: [ 2000 ]
-jan:
-  name: Jan Samec
-  window: [10000]
+  sucher: lida
+  position: [2000, 10000]
 lukas:
   name: Lukáš Georgiev
-  window: [ 3000 ]
+  sucher: konrad
+  position: [3000, 7000]
 radim:
   name: Radim Kučera
-  window: [ 4000 ]
+  sucher: heinrich
+  position: [4000, 9000]
 roman:
   name: Roman Neruda
-  window: [ 5000 ]
+  sucher: wilhelm
+  position: [5000, 11000]
+jan:
+  name: Jan Samec
+  sucher: samec
+  position: [12000]

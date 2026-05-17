@@ -11,12 +11,11 @@ from fastapi import status
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import platform
 import uvicorn
 
-from modules.SolVideo import SolVideoConfig
+from _removing.SolVideo import SolVideoConfig
 from modules.Config import arg_parser
-from modules.VideoPlayer import tate
+from _removing.VideoPlayer import tate
 
 # Parse the runtime arguments to decide 'who we are'
 arg = arg_parser()
