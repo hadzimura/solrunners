@@ -3,7 +3,9 @@
 # Springs of Life (2025) / rkucera@gmail.com
 
 import asyncio
+import datetime
 from contextlib import asynccontextmanager
+from copy import deepcopy
 from datetime import datetime as dt
 from datetime import timedelta
 from fastapi import FastAPI
@@ -21,12 +23,17 @@ import uvicorn
 
 from ruamel.yaml import YAML
 
-from _removing.Audio import AudioLibrary
+from modules.Audio import AudioLibrary
 from modules.Config import Configuration
 from modules.Config import arg_parser
-from _removing.VideoPlayer import silent_heads
-from _removing.VideoPlayer import entropy
+from modules.VideoPlayer import tate
+from modules.VideoPlayer import entropy
 
+from pydantic import BaseModel
+
+class Queue(BaseModel):
+    play_time: datetime.datetime
+    track_id: int
 
 # Parse the runtime arguments to decide 'who we are'
 arg = arg_parser()
@@ -57,22 +64,19 @@ async def runtime_lifespan(app: FastAPI):
     room = int(arg.room)
     if room == 1:
         # asyncio.create_task(tate_linear(app.c, app.a))
-        # asyncio.create_task(tate(app.c, app.a))
-        pass
+        asyncio.create_task(tate(app.c, app.a))
     elif room == 2:
         # asyncio.create_task(tate_linear(app.c, app.a))
-        # asyncio.create_task(tate(app.c, app.a))
-        pass
+        asyncio.create_task(tate(app.c, app.a))
     elif room == 3:
         # asyncio.create_task(tate_linear(app.c, app.a))
         asyncio.create_task(entropy(app.c))
     elif room == 4:
         # asyncio.create_task(tate_linear(app.c, app.a))
-        # asyncio.create_task(tate(app.c, app.a))
-        pass
+        asyncio.create_task(tate(app.c, app.a))
     elif room == 5:
         # asyncio.create_task(tate_linear(app.c, app.a))
-        asyncio.create_task(silent_heads(app.c))
+        asyncio.create_task(tate(app.c, app.a))
 
     if peripherals is True:
         asyncio.create_task(read_sensors())

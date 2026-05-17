@@ -6,19 +6,9 @@ Image: `Raspberry PI OS (64 bit)`
 |----------|------------|---------------------|
 | room1    | 10.0.0.1   | `B8:27:EB:19:5D:5C` |
 | room2    | 10.0.0.2   | `1C:B7:2C:D5:0E:3D` |
-| room3    | 10.0.0.3   | `2C:CF:67:5B:7E:D2` |
+| room3    | 10.0.0.3   | `2C:CF:67:5B:80:DB` |
 | room4    | 10.0.0.4   | `2C:CF:67:AB:95:2A` |
-| room5    | 10.0.0.5   | `2C:CF:67:5B:80:DB` |
-
-# Apps
-
-``` shell
-sudo apt update
-sudo apt upgrade 
-sudo apt-get install xinit x11-xserver-utils matchbox-window-manager xautomation unclutter mc xterm
-``` 
-
-# Keys
+| room5    | 10.0.0.5   | `2C:CF:67:5B:7E:D2` |
 
 ``` shell
 mkdir /home/zero/.ssh
@@ -44,8 +34,6 @@ echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINqhhcw3svD9s4+GniljpF7yGH6LnW/0K7PQUT
 chmod 600 /home/zero/.ssh/id*
 ```
 
-# Hosts
-
 `/etc/hosts`
 
 ``` text
@@ -62,11 +50,14 @@ Current host has `127.0.0.1`
 
 ``` text
 git clone git@github.com:hadzimura/solrunners.git /home/zero/solrunners
+rm -rf /home/zero/solrunners/.venv
 python3 -m venv /home/zero/solrunners/.venv
 source /home/zero/solrunners/.venv/bin/activate
-python3 -m pip install --upgrade pip
+    
+    python3 -m pip install --upgrade pip
 python3 -m pip install -r /home/zero/solrunners/requirements.txt
-sudo cp /home/zero/solrunners/media/raspberry/splash.png /usr/share/plymouth/themes/pix/
+
+
 ``` 
 
 .bashrc
@@ -76,7 +67,7 @@ echo "source /home/zero/solrunners/.venv/bin/activate" >> /home/zero/.bashrc
 echo "export PYTHONPATH=$PYTHONPATH:/home/zero/solrunners/" >> /home/zero/.bashrc
 ``` 
 
-# Monitoring
+fi
 
 https://repos.influxdata.com/debian/
 ``` 
@@ -91,9 +82,77 @@ cp /home/zero/solrunners/telegraf.conf /etc/telegraf
 !!!! sudo usermod -a -G video telegraf
 service telegraf start
 ``` 
-Influx token: `Si5w9T32qtMKfHvjzY2xAS-UuubDxqK7Roqo6jXOrh0rJ24_GGQXWfzwq6ym-376zdY7bkkxhNfYU16daFWNWA==`
+influx token: Si5w9T32qtMKfHvjzY2xAS-UuubDxqK7Roqo6jXOrh0rJ24_GGQXWfzwq6ym-376zdY7bkkxhNfYU16daFWNWA==
 
-# Kiosk mode
+
+
+
+o make it permanent you have to use  systemctl set-default as shown below:
+
+sudo systemctl set-default multi-user.target
+and reboot.
+
+To revert graphical session use
+
+sudo systemctl set-default graphical.target
+
+   48  service --status-all
+   49  service cups disable
+   50  systemctl cups disable
+   51  systemctl cups.service disable
+   52  systemctl list-unit-files | grep enabled
+   53  systemctl disable cups
+   54  systemctl disable bluetooth
+   55  systemctl list-unit-files | grep enabled
+   56  systemctl disable nfs-client.target
+   57  systemctl disable wayvnc
+   58  systemctl disable sol.service
+   59  systemctl disable lightdm.service
+   
+
+sudo apt-get install build-essential cmake git unzip pkg-config
+sudo apt-get install libjpeg-dev libpng-dev
+sudo apt-get install libavcodec-dev libavformat-dev libswscale-dev
+sudo apt-get install libgtk2.0-dev libcanberra-gtk* libgtk-3-dev
+sudo apt-get install libgstreamer1.0-dev gstreamer1.0-gtk3
+sudo apt-get install libgstreamer-plugins-base1.0-dev gstreamer1.0-gl
+sudo apt-get install libxvidcore-dev libx264-dev
+sudo apt-get install python3-dev python3-numpy python3-pip
+sudo apt-get install libtbbmalloc2 libtbb-dev libdc1394-dev
+sudo apt-get install libv4l-dev v4l-utils
+sudo apt-get install libopenblas-dev libatlas-base-dev libblas-dev
+sudo apt-get install liblapack-dev gfortran libhdf5-dev
+sudo apt-get install libprotobuf-dev libgoogle-glog-dev libgflags-dev
+sudo apt-get install protobuf-compiler
+
+-D OPENCV_EXTRA_MODULES_PATH=~/opencv/opencv_contrib/modules \
+
+cmake -D CMAKE_BUILD_TYPE=RELEASE \
+-D CMAKE_INSTALL_PREFIX=/usr/local \
+-D ENABLE_NEON=ON \
+-D WITH_OPENMP=ON \
+-D WITH_OPENCL=OFF \
+-D BUILD_TIFF=ON \
+-D WITH_FFMPEG=ON \
+-D WITH_TBB=ON \
+-D BUILD_TBB=ON \
+-D WITH_GSTREAMER=ON \
+-D HIGHGUI_PLUGIN_LIST=gtk \
+-D VIDEOIO_PLUGIN_LIST=all \
+-D BUILD_TESTS=OFF \
+-D WITH_EIGEN=OFF \
+-D WITH_V4L=ON \
+-D WITH_LIBV4L=ON \
+-D WITH_VTK=OFF \
+-D WITH_QT=OFF \
+-D WITH_PROTOBUF=ON \
+-D OPENCV_ENABLE_NONFREE=ON \
+-D INSTALL_C_EXAMPLES=OFF \
+-D INSTALL_PYTHON_EXAMPLES=ON \
+-D PYTHON3_PACKAGES_PATH=/usr/lib/python3/dist-packages \
+-D OPENCV_GENERATE_PKGCONFIG=ON \
+-D BUILD_EXAMPLES=OFF ..
+
+kiosk mode
 https://www.raspberrypi.com/tutorials/how-to-use-a-raspberry-pi-in-kiosk-mode/
 https://reelyactive.github.io/diy/pi-kiosk/  
-

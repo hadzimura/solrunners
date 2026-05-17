@@ -1,0 +1,3 @@
+vlc --intf http --http-host localhost:8080 --http-password aaa
+
+vlc --extraintf=http --http-host 0.0.0.0 --http-port 8080 --http-password

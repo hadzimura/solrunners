@@ -5,6 +5,8 @@ set -e
 
 sudo mkdir /storage
 sudo chown zero:zero /storage
-sudo echo "tmpfs /storage tmpfs nodev,nosuid,size=1500M 0 0" >> /etc/fstab
-sudo systemctl daemon-reload
+
+# This goes into the /etc/fstab
+# tmpfs /storage tmpfs nodev,nosuid,size=1.5G 0 0
+
 sudo mount -a

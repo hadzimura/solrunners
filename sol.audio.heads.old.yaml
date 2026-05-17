@@ -1,0 +1,71 @@
+honza:
+  1:
+    name: none
+    sub: "Tohle jsem ještě nezažil, ale záživné to bezesporu je!"
+  2:
+    name: none
+    sub: "Jaká škoda, že nejsem povahou sběratel a navíc si nic nepamatuji!"
+  3:
+    name: za_mnou_prazdno
+    sub: "Za mnou prázdno, přede mnou prázdno, nade mnou prázdno a pod sebe se podívat bojím."
+radim:
+  1:
+    name: toto_je_me_rizoto
+    sub: "Toto je mé rizoto."
+  2:
+    name: vsechno_byti
+    sub: "Všechno bytí směřuje k nebytí."
+  3:
+    name: emanuelle
+    sub: "Lásku není možno udržet v náručí, láska je nekonečno, ke kterému se přibližujeme."
+roman:
+  1:
+    name: entropie
+    sub: "Entropie nás nakonec stejně dostane."
+  2:
+    name: nevidime_veci
+    sub: "Nevidíme věci takové, jaké jsou, vidíme je takové, jací jsme my."
+  3:
+    name: nic_se_mi_nelibi
+    sub: "Nic se mi nelíbí."
+adela:
+  1:
+    name: mira_korelace
+    sub: "Míra korelace našeho kruhu s ostatními kruhy zdá se možnou podstatou bytí, vytváří a boří proměnná jsoucna."
+  2:
+    name: krasno
+    sub: "Krásno v přesahu uměleckého díla pokládá otázku osobní interpretace, jestli si ho nenašel, zavři oči, otevři oči a jdi se podívat znovu. Teď."
+  3:
+    name: mista_kde-vladne
+    sub: "Místa, kde vládne bezčasí neexistují, pár jsem jich našla a posbírala."
+barbora:
+  1:
+    name: zustane_po_nas
+    sub: "Zůstane po nás jen pocit červeného dotyku bez doby."
+  2:
+    name: kazda_rodina
+    sub: "Každá rodina má své skryté poklady pod schody, co bolí jako sůl v ráně."
+  3:
+    name: den_noc_den_a_sen
+    sub: "Den noc den noc a sen a poslední sklenice bílého vína"
+lukas:
+  1:
+    name: magnet
+    sub: "Člověk se vždycky děsně těší na párek. Dá si dva a pak zase měsíc nechce párek ani vidět – zvedá se mu z něj kufr. Špekáčky, punčový dezert, Bůh, milenky, chlast, sociálno jakbysmet. Magnet se neustále přepólovává."
+  2:
+    name: kdyz_uz_tlacit
+    sub: "Když už tlačit, tak jen ob zub."
+  3:
+    name: decka_zejtra
+    sub: "Děcka, zejtra už fakt pošlu. Fakt."
+denisa:
+  1:
+    name: prekracujeme_hranice
+    sub: "Překračujeme hranice kolektivní imaginace."
+  2:
+    name: historie
+    sub: "Historie opakující se napříč různými dimenzemi je něco jako optický klam."
+  3:
+    name: nezkusenost
+    sub: "Nezkušenost není limitující, ale inspirující."
+
