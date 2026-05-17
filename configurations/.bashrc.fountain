@@ -112,8 +112,13 @@ if ! shopt -oq posix; then
   fi
 fi
 
+source /home/zero/solrunners/.venv/bin/activate
+export PYTHONPATH=$PYTHONPATH:/home/zero/solrunners/
+
 if [ -z $SSH_TTY ]; then
-    # TODO: cvlc
+    cd /home/zero/solrunners/
+    export PYTHONPATH=$PYTHONPATH:.
+    python3 sol/Fountain.py --room 4 --fountain 3
 else
   echo "Not executing SoL Runner as we are logged over SSH"
 fi
