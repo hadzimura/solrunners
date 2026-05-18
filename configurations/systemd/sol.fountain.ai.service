@@ -1,0 +1,18 @@
+[Unit]
+Description=Springs Of Life Fountain (AI)
+After=network.target sound.target
+
+[Service]
+Type=simple
+User=zero
+WorkingDirectory=/home/zero/solrunners
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/zero/solrunners/.venv/bin/python /home/zero/solrunners/Fountain.ai.py --system rpi
+Restart=always
+RestartSec=3
+StandardOutput=inherit
+StandardError=inherit
+
+[Install]
+WantedBy=multi-user.target
+

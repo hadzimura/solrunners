@@ -1,0 +1,10 @@
+[project]
+name = "solrunners"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.4.5",
+    "opencv-python>=4.13.0.92",
+    "pyglet>=2.1.14",
+    "ruamel-yaml>=0.19.1",
+]
