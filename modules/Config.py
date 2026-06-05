@@ -15,6 +15,19 @@ from ruamel.yaml import YAML, YAMLError
 from platform import system
 import re
 import subprocess
+from random import choice
+import requests
+
+if system() != 'Darwin':
+    from gpiozero import Button
+    from gpiozero import DistanceSensor
+    from gpiozero import LED
+    from gpiozero import MotionSensor
+
+from modules.Controllers import Effect
+from modules.Controllers import Font
+from modules.Controllers import Text
+from modules.Controllers import Draw
 
 # Run pyglet in headless mode
 import pyglet

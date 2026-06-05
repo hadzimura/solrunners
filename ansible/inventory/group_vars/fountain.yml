@@ -21,7 +21,7 @@ sol_storage_size_mb: 512
 sol_skip_upgrade: true
 
 # Git branch override (remove once merged to main)
-sol_git_branch: "2.0.26.ai"
+sol_git_branch: "main"
 
 # Skip uv sync from pyproject.toml — ruamel-yaml has no armv7l wheel and builds
 # from source (takes hours, drops SSH). The fountain role installs sounddevice +

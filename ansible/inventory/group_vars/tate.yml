@@ -15,7 +15,7 @@ sol_service_name:   "sol.tate"
 
 # ── Git branch ────────────────────────────────────────────────────────────────
 # Deploy from the active development branch; merge to main when stable.
-sol_git_branch: "2.0.26.ai"
+sol_git_branch: "main"
 # mpv video output backend — drm renders directly to the framebuffer (no Xorg)
 sol_mpv_vo:         "drm"
 # Audio output backend — ALSA is standard on RPi OS Lite (no PulseAudio needed)

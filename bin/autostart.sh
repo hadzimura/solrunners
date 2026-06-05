@@ -1,8 +1,8 @@
 #!/bin/sh
 cd /home/zero/solrunners
-export PYTHONPATH=$PYTHONPATH:/home/zero/solrunners
-export PYTHONUNBUFFERED=1
-source /home/zero/solrunners/.venv/bin/activate
+# export PYTHONPATH=$PYTHONPATH:/home/zero/solrunners
+# export PYTHONUNBUFFERED=1
+# source /home/zero/solrunners/.venv/bin/activate
 xset -dpms     # disable DPMS (Energy Star) features.
 xset s off     # disable screen saver
 xset s noblank # don't blank the video device
