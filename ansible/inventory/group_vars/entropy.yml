@@ -16,7 +16,7 @@ sol_service_name: "sol.entropy.ai"
 sol_xinit_script: "xinit.entropy.ai.sh"
 
 # Git branch for this deployment
-sol_git_branch: "entropy"
+sol_git_branch: "main"
 
 # Python version check for stale-venv detection (RPi 5 Bookworm ships 3.13.5)
 sol_venv_python_check: "3.13"
