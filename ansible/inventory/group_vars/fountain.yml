@@ -30,6 +30,8 @@ sol_audio_packages:
   - libportaudio2       # PortAudio runtime — required by sounddevice
   - portaudio19-dev     # PortAudio headers — needed to build sounddevice wheel
   - libsndfile1         # libsndfile runtime — required by soundfile (Python pkg)
+  - python3-numpy       # numpy for armv7l: no binary wheel on PyPI for numpy 2.x;
+                        # system package is numpy 1.24 which works fine with sounddevice
 
 # Python packages installed into the venv by the fountain role (after system pkgs)
 sol_fountain_pip_packages:
@@ -52,3 +54,6 @@ sol_gain_right: 1.0
 # sol_dist_min_cm: 20  # closer than this → full volume (gain = 1.0)
 # sol_dist_max_cm: 200 # farther than this → minimum ambient volume
 # sol_dist_ambient: 0.1 # gain floor when spectator detected but far away
+
+# Expected Python version string in the venv (used for stale-venv detection)
+sol_venv_python_check: "3.11"

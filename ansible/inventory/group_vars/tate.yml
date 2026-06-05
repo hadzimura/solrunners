@@ -27,3 +27,6 @@ sol_no_repeat_window: 5
 # ── Storage (tmpfs) ───────────────────────────────────────────────────────────
 # 35 × ~50 MB clips ≈ 1.7 GB; 2 GB tmpfs leaves room for growth
 sol_storage_size_mb: 2048
+
+# Expected Python version string in the venv (used for stale-venv detection)
+sol_venv_python_check: "3.13"

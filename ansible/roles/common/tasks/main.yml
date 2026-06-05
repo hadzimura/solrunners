@@ -194,17 +194,21 @@
     path:  "{{ sol_venv_path }}"
     state: absent
   become: false
-  # Remove if: venv doesn't exist yet (rc!=0), or its Python is not system Python.
-  # A bad venv has its binary pointing into uv's managed cache (/root/.local or
-  # /home/zero/.local/share/uv) rather than /usr/bin — this happens when uv runs
-  # under root's HOME despite become: false (pipelining side-effect).
+  # Remove if: venv doesn't exist yet (rc!=0), or its Python is wrong version.
+  # Each node declares sol_venv_python_check in group_vars (e.g. "3.13", "3.11").
   when: >
     _venv_python_ver.rc != 0 or
-    '3.13' not in _venv_python_ver.stdout
+    (sol_venv_python_check | default('3.')) not in _venv_python_ver.stdout
 
 - name: Create venv using system Python ({{ sol_python_version }})
   ansible.builtin.command:
-    cmd: "{{ sol_uv_bin }} venv --python {{ sol_python_version }} {{ sol_venv_path }}"
+    # --system-site-packages on armv7l: exposes system python3-numpy (and other
+    # apt-installed packages) to the venv, avoiding source builds of packages
+    # that have no binary wheel for 32-bit ARM (numpy 2.x, scipy, etc.).
+    cmd: >
+      {{ sol_uv_bin }} venv --python {{ sol_python_version }}
+      {% if ansible_architecture == 'armv7l' %}--system-site-packages{% endif %}
+      {{ sol_venv_path }}
     creates: "{{ sol_venv_path }}/bin/activate"
   become: false
   environment:
