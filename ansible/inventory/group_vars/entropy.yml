@@ -1,24 +1,36 @@
-# group_vars/entropy.yml — variables specific to the Entropy (RPi 5, M.2 SSD) node
+# group_vars/entropy.yml — variables specific to the Entropy node
 #
 # Entropy plays a 16:9 horizontal video with per-frame OpenCV processing.
 # Display: minimal X11 via xinit (no window manager, no desktop environment).
-# The M.2 SSD provides fast read for the source media before tmpfs copy.
+# Hardware: RPi 5 (rpi6), 29 GB SD card — no NVMe/SSD.
+#
+# Storage strategy: no tmpfs ramdisk. Media (~1 GB) lives in the repo clone
+# on the SD card. /storage/entropy is a symlink into the repo media folder.
+# noatime on root and /boot/firmware reduces SD write amplification.
 
-sol_hostname: "entropy"       # RPi hostname set by Ansible at setup time
-sol_media_subdir:    "entropy"
-sol_service_name:    "sol.entropy.ai"
+sol_hostname: "entropy"
+sol_media_subdir: "entropy"
+sol_service_name: "sol.entropy.ai"
 
 # xinit startup script that launches the Python app directly
-sol_xinit_script:    "xinit.entropy.ai.sh"
+sol_xinit_script: "xinit.entropy.ai.sh"
 
-# Allocate 6 GB of RAM for the /storage tmpfs — entropy.mov can be ~3–5 GB
-sol_storage_size_mb: 6144
+# Git branch for this deployment
+sol_git_branch: "entropy"
 
-# Display rotation sent to xrandr inside the xinit script
-# Entropy is horizontal (landscape) — no rotation needed.
-# NOTE: the existing xinit.entropy.ai.sh contains "--rotate left"; that line
-# should be removed if the physical TV is already in landscape orientation.
+# Python version check for stale-venv detection (RPi 5 Bookworm ships 3.13.5)
+sol_venv_python_check: "3.13"
+
+# aarch64 (RPi 5) — full PyPI binary wheels available, use pyproject.toml
+sol_dep_mode: "pyproject"
+
+# Skip tmpfs ramdisk — no SSD, media fits on SD card (total ~1 GB).
+# The common role will instead create /storage as a plain directory and
+# symlink /storage/entropy → sol_repo_path/media/entropy.
+sol_skip_storage_tmpfs: true
+
+# Display rotation — landscape, no rotation needed
 sol_display_rotate: "normal"
 
-# Screen resolution for reference (Sony TV, HD Ready)
+# Screen resolution for reference
 sol_display_resolution: "1360x768"
