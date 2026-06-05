@@ -1,0 +1,30 @@
+[Unit]
+Description=Springs of Life — Fountain node (stereo WAV loop)
+# Start after audio subsystem is available
+After=network.target sound.target
+
+[Service]
+Type=simple
+User=zero
+
+WorkingDirectory=/home/zero/solrunners
+
+# Unbuffered Python output → real-time logs in journalctl
+Environment=PYTHONUNBUFFERED=1
+
+# Phase 1: static L/R gain from CLI args.
+# Phase 2: remove --gain-left/right; add --sensor-trig-a, --sensor-echo-a etc.
+ExecStart=/home/zero/solrunners/.venv/bin/python /home/zero/solrunners/fountain.py \
+    --silence-base 10 \
+    --silence-random 10 \
+    --gain-left 1.0 \
+    --gain-right 1.0
+
+Restart=on-failure
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

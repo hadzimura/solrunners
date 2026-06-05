@@ -3,7 +3,7 @@
 
 - name: Reload systemd and restart fountain
   ansible.builtin.systemd:
-    name:          sol.fountain.ai.service
+    name:          sol.fountain.service
     daemon_reload: true
     state:         restarted
   become: true

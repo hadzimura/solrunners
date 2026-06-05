@@ -1,27 +1,32 @@
 ---
 # roles/fountain/tasks/main.yml
-# Configures the Fountain node: audio-only, RPi 3, no display stack.
+# Configures the Fountain node: audio-only WAV player with stereo L/R gain.
 #
-# Fountain.ai.py uses subprocess to call aplay (alsa-utils) or ffplay (ffmpeg)
-# for audio playback — no pyglet, no X11 required.  It plays fountain.wav on
-# a random loop with optional "talking head" sample overlays.
+# Phase 1: fountain.py plays fountain.wav in a loop with configurable silence
+#          interval and static per-channel gain (CLI args).
+# Phase 2: adds HCY-SRF05 ultrasonic sensors for real-time distance-to-volume
+#          mapping (see docs/FOUNTAIN.md for hardware wiring guide).
 
-# ── Audio system packages ─────────────────────────────────────────────────────
-- name: Install audio packages for Fountain
+# ── System audio packages ─────────────────────────────────────────────────────
+# libportaudio2 / portaudio19-dev: PortAudio runtime + headers for sounddevice.
+# libsndfile1: required by the soundfile Python package (WAV decoder).
+# alsa-utils: provides aplay for manual testing / fallback.
+- name: Install audio system packages for Fountain
   ansible.builtin.apt:
-    name: "{{ sol_audio_packages }}"   # defined in group_vars/fountain.yml
+    name: "{{ sol_audio_packages }}"
     state: present
   become: true
 
-# ── ALSA default audio device ─────────────────────────────────────────────────
-# On RPi 3 the default output is the 3.5 mm jack (card 0, device 0).
-# If a USB audio device is attached, adjust the card number here.
-- name: Set ALSA default audio device to 3.5mm jack
+# ── ALSA default output device ────────────────────────────────────────────────
+# On RPi the default ALSA output varies by model and attached hardware.
+# card 0, device 0 = built-in 3.5 mm jack on RPi 3; adjust if using USB audio.
+- name: Set ALSA default audio device
   ansible.builtin.copy:
     dest: /etc/asound.conf
     content: |
-      # ALSA global configuration — Spring of Life / Fountain node
-      # Forces output to the built-in 3.5 mm audio jack on RPi 3.
+      # ALSA global config — Springs of Life / Fountain node
+      # Forces output to card 0, device 0 (3.5 mm jack on RPi 3).
+      # Change card number to 1 if a USB audio interface is used.
       defaults.pcm.card 0
       defaults.pcm.device 0
       defaults.ctl.card 0
@@ -30,18 +35,30 @@
     mode: "0644"
   become: true
 
+# ── Python packages (venv) ────────────────────────────────────────────────────
+# sounddevice and soundfile are NOT in pyproject.toml because they require
+# PortAudio / libsndfile system libraries that are only present on the Fountain
+# node. Installing them on other nodes without those libs would cause errors.
+- name: Install fountain Python packages into project venv
+  ansible.builtin.command:
+    cmd: "{{ sol_uv_bin }} pip install --python {{ sol_venv_path }}/bin/python {{ sol_fountain_pip_packages | join(' ') }}"
+  become: false
+  environment:
+    HOME: "/home/{{ sol_user }}"
+  changed_when: false   # uv pip install is idempotent but doesn't report changes
+
 # ── systemd service ───────────────────────────────────────────────────────────
-- name: Copy sol.fountain.ai.service to systemd
+- name: Copy sol.fountain.service to systemd
   ansible.builtin.copy:
-    src:        "{{ sol_repo_path }}/configurations/systemd/sol.fountain.ai.service"
-    dest:       /etc/systemd/system/sol.fountain.ai.service
+    src:        "{{ sol_repo_path }}/configurations/systemd/sol.fountain.service"
+    dest:       /etc/systemd/system/sol.fountain.service
     remote_src: yes
   become: true
   notify: Reload systemd and restart fountain
 
 - name: Enable and start Fountain service
   ansible.builtin.systemd:
-    name:          sol.fountain.ai.service
+    name:          sol.fountain.service
     enabled:       true
     state:         started
     daemon_reload: true

@@ -1,22 +1,50 @@
-# group_vars/fountain.yml — variables specific to the Fountain (RPi 3) node
+# group_vars/fountain.yml — variables specific to the Fountain node
 #
-# Fountain is audio-only: no display server is needed.
-# Audio playback uses system command (aplay / ffplay) — no pyglet buffer issues.
+# Fountain is audio-only (no display server needed).
+# Phase 1: WAV loop with static L/R gain.
+# Phase 2: HCY-SRF05 ultrasonic sensors → dynamic per-channel volume.
 
-# RPi hostname — set by Ansible during setup
+# RPi hostname set by Ansible
 sol_hostname: "fountain"
 
-# Media subfolder name inside sol_repo_path/media/
+# Media subfolder inside sol_repo_path/media/
 sol_media_subdir: "fountain"
 
-# Systemd service file (from configurations/systemd/) to deploy
-sol_service_name: "sol.fountain.ai"
+# systemd service file deployed by the fountain role
+sol_service_name: "sol.fountain.service"
 
-# No tmpfs storage needed — audio files are small; read directly from disk
+# tmpfs size for /storage — audio files are small; 512 MB is generous
 sol_storage_size_mb: 512
 
-# Audio backend preference order (first found wins at runtime in Fountain.ai.py)
-# aplay comes from alsa-utils; ffplay from ffmpeg
+# Git branch override (remove once merged to main)
+sol_git_branch: "2.0.26.ai"
+
+# ── Audio ────────────────────────────────────────────────────────────────────
+# System packages installed by the fountain role
 sol_audio_packages:
-  - alsa-utils
-  - ffmpeg
+  - alsa-utils          # aplay (used as fallback / manual testing)
+  - libportaudio2       # PortAudio runtime — required by sounddevice
+  - portaudio19-dev     # PortAudio headers — needed to build sounddevice wheel
+  - libsndfile1         # libsndfile runtime — required by soundfile (Python pkg)
+
+# Python packages installed into the venv by the fountain role (after system pkgs)
+sol_fountain_pip_packages:
+  - sounddevice         # Python PortAudio binding — real-time stereo playback
+  - soundfile           # WAV/FLAC loader → numpy array
+
+# ── Phase 1 static gain (passed as ExecStart args in sol.fountain.service) ───
+# Adjust these if the speaker balance needs correcting for the installation.
+# Values: 0.0 (mute) – 1.0 (full). Both default to full.
+sol_gain_left:  1.0
+sol_gain_right: 1.0
+
+# ── Phase 2 — SRF05 GPIO pins (not used yet; reserved for sensor integration) ─
+# Sensor A covers North; Sensor B covers South (or West — configurable in situ)
+# Uses RPi GPIO numbering (BCM).
+# sol_pir_a_trig: 23   # GPIO 23, pin 16
+# sol_pir_a_echo: 24   # GPIO 24, pin 18  (via 1kΩ/2kΩ voltage divider!)
+# sol_pir_b_trig: 25   # GPIO 25, pin 22
+# sol_pir_b_echo: 8    # GPIO 8,  pin 24  (via 1kΩ/2kΩ voltage divider!)
+# sol_dist_min_cm: 20  # closer than this → full volume (gain = 1.0)
+# sol_dist_max_cm: 200 # farther than this → minimum ambient volume
+# sol_dist_ambient: 0.1 # gain floor when spectator detected but far away
