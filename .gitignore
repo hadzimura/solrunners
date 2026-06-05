@@ -1,6 +1,4 @@
-media
-_media
-!media/.gitkeep
+media/
 source
 ssh
 .idea

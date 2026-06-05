@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-xrandr --output HDMI-1 --rotate left
+xrandr --output HDMI-1 --rotate normal
 cd /home/zero/solrunners
 export PYTHONPATH="$PYTHONPATH:/home/zero/solrunners"
 export PYTHONUNBUFFERED=1
