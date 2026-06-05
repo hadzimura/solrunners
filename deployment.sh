@@ -68,7 +68,7 @@ PLAYBOOKS=(
     "setup-entropy     — Full setup of Entropy node (RPi 5, M.2 SSD, 16:9 video)"
     "setup-heads       — Full setup of Heads node (RPi 5, SD card, 10:16 video)"
     "setup-tate        — Full setup of Tate node (RPi, random MP4 loop, DRM/KMS)"
-    "deploy-media      — Sync media files from this Mac to a target RPi"
+    "deploy-media      — Sync media files to one or all RPi nodes"
     "restart-services  — Pull latest code + restart service on a target RPi"
     "quit              — Exit without doing anything"
 )
@@ -99,18 +99,18 @@ if [[ "${PLAYBOOK_KEY}" == "deploy-media" || "${PLAYBOOK_KEY}" == "restart-servi
     echo ""
 
     NODES=(
-        "entropy-node    — RPi 5 @ 192.168.0.190 (Entropy)"
+        "all             — All nodes (unreachable ones are skipped)"
         "tate-node       — RPi   @ 192.168.0.192 (Tate)"
+        "entropy-node    — RPi 5 @ 192.168.0.190 (Entropy)"
         "heads-node      — RPi 5 @ TBD           (Heads)"
         "fountain-node   — RPi 3 @ TBD           (Fountain)"
-        "all             — All nodes in the inventory"
     )
 
     PS3=$'\nEnter number: '
     select node_choice in "${NODES[@]}"; do
         NODE_KEY="${node_choice%% *}"
         case "${NODE_KEY}" in
-            entropy-node|tate-node|heads-node|fountain-node|all)
+            all|tate-node|entropy-node|heads-node|fountain-node)
                 if [[ "${NODE_KEY}" != "all" ]]; then
                     LIMIT_FLAG="--limit ${NODE_KEY}"
                 fi

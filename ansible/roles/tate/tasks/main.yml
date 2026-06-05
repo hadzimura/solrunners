@@ -40,6 +40,7 @@
   ansible.builtin.file:
     path: "{{ sol_repo_path }}/tate.py"
     mode: "0755"
+  become: false
 
 # ── systemd service ───────────────────────────────────────────────────────────
 # sol.tate.service launches tate.py directly (no xinit) — mpv uses DRM/KMS

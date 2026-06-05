@@ -23,10 +23,11 @@ sol_group:      "zero"
 # It manages the venv and installs Python dependencies much faster than pip.
 sol_uv_bin:      "/home/zero/.local/bin/uv"
 
-# Python version uv will use/download for the RPi venv.
-# requirements.txt (pyglet==1.5.27) is the proven-stable RPi baseline.
-# Change to "3.13" once pyglet 2.x compatibility is confirmed on-device.
-sol_python_version: "3.11"
+# Python version uv will use for the RPi venv.
+# Use the system Python (python3) so uv doesn't download its own interpreter.
+# Raspberry Pi OS ships python3.13 as of 2025; this resolves to whatever
+# /usr/bin/python3 points to on each node.
+sol_python_version: "python3"
 
 # Which dependency file to install into the venv.
 # Both dev (Mac) and RPi now use the same pyproject.toml + uv.lock.

@@ -144,10 +144,42 @@
     force:   yes
   become: false
 
+# Fix ownership: previous runs (or manual root operations) may have left some
+# files root-owned inside the repo. Always enforce zero:zero on the entire tree.
+- name: Fix repository ownership (ensure {{ sol_user }}:{{ sol_group }} throughout)
+  ansible.builtin.file:
+    path:    "{{ sol_repo_path }}"
+    state:   directory
+    owner:   "{{ sol_user }}"
+    group:   "{{ sol_group }}"
+    recurse: yes
+  become: true
+
 # ── 6. Python virtual environment via uv ─────────────────────────────────────
-# uv creates a lightweight venv and can download the target Python version
-# automatically — no need to pre-install python3.13 from system packages.
-- name: Create Python {{ sol_python_version }} venv with uv
+# Use the system Python (python3) — no uv-managed download, no version mismatch.
+# If the existing venv was built with a different Python (e.g. uv-downloaded 3.11),
+# detect and remove it so the next step recreates it cleanly.
+
+- name: Check if venv Python is the system interpreter
+  ansible.builtin.stat:
+    path: "{{ sol_venv_path }}/bin/python"
+    follow: true   # resolve the symlink to the real binary
+  register: _venv_python
+  become: false
+
+- name: Remove stale venv if it uses a non-system Python
+  ansible.builtin.file:
+    path:  "{{ sol_venv_path }}"
+    state: absent
+  become: false
+  # Remove when the venv python resolves to a path inside uv's own cache/toolchain
+  # (i.e. contains ".local/share/uv" or "uv/python") rather than /usr/bin.
+  when: >
+    _venv_python.stat.exists and
+    ('/uv/' in (_venv_python.stat.lnk_target | default('')) or
+     '.local/share/uv' in (_venv_python.stat.lnk_target | default('')))
+
+- name: Create venv using system Python ({{ sol_python_version }})
   ansible.builtin.command:
     cmd: "{{ sol_uv_bin }} venv --python {{ sol_python_version }} {{ sol_venv_path }}"
     creates: "{{ sol_venv_path }}/bin/activate"
@@ -182,6 +214,7 @@
     owner: "{{ sol_user }}"
     group: "{{ sol_group }}"
     mode:  "0644"
+  become: false
 
 # ── 9. /storage tmpfs ─────────────────────────────────────────────────────────
 - name: Create /storage mount point
