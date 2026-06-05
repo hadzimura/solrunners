@@ -37,6 +37,19 @@
     create: yes
   become: true
 
+# ── User group membership for X server access ────────────────────────────────
+# The Xorg server (started by xinit from systemd) needs the user to be in:
+#   tty   — access /dev/tty0 to allocate a virtual terminal
+#   video — access /dev/dri and /dev/fb (framebuffer / DRM device)
+#   render — access /dev/dri/renderD* (GPU render nodes)
+# Without these, Xorg exits immediately with "Permission denied on /dev/tty0".
+- name: Add sol_user to tty, video, render groups for X server access
+  ansible.builtin.user:
+    name:   "{{ sol_user }}"
+    groups: "tty,video,render"
+    append: true
+  become: true
+
 # ── Make xinit scripts executable ────────────────────────────────────────────
 # The scripts live in the repo; ensure they have the execute bit set.
 - name: Make xinit startup scripts executable
