@@ -7,10 +7,12 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "numpy",
-    "pyglet==1.5.27",
-    "opencv-contrib-python",   # contrib variant required for face-detection classifiers (Heads.py)
+    # pyglet and opencv have no armv7l (32-bit RPi 3) wheels — exclude them on
+    # that platform. Fountain is the only armv7l node; it needs neither.
+    "pyglet==1.5.27 ; platform_machine != 'armv7l'",
+    "opencv-contrib-python ; platform_machine != 'armv7l'",   # contrib for face-detection (Heads.py)
     "ruamel.yaml",
-    "scipy",
+    "scipy ; platform_machine != 'armv7l'",  # no armv7l wheel in recent versions
     # Ansible runs from the project venv so deployment.sh doesn't need a system-level install.
     # ansible-core is the lean core package; full `ansible` meta-package pulls all collections.
     "ansible-core",

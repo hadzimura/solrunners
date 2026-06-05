@@ -535,18 +535,18 @@ dependencies = [
     { name = "ansible-core", version = "2.19.10", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "ansible-core", version = "2.21.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "numpy" },
-    { name = "opencv-contrib-python" },
-    { name = "pyglet" },
+    { name = "opencv-contrib-python", marker = "platform_machine != 'armv7l'" },
+    { name = "pyglet", marker = "platform_machine != 'armv7l'" },
     { name = "ruamel-yaml" },
-    { name = "scipy" },
+    { name = "scipy", marker = "platform_machine != 'armv7l'" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "ansible-core" },
     { name = "numpy" },
-    { name = "opencv-contrib-python" },
-    { name = "pyglet", specifier = "==1.5.27" },
+    { name = "opencv-contrib-python", marker = "platform_machine != 'armv7l'" },
+    { name = "pyglet", marker = "platform_machine != 'armv7l'", specifier = "==1.5.27" },
     { name = "ruamel-yaml" },
-    { name = "scipy" },
+    { name = "scipy", marker = "platform_machine != 'armv7l'" },
 ]
