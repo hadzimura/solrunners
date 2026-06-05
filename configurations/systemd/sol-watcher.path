@@ -1,5 +1,0 @@
-[Path]
-PathModified=/home/zero/solrunners
-
-[Install]
-WantedBy=multi-user.target

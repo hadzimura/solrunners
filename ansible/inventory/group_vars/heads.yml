@@ -22,3 +22,6 @@ sol_display_rotate:  "left"
 
 # Screen resolution for reference (EIZO 24", portrait)
 sol_display_resolution: "1050x1680"
+
+# Python version check for stale-venv detection (RPi 5 Bookworm)
+sol_venv_python_check: "3.13"

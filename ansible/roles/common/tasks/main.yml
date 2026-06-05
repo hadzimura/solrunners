@@ -236,6 +236,19 @@
     UV_PROJECT_ENVIRONMENT: "{{ sol_venv_path }}"
   when: sol_dep_mode == "pyproject"
 
+# Fix venv ownership: uv creates files under the venv path; with global
+# ansible_become: true and SSH pipelining, files can end up root-owned even
+# when tasks declare become: false. Enforce zero:zero on the whole venv tree.
+- name: Fix venv ownership (ensure {{ sol_user }}:{{ sol_group }} throughout)
+  ansible.builtin.file:
+    path:    "{{ sol_venv_path }}"
+    state:   directory
+    owner:   "{{ sol_user }}"
+    group:   "{{ sol_group }}"
+    recurse: yes
+  become: true
+  when: sol_dep_mode != "skip"
+
 # ── 8. Deploy .bashrc ─────────────────────────────────────────────────────────
 # The template activates the venv for ALL interactive logins (SSH, TTY5, etc).
 # It does NOT call startx or launch any application — the systemd service owns
