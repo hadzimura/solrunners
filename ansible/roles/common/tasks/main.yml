@@ -160,31 +160,31 @@
 # If the existing venv was built with a different Python (e.g. uv-downloaded 3.11),
 # detect and remove it so the next step recreates it cleanly.
 
-- name: Check if venv Python is the system interpreter
-  ansible.builtin.stat:
-    path: "{{ sol_venv_path }}/bin/python"
-    follow: true   # resolve the symlink to the real binary
-  register: _venv_python
+- name: Check Python version in existing venv
+  ansible.builtin.command:
+    cmd: "{{ sol_venv_path }}/bin/python --version"
+  register: _venv_python_ver
+  failed_when: false
+  changed_when: false
   become: false
 
-- name: Remove stale venv if it uses a non-system Python
+- name: Remove stale venv if it is not using system Python ({{ sol_python_version }})
   ansible.builtin.file:
     path:  "{{ sol_venv_path }}"
     state: absent
   become: false
-  # Remove when the venv python resolves to a path inside uv's own cache/toolchain
-  # (i.e. contains ".local/share/uv" or "uv/python") rather than /usr/bin.
+  # Remove when the venv exists but its Python major.minor doesn't match /usr/bin/python3.
+  # 'python3' on the system resolves to 3.13; if the venv reports something older
+  # (e.g. 3.11 downloaded by uv), it needs to be recreated.
   when: >
-    _venv_python.stat.exists and
-    ('/uv/' in (_venv_python.stat.lnk_target | default('')) or
-     '.local/share/uv' in (_venv_python.stat.lnk_target | default('')))
+    _venv_python_ver.rc == 0 and
+    '3.13' not in _venv_python_ver.stdout
 
 - name: Create venv using system Python ({{ sol_python_version }})
   ansible.builtin.command:
     cmd: "{{ sol_uv_bin }} venv --python {{ sol_python_version }} {{ sol_venv_path }}"
     creates: "{{ sol_venv_path }}/bin/activate"
   become: false
-
 # ── 7. Install Python dependencies ───────────────────────────────────────────
 # Two modes controlled by sol_dep_mode in group_vars/all.yml:
 #   "requirements" → uv pip install -r requirements.txt  (proven-stable baseline)
