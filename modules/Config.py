@@ -13,10 +13,50 @@ from os.path import isdir
 from os.path import isfile
 from ruamel.yaml import YAML, YAMLError
 from platform import system
+import re
+import subprocess
 
 # Run pyglet in headless mode
 import pyglet
 pyglet.options['headless'] = True
+
+def get_display_resolution(display=':0'):
+    """Return (width, height) of the connected display via xrandr.
+
+    On macOS or when xrandr is unavailable, returns (None, None).
+    Used by window setup to manually fill the screen when no window manager
+    is running (bare xinit) — EWMH fullscreen hints require a WM to handle.
+    """
+    if system() == 'Darwin':
+        return None, None
+    try:
+        out = subprocess.check_output(
+            ['xrandr', '--display', display],
+            stderr=subprocess.DEVNULL
+        ).decode()
+        # Match the active/connected output line: "HDMI-2 connected 1440x900+0+0 ..."
+        m = re.search(r' connected (?:primary )?(\d+)x(\d+)\+0\+0', out)
+        if m:
+            return int(m.group(1)), int(m.group(2))
+    except Exception:
+        pass
+    return None, None
+
+
+def setup_cv2_fullscreen(window_name, display_w, display_h):
+    """Position and resize a cv2 window to fill the screen without a WM.
+
+    cv2's WND_PROP_FULLSCREEN relies on EWMH hints that only work when a window
+    manager is present. In a bare xinit session (no WM), the hint is silently
+    ignored and the window stays at video native resolution. This function
+    explicitly moves the window to (0,0) and resizes it to screen dimensions,
+    which works without any WM. setWindowProperty is also called as a fallback
+    for environments that do have a WM.
+    """
+    if display_w and display_h:
+        cv.moveWindow(window_name, 0, 0)
+        cv.resizeWindow(window_name, display_w, display_h)
+    cv.setWindowProperty(window_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
 def arg_parser():
     # Parse the runtime arguments to decide 'who we are'

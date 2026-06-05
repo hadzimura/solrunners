@@ -21,6 +21,8 @@ pyglet.options['headless'] = True
 from modules.Config import arg_parser
 from modules.Config import wait_for_storage
 from modules.Config import Configuration
+from modules.Config import get_display_resolution
+from modules.Config import setup_cv2_fullscreen
 
 
 def countdown(total_playtime=None, start_playtime=None):
@@ -39,13 +41,16 @@ def countdown(total_playtime=None, start_playtime=None):
     if start_playtime is not None:
         c_video.set(cv.CAP_PROP_POS_FRAMES, start_playtime)
 
-    # Display setup
-    cv.namedWindow('countdown', cv.WINDOW_NORMAL)
-    cv.namedWindow('countdown', cv.WINDOW_FREERATIO)
+    # Display setup — create window once with combined flags.
+    # WINDOW_NORMAL allows resizing; WINDOW_FREERATIO allows non-native aspect.
+    # Without a WM (bare xinit), EWMH fullscreen hints are ignored, so we
+    # manually resize to screen dims via setup_cv2_fullscreen().
+    cv.namedWindow('countdown', cv.WINDOW_NORMAL | cv.WINDOW_FREERATIO)
 
     if cfg.fullscreen is True:
         print('Running in fullscreen mode')
-        cv.setWindowProperty('countdown', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+        disp_w, disp_h = get_display_resolution()
+        setup_cv2_fullscreen('countdown', disp_w, disp_h)
     else:
         print("Running in windowed mode (use '--fullscreen' runtime arg for fullscreen mode)")
 
@@ -217,12 +222,12 @@ def entropy(total_playtime=None, start_playtime=0):
 
     qr_code = cv.imread(str(cfg.entropy_qr_code))
 
-    # Display setup
-    cv.namedWindow('entropy', cv.WINDOW_NORMAL)
-    cv.namedWindow('entropy', cv.WINDOW_FREERATIO)
+    # Display setup — see countdown() for fullscreen rationale.
+    cv.namedWindow('entropy', cv.WINDOW_NORMAL | cv.WINDOW_FREERATIO)
     if cfg.fullscreen is True:
         print('Running in fullscreen mode')
-        cv.setWindowProperty('entropy', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+        disp_w, disp_h = get_display_resolution()
+        setup_cv2_fullscreen('entropy', disp_w, disp_h)
     else:
         print("Running in windowed mode (use '--fullscreen' runtime arg for fullscreen mode)")
 
