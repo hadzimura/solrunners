@@ -18,4 +18,3 @@ dependencies = [
     # On armv7l it also pulls cffi which requires libffi-dev to compile.
     "ansible-core ; platform_machine != 'armv7l'",
 ]
-]
