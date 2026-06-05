@@ -1,0 +1,32 @@
+---
+# roles/heads/tasks/main.yml
+# Configures the Heads node: RPi 5, 8 GB RAM, 16 GB SD card.
+# Plays a 10:16 vertical video with face-detection + audio sample overlays.
+# Display: minimal X11 via xinit with xrandr left-rotation for portrait output.
+
+# ── Make xinit script executable ─────────────────────────────────────────────
+- name: Make xinit.heads.ai.sh executable
+  ansible.builtin.file:
+    path: "{{ sol_repo_path }}/configurations/xinit.heads.ai.sh"
+    mode: "0755"
+
+# ── systemd service ───────────────────────────────────────────────────────────
+# sol.heads.ai.service calls:
+#   /usr/bin/xinit configurations/xinit.heads.ai.sh -- :0 -nocursor
+# xinit.heads.ai.sh then calls:
+#   python Heads.ai.py --system rpi --fullscreen
+- name: Copy sol.heads.ai.service to systemd
+  ansible.builtin.copy:
+    src:        "{{ sol_repo_path }}/configurations/systemd/sol.heads.ai.service"
+    dest:       /etc/systemd/system/sol.heads.ai.service
+    remote_src: yes
+  become: true
+  notify: Reload systemd and restart heads
+
+- name: Enable and start Heads service
+  ansible.builtin.systemd:
+    name:          sol.heads.ai.service
+    enabled:       true
+    state:         started
+    daemon_reload: true
+  become: true

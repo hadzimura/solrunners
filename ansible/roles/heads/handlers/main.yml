@@ -1,0 +1,9 @@
+---
+# roles/heads/handlers/main.yml
+
+- name: Reload systemd and restart heads
+  ansible.builtin.systemd:
+    name:          sol.heads.ai.service
+    daemon_reload: true
+    state:         restarted
+  become: true

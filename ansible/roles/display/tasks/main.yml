@@ -1,0 +1,48 @@
+---
+# roles/display/tasks/main.yml
+# Installs the minimal X11 stack required by Entropy and Heads.
+#
+# Design decision — why minimal X11 instead of full Xorg or Wayland:
+#   • Raspberry Pi OS Lite ships with NO display server by default.
+#   • OpenCV's imshow() requires a display surface (X11 or Wayland).
+#   • We use `xinit <script> -- :0 -nocursor` which starts the bare X server
+#     and immediately runs the Python application — NO window manager, NO
+#     desktop environment, NO compositor.
+#   • This is the lightest possible X11 configuration and was already proven
+#     to work with the existing .ai service files.
+#   • Wayland (labwc) is a viable future upgrade but needs OpenCV recompiled
+#     with Wayland GTK support and is not yet tested on this hardware.
+
+# ── X11 display stack ─────────────────────────────────────────────────────────
+- name: Install minimal X11 packages
+  ansible.builtin.apt:
+    name:
+      - xserver-xorg-core      # bare X server (no DE, no WM)
+      - xinit                  # startx / xinit command
+      - x11-xserver-utils      # xrandr, xset (rotation + screensaver control)
+      - libgtk-3-0             # OpenCV GUI backend (cv2.imshow uses GTK3)
+      - libgl1                 # OpenGL stub (required by opencv-contrib-python wheel)
+      - unclutter              # hides the mouse cursor during kiosk playback
+    state: present
+  become: true
+
+# ── Disable screen blanking at OS level ───────────────────────────────────────
+# The xinit scripts also call xset, but setting it in the console-blanking
+# layer ensures the screen stays on even before X starts.
+- name: Disable console blanking in /etc/rc.local
+  ansible.builtin.lineinfile:
+    path:   /etc/rc.local
+    line:   "setterm -blank 0 -powersave off -powerdown 0"
+    insertbefore: "^exit 0"
+    create: yes
+  become: true
+
+# ── Make xinit scripts executable ────────────────────────────────────────────
+# The scripts live in the repo; ensure they have the execute bit set.
+- name: Make xinit startup scripts executable
+  ansible.builtin.file:
+    path: "{{ sol_repo_path }}/configurations/{{ item }}"
+    mode: "0755"
+  loop:
+    - xinit.entropy.ai.sh
+    - xinit.heads.ai.sh

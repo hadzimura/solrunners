@@ -1,0 +1,24 @@
+# group_vars/entropy.yml — variables specific to the Entropy (RPi 5, M.2 SSD) node
+#
+# Entropy plays a 16:9 horizontal video with per-frame OpenCV processing.
+# Display: minimal X11 via xinit (no window manager, no desktop environment).
+# The M.2 SSD provides fast read for the source media before tmpfs copy.
+
+sol_hostname: "entropy"       # RPi hostname set by Ansible at setup time
+sol_media_subdir:    "entropy"
+sol_service_name:    "sol.entropy.ai"
+
+# xinit startup script that launches the Python app directly
+sol_xinit_script:    "xinit.entropy.ai.sh"
+
+# Allocate 6 GB of RAM for the /storage tmpfs — entropy.mov can be ~3–5 GB
+sol_storage_size_mb: 6144
+
+# Display rotation sent to xrandr inside the xinit script
+# Entropy is horizontal (landscape) — no rotation needed.
+# NOTE: the existing xinit.entropy.ai.sh contains "--rotate left"; that line
+# should be removed if the physical TV is already in landscape orientation.
+sol_display_rotate: "normal"
+
+# Screen resolution for reference (Sony TV, HD Ready)
+sol_display_resolution: "1360x768"

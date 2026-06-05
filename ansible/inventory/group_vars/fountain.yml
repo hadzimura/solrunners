@@ -1,0 +1,22 @@
+# group_vars/fountain.yml — variables specific to the Fountain (RPi 3) node
+#
+# Fountain is audio-only: no display server is needed.
+# Audio playback uses system command (aplay / ffplay) — no pyglet buffer issues.
+
+# RPi hostname — set by Ansible during setup
+sol_hostname: "fountain"
+
+# Media subfolder name inside sol_repo_path/media/
+sol_media_subdir: "fountain"
+
+# Systemd service file (from configurations/systemd/) to deploy
+sol_service_name: "sol.fountain.ai"
+
+# No tmpfs storage needed — audio files are small; read directly from disk
+sol_storage_size_mb: 512
+
+# Audio backend preference order (first found wins at runtime in Fountain.ai.py)
+# aplay comes from alsa-utils; ffplay from ffmpeg
+sol_audio_packages:
+  - alsa-utils
+  - ffmpeg

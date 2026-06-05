@@ -1,0 +1,48 @@
+---
+# roles/fountain/tasks/main.yml
+# Configures the Fountain node: audio-only, RPi 3, no display stack.
+#
+# Fountain.ai.py uses subprocess to call aplay (alsa-utils) or ffplay (ffmpeg)
+# for audio playback — no pyglet, no X11 required.  It plays fountain.wav on
+# a random loop with optional "talking head" sample overlays.
+
+# ── Audio system packages ─────────────────────────────────────────────────────
+- name: Install audio packages for Fountain
+  ansible.builtin.apt:
+    name: "{{ sol_audio_packages }}"   # defined in group_vars/fountain.yml
+    state: present
+  become: true
+
+# ── ALSA default audio device ─────────────────────────────────────────────────
+# On RPi 3 the default output is the 3.5 mm jack (card 0, device 0).
+# If a USB audio device is attached, adjust the card number here.
+- name: Set ALSA default audio device to 3.5mm jack
+  ansible.builtin.copy:
+    dest: /etc/asound.conf
+    content: |
+      # ALSA global configuration — Spring of Life / Fountain node
+      # Forces output to the built-in 3.5 mm audio jack on RPi 3.
+      defaults.pcm.card 0
+      defaults.pcm.device 0
+      defaults.ctl.card 0
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+
+# ── systemd service ───────────────────────────────────────────────────────────
+- name: Copy sol.fountain.ai.service to systemd
+  ansible.builtin.copy:
+    src:        "{{ sol_repo_path }}/configurations/systemd/sol.fountain.ai.service"
+    dest:       /etc/systemd/system/sol.fountain.ai.service
+    remote_src: yes
+  become: true
+  notify: Reload systemd and restart fountain
+
+- name: Enable and start Fountain service
+  ansible.builtin.systemd:
+    name:          sol.fountain.ai.service
+    enabled:       true
+    state:         started
+    daemon_reload: true
+  become: true

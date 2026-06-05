@@ -1,0 +1,9 @@
+---
+# roles/entropy/handlers/main.yml
+
+- name: Reload systemd and restart entropy
+  ansible.builtin.systemd:
+    name:          sol.entropy.ai.service
+    daemon_reload: true
+    state:         restarted
+  become: true
