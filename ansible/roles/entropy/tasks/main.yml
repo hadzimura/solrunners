@@ -1,0 +1,32 @@
+---
+# roles/entropy/tasks/main.yml
+# Configures the Entropy node: RPi 5, 8 GB RAM, 128 GB M.2 SSD.
+# Plays a 16:9 horizontal video with per-frame OpenCV processing + pyglet audio.
+# Display: minimal X11 via xinit (bare X server, no window manager).
+
+# ── Make xinit script executable ─────────────────────────────────────────────
+- name: Make xinit.entropy.ai.sh executable
+  ansible.builtin.file:
+    path: "{{ sol_repo_path }}/configurations/xinit.entropy.ai.sh"
+    mode: "0755"
+
+# ── systemd service ───────────────────────────────────────────────────────────
+# sol.entropy.ai.service calls:
+#   /usr/bin/xinit configurations/xinit.entropy.ai.sh -- :0 -nocursor
+# xinit.entropy.ai.sh then calls:
+#   python Entro.ai.py --system rpi --fullscreen
+- name: Copy sol.entropy.ai.service to systemd
+  ansible.builtin.copy:
+    src:        "{{ sol_repo_path }}/configurations/systemd/sol.entropy.ai.service"
+    dest:       /etc/systemd/system/sol.entropy.ai.service
+    remote_src: yes
+  become: true
+  notify: Reload systemd and restart entropy
+
+- name: Enable and start Entropy service
+  ansible.builtin.systemd:
+    name:          sol.entropy.ai.service
+    enabled:       true
+    state:         started
+    daemon_reload: true
+  become: true

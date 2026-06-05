@@ -1,0 +1,10 @@
+# Optional macOS packages for local testing
+# Install only what your setup needs.
+
+ffmpeg
+pkg-config
+
+# Notes:
+# - ffmpeg enables ffprobe/ffplay utilities used by Fountain.ai.py fallbacks.
+# - pkg-config can help when building native wheels on non-standard Python setups.
+

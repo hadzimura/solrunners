@@ -1,0 +1,21 @@
+[project]
+name = "solrunners"
+version = "0.1.0"
+# Python 3.11 is the proven baseline on all RPi nodes and works on macOS too.
+# pyglet 1.5.27 is the only confirmed-working version with the current AV-sync
+# code in Entro.py and Heads.py.  Do NOT bump pyglet without full on-device testing.
+requires-python = ">=3.11"
+dependencies = [
+    # numpy 2.x has no armv7l (32-bit) binary wheel and building from source
+    # takes 20+ min and exhausts disk. On armv7l use system python3-numpy (apt).
+    "numpy ; platform_machine != 'armv7l'",
+    # pyglet and opencv have no armv7l wheels either.
+    "pyglet==1.5.27 ; platform_machine != 'armv7l'",
+    "opencv-contrib-python ; platform_machine != 'armv7l'",
+    "ruamel.yaml",
+    "scipy ; platform_machine != 'armv7l'",
+    # Ansible is only needed on the control machine, not on RPi target nodes.
+    # On armv7l it also pulls cffi which requires libffi-dev to compile.
+    "ansible-core ; platform_machine != 'armv7l'",
+]
+]

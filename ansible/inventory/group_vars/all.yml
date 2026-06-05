@@ -1,0 +1,44 @@
+# group_vars/all.yml — variables shared by every RPi node
+#
+# Sensitive values (ssh password, become password) are NOT stored here.
+# They are supplied interactively by deployment.sh via --ask-pass /
+# --ask-become-pass flags.
+
+# ── Remote user ──────────────────────────────────────────────────────────────
+ansible_user: zero
+
+# Privilege escalation
+ansible_become: true
+ansible_become_method: sudo
+
+# ── Repository & application paths ───────────────────────────────────────────
+sol_repo_url:   "https://github.com/hadzimura/solrunners.git"
+sol_repo_path:  "/home/zero/solrunners"
+sol_venv_path:  "/home/zero/solrunners/.venv"
+sol_user:       "zero"
+sol_group:      "zero"
+
+# ── uv — Python package/venv manager ─────────────────────────────────────────
+# uv is installed to ~/.local/bin/uv on each RPi via its official installer.
+# It manages the venv and installs Python dependencies much faster than pip.
+sol_uv_bin:      "/home/zero/.local/bin/uv"
+
+# Python version uv will use for the RPi venv.
+# Use the system Python (python3) so uv doesn't download its own interpreter.
+# Raspberry Pi OS ships python3.13 as of 2025; this resolves to whatever
+# /usr/bin/python3 points to on each node.
+sol_python_version: "/usr/bin/python3"
+
+# Which dependency file to install into the venv.
+# Both dev (Mac) and RPi now use the same pyproject.toml + uv.lock.
+# "pyproject"    → uv sync (canonical, uses the lock file — preferred)
+# "requirements" → uv pip install -r requirements.txt (fallback if uv sync fails)
+sol_dep_mode: "pyproject"
+sol_requirements_file: "{{ sol_repo_path }}/requirements.txt"
+
+# ── Storage (tmpfs) ───────────────────────────────────────────────────────────
+sol_storage_path:     "/storage"
+sol_storage_size_mb:  4096
+
+# ── Git branch to deploy ──────────────────────────────────────────────────────
+sol_git_branch: "main"

@@ -1,0 +1,16 @@
+---
+# playbooks/setup-heads.yml
+# Full setup for the Heads node (RPi 5, 8 GB RAM, 16 GB SD card).
+# Run this after a fresh Raspberry Pi OS Lite installation.
+#
+# Usage (via deployment.sh or directly):
+#   ansible-playbook playbooks/setup-heads.yml --ask-pass --ask-become-pass
+
+- name: "Springs of Life — Heads node setup"
+  hosts: heads
+  gather_facts: true
+
+  roles:
+    - role: common     # base OS: packages, git clone, venv, tmpfs
+    - role: display    # minimal X11 stack (xserver-xorg-core, xinit, libgtk-3)
+    - role: heads      # systemd service deployment

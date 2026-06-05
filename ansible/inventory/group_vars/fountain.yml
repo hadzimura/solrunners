@@ -1,0 +1,70 @@
+# group_vars/fountain.yml — variables specific to the Fountain node
+#
+# Fountain is audio-only (no display server needed).
+# Phase 1: WAV loop with static L/R gain.
+# Phase 2: HCY-SRF05 ultrasonic sensors → dynamic per-channel volume.
+
+# RPi hostname set by Ansible
+sol_hostname: "fountain"
+
+# Media subfolder inside sol_repo_path/media/
+sol_media_subdir: "fountain"
+
+# systemd service file deployed by the fountain role
+sol_service_name: "sol.fountain.service"
+
+# tmpfs size for /storage — audio files are small; 512 MB is generous
+sol_storage_size_mb: 512
+
+# Skip dist-upgrade — this node has a 4 GB SD card; the full kernel/firmware
+# upgrade (367 MB) exceeds available space. Use a larger card to re-enable.
+sol_skip_upgrade: true
+
+# Git branch override (remove once merged to main)
+sol_git_branch: "2.0.26.ai"
+
+# Skip uv sync from pyproject.toml — ruamel-yaml has no armv7l wheel and builds
+# from source (takes hours, drops SSH). The fountain role installs sounddevice +
+# soundfile directly via uv pip after system packages are in place.
+sol_dep_mode: "skip"
+
+# ── Audio ────────────────────────────────────────────────────────────────────
+# System packages installed by the fountain role
+sol_audio_packages:
+  - alsa-utils          # aplay (used as fallback / manual testing)
+  - libportaudio2       # PortAudio runtime — required by sounddevice
+  - portaudio19-dev     # PortAudio headers — needed to build sounddevice wheel
+  - libsndfile1         # libsndfile runtime — required by soundfile (Python pkg)
+  - python3-numpy       # numpy for armv7l: no binary wheel on PyPI for numpy 2.x;
+                        # system package is numpy 1.24 which works fine with sounddevice
+  - python3-cffi        # cffi for armv7l: sounddevice needs cffi; system package avoids
+                        # compiling cffi 2.0 from source (requires libffi-dev, very slow)
+
+# Python packages installed into the venv by the fountain role (after system pkgs).
+# sounddevice is pinned to 0.4.x: the 0.5.x series switched from ctypes to cffi,
+# which requires compiling cffi from source on armv7l (no binary wheel). 0.4.6
+# uses ctypes and only needs numpy (already supplied by python3-numpy apt package).
+# soundfile has a pure-Python wheel and installs instantly.
+sol_fountain_pip_packages:
+  - "sounddevice==0.4.6"  # ctypes-based: no cffi build dep; numpy via system pkg
+  - soundfile              # WAV/FLAC loader → numpy array
+
+# ── Phase 1 static gain (passed as ExecStart args in sol.fountain.service) ───
+# Adjust these if the speaker balance needs correcting for the installation.
+# Values: 0.0 (mute) – 1.0 (full). Both default to full.
+sol_gain_left:  1.0
+sol_gain_right: 1.0
+
+# ── Phase 2 — SRF05 GPIO pins (not used yet; reserved for sensor integration) ─
+# Sensor A covers North; Sensor B covers South (or West — configurable in situ)
+# Uses RPi GPIO numbering (BCM).
+# sol_pir_a_trig: 23   # GPIO 23, pin 16
+# sol_pir_a_echo: 24   # GPIO 24, pin 18  (via 1kΩ/2kΩ voltage divider!)
+# sol_pir_b_trig: 25   # GPIO 25, pin 22
+# sol_pir_b_echo: 8    # GPIO 8,  pin 24  (via 1kΩ/2kΩ voltage divider!)
+# sol_dist_min_cm: 20  # closer than this → full volume (gain = 1.0)
+# sol_dist_max_cm: 200 # farther than this → minimum ambient volume
+# sol_dist_ambient: 0.1 # gain floor when spectator detected but far away
+
+# Expected Python version string in the venv (used for stale-venv detection)
+sol_venv_python_check: "3.11"

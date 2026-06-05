@@ -1,0 +1,24 @@
+# group_vars/heads.yml — variables specific to the Heads (RPi 5, 16 GB SD) node
+#
+# Heads plays a 10:16 vertical video with per-frame OpenCV processing,
+# face-detection overlays, and dynamic audio sample injection.
+# Display: minimal X11 via xinit with xrandr left-rotation for portrait output.
+# SD card is the boot/app medium; large media files loaded into tmpfs at boot.
+
+sol_hostname: "heads"         # RPi hostname set by Ansible at setup time
+sol_media_subdir:    "heads"
+sol_service_name:    "sol.heads.ai"
+
+# xinit startup script that launches the Python app directly
+sol_xinit_script:    "xinit.heads.ai.sh"
+
+# Allocate 6 GB for /storage — silent_heads.mov + samples + PNGs can be large.
+# With 8 GB RAM on RPi 5, 6 GB tmpfs leaves ~2 GB for OS + Python process.
+# Monitor with: free -h  and  df -h /storage  during playback.
+sol_storage_size_mb: 6144
+
+# Display rotation (portrait: physical display rotated 90°)
+sol_display_rotate:  "left"
+
+# Screen resolution for reference (EIZO 24", portrait)
+sol_display_resolution: "1050x1680"

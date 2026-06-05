@@ -1,0 +1,64 @@
+---
+# roles/tate/tasks/main.yml
+# Configures the Tate node: random MP4 loop via mpv DRM/KMS, no Xorg.
+#
+# Stack:
+#   mpv (system)  ← libmpv renders video directly to the Linux framebuffer
+#   python-mpv    ← ctypes wrapper, installed into the project venv by uv
+#   tate.py       ← application logic (random loop, ESC quit)
+#   sol.tate.service ← systemd unit that owns the process lifecycle
+
+# ── System packages ───────────────────────────────────────────────────────────
+# mpv      — the player binary AND the shared libmpv.so used by python-mpv
+# libmpv-dev — provides the libmpv headers; the .so symlink is also here,
+#              which python-mpv's ctypes loader requires to find the library
+# python3-dev — C headers needed by any native Python extensions in the venv
+- name: Install mpv and libmpv packages
+  ansible.builtin.apt:
+    name:
+      - mpv
+      - libmpv-dev    # supplies libmpv.so symlink for python-mpv ctypes loader
+      - python3-dev   # native extension headers (precautionary)
+    state: present
+  become: true
+
+# ── python-mpv in venv ────────────────────────────────────────────────────────
+# python-mpv is specific to tate; we install it directly into the project venv
+# with uv pip rather than adding it to pyproject.toml (which would affect all
+# other nodes that don't have libmpv installed).
+- name: Install python-mpv into project venv
+  ansible.builtin.command:
+    cmd: >
+      {{ sol_uv_bin }} pip install
+      --python {{ sol_venv_path }}/bin/python
+      python-mpv
+  become: false
+  environment:
+    HOME: "/home/{{ sol_user }}"
+  changed_when: false   # uv pip install is idempotent; suppress false changes
+
+# ── Make tate.py executable ───────────────────────────────────────────────────
+- name: Make tate.py executable
+  ansible.builtin.file:
+    path: "{{ sol_repo_path }}/tate.py"
+    mode: "0755"
+  become: false
+
+# ── systemd service ───────────────────────────────────────────────────────────
+# sol.tate.service launches tate.py directly (no xinit) — mpv uses DRM/KMS
+# and does not need an X server.
+- name: Copy sol.tate.service to systemd
+  ansible.builtin.copy:
+    src:        "{{ sol_repo_path }}/configurations/systemd/sol.tate.service"
+    dest:       /etc/systemd/system/sol.tate.service
+    remote_src: yes
+  become: true
+  notify: Reload systemd and restart tate
+
+- name: Enable and start Tate service
+  ansible.builtin.systemd:
+    name:          sol.tate.service
+    enabled:       true
+    state:         started
+    daemon_reload: true
+  become: true

@@ -1,0 +1,73 @@
+---
+# playbooks/setup-boot-logo.yml
+# Deploys the project boot splash to ALL nodes.
+# Run this whenever media/boot_logo.png is updated or on any new node.
+#
+# The boot logo tasks live in the common role (applied automatically during
+# full setup), but this playbook lets you push logo changes independently
+# without re-running the full node setup.
+#
+# Usage:
+#   ansible-playbook playbooks/setup-boot-logo.yml --ask-pass --ask-become-pass
+#   ansible-playbook playbooks/setup-boot-logo.yml --limit tate-node --ask-pass --ask-become-pass
+
+- name: "Springs of Life — Boot splash update (all nodes)"
+  hosts: runners
+  gather_facts: true
+
+  tasks:
+    # ── Plymouth package guard ──────────────────────────────────────────────
+    - name: Install Plymouth splash packages
+      ansible.builtin.apt:
+        name:
+          - plymouth
+          - rpd-plym-splash
+          - plymouth-themes
+        state: present
+      become: true
+
+    - name: Set Plymouth default theme to pix
+      ansible.builtin.command:
+        cmd: plymouth-set-default-theme pix
+      become: true
+      changed_when: false
+
+    # ── Copy logo ───────────────────────────────────────────────────────────
+    - name: Copy project boot logo to Plymouth pix theme
+      ansible.builtin.copy:
+        src:   "{{ playbook_dir }}/../../media/boot_logo.png"   # from control node
+        dest:  /usr/share/plymouth/themes/pix/splash.png
+        owner: root
+        group: root
+        mode:  "0644"
+      become: true
+      notify: Rebuild initramfs
+
+    # ── Kernel parameters ───────────────────────────────────────────────────
+    - name: Ensure silent-splash kernel parameters are present in cmdline.txt
+      ansible.builtin.shell: |
+        CMDFILE=/boot/firmware/cmdline.txt
+        CMDLINE=$(cat "$CMDFILE")
+        CHANGED=0
+        for PARAM in quiet splash "loglevel=3" "logo.nologo" \
+                     "vt.global_cursor_default=0" \
+                     "plymouth.ignore-serial-consoles"; do
+          if ! echo "$CMDLINE" | grep -qw "$PARAM"; then
+            CMDLINE="$CMDLINE $PARAM"
+            CHANGED=1
+          fi
+        done
+        if [ "$CHANGED" -eq 1 ]; then
+          echo "$CMDLINE" > "$CMDFILE"
+          echo "changed"
+        fi
+      register:      _cmdline_result
+      changed_when:  "'changed' in _cmdline_result.stdout"
+      become:        true
+
+  handlers:
+    - name: Rebuild initramfs
+      ansible.builtin.command:
+        cmd: update-initramfs -u
+      become: true
+      changed_when: true

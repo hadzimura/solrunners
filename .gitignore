@@ -1,5 +1,6 @@
-media
+media/
 source
 ssh
 .idea
 .venv
+.DS_Store
