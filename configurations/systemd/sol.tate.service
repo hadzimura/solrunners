@@ -1,0 +1,28 @@
+[Unit]
+Description=Springs of Life — Tate node (mpv DRM video loop)
+# Start after the storage.service has copied media to /storage.
+After=storage.service network.target
+Requires=storage.service
+
+[Service]
+Type=simple
+User=zero
+
+WorkingDirectory=/home/zero/solrunners
+
+# Unbuffered Python output so journalctl shows print() in real time.
+Environment=PYTHONUNBUFFERED=1
+
+# Run directly from the venv — no xinit needed, mpv uses DRM/KMS.
+ExecStart=/home/zero/solrunners/.venv/bin/python /home/zero/solrunners/tate.py
+
+# Restart automatically after crashes; ESC / SIGTERM exit cleanly with code 0
+# so the service won't restart on intentional quits.
+Restart=on-failure
+RestartSec=3
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

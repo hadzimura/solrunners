@@ -1,0 +1,229 @@
+---
+# roles/common/tasks/main.yml
+# Tasks run on EVERY RPi node regardless of role.
+# Establishes base OS state: hostname, packages, git repo, uv, venv, tmpfs.
+
+# ── 1. Set hostname ───────────────────────────────────────────────────────────
+# Each node gets a hostname matching its artistic role (fountain/entropy/heads).
+# hostnamectl writes /etc/hostname and informs the running kernel immediately.
+- name: Set hostname to {{ sol_hostname }}
+  ansible.builtin.hostname:
+    name: "{{ sol_hostname }}"
+  become: true
+
+- name: Ensure /etc/hostname contains the correct name
+  ansible.builtin.copy:
+    content: "{{ sol_hostname }}\n"
+    dest: /etc/hostname
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+
+- name: Update /etc/hosts with new hostname (127.0.1.1 entry)
+  ansible.builtin.lineinfile:
+    path:   /etc/hosts
+    regexp: "^127\\.0\\.1\\.1"
+    line:   "127.0.1.1\t{{ sol_hostname }}"
+    state:  present
+  become: true
+
+# ── 2. Boot splash (Plymouth) ────────────────────────────────────────────────
+# All nodes show the project boot logo instead of the default Raspberry Pi logo.
+# Plymouth is the boot splash daemon built into Raspberry Pi OS.
+# We use the bundled "pix" theme (full-screen PNG), replacing its splash image.
+
+- name: Install Plymouth splash packages
+  ansible.builtin.apt:
+    name:
+      - plymouth            # boot splash daemon
+      - rpd-plym-splash     # RPi Desktop pix theme — full-screen PNG splash
+      - plymouth-themes     # base theme support (dependency of rpd-plym-splash)
+    state: present
+  become: true
+
+- name: Set Plymouth default theme to pix
+  ansible.builtin.command:
+    cmd: plymouth-set-default-theme pix
+  become: true
+  changed_when: false    # command is idempotent by nature; don't mark changed
+
+- name: Copy project boot logo to Plymouth pix theme
+  ansible.builtin.copy:
+    src:   "{{ playbook_dir }}/../../media/boot_logo.png"   # from control node
+    dest:  /usr/share/plymouth/themes/pix/splash.png
+    owner: root
+    group: root
+    mode:  "0644"
+  become: true
+  notify: Rebuild initramfs
+
+# Ensure the kernel command line is configured for a silent graphical boot.
+# /boot/firmware/cmdline.txt is a single line — we append any missing flags.
+# Flags: quiet (no verbose messages), splash (enable Plymouth), loglevel=3
+# (only errors), logo.nologo (suppress Tux/RPi logo), vt.global_cursor_default=0
+# (no blinking cursor), plymouth.ignore-serial-consoles (TTY stability).
+- name: Ensure silent-splash kernel parameters are present in cmdline.txt
+  ansible.builtin.shell: |
+    CMDFILE=/boot/firmware/cmdline.txt
+    CMDLINE=$(cat "$CMDFILE")
+    CHANGED=0
+    for PARAM in quiet splash "loglevel=3" "logo.nologo" \
+                 "vt.global_cursor_default=0" \
+                 "plymouth.ignore-serial-consoles"; do
+      if ! echo "$CMDLINE" | grep -qw "$PARAM"; then
+        CMDLINE="$CMDLINE $PARAM"
+        CHANGED=1
+      fi
+    done
+    if [ "$CHANGED" -eq 1 ]; then
+      echo "$CMDLINE" > "$CMDFILE"
+      echo "changed"
+    fi
+  register:      _cmdline_result
+  changed_when:  "'changed' in _cmdline_result.stdout"
+  become:        true
+
+# ── 2b. System update ─────────────────────────────────────────────────────────
+- name: Update apt cache and upgrade all packages
+  ansible.builtin.apt:
+    update_cache: yes
+    upgrade: dist
+    cache_valid_time: 3600
+  become: true
+
+# ── 3. Base packages ──────────────────────────────────────────────────────────
+- name: Install base system packages
+  ansible.builtin.apt:
+    name:
+      - git
+      - python3
+      - python3-dev       # headers needed by some native Python extensions
+      - curl              # used to download the uv installer
+      - rsync             # used by Ansible synchronize for media sync
+      - htop
+      - mc
+    state: present
+  become: true
+
+# ── 4. Install uv ─────────────────────────────────────────────────────────────
+# uv is a fast Rust-based Python package/venv manager from Astral.
+# The official installer places the binary at ~/.local/bin/uv.
+# We use 'creates:' for idempotency: skip if the binary already exists.
+- name: Install uv via official installer script
+  ansible.builtin.shell:
+    cmd: "curl -LsSf https://astral.sh/uv/install.sh | sh"
+    creates: "{{ sol_uv_bin }}"
+  become: false
+  environment:
+    HOME: "/home/{{ sol_user }}"
+
+- name: Ensure ~/.local/bin is in PATH for subsequent tasks
+  ansible.builtin.lineinfile:
+    path:   "/home/{{ sol_user }}/.profile"
+    line:   'export PATH="$HOME/.local/bin:$PATH"'
+    regexp: 'HOME/.local/bin'
+    state:  present
+    create: yes
+  become: false
+
+# ── 5. Clone or update the solrunners repository ─────────────────────────────
+- name: Ensure repository directory exists
+  ansible.builtin.file:
+    path:  "{{ sol_repo_path }}"
+    state: directory
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0755"
+
+- name: Clone or pull solrunners repository
+  ansible.builtin.git:
+    repo:    "{{ sol_repo_url }}"
+    dest:    "{{ sol_repo_path }}"
+    version: "{{ sol_git_branch }}"
+    force:   yes
+  become: false
+
+# ── 6. Python virtual environment via uv ─────────────────────────────────────
+# uv creates a lightweight venv and can download the target Python version
+# automatically — no need to pre-install python3.13 from system packages.
+- name: Create Python {{ sol_python_version }} venv with uv
+  ansible.builtin.command:
+    cmd: "{{ sol_uv_bin }} venv --python {{ sol_python_version }} {{ sol_venv_path }}"
+    creates: "{{ sol_venv_path }}/bin/activate"
+  become: false
+
+# ── 7. Install Python dependencies ───────────────────────────────────────────
+# Two modes controlled by sol_dep_mode in group_vars/all.yml:
+#   "requirements" → uv pip install -r requirements.txt  (proven-stable baseline)
+#   "pyproject"    → uv sync (uses pyproject.toml + uv.lock)
+- name: Install Python deps via uv pip (requirements.txt mode)
+  ansible.builtin.command:
+    cmd: "{{ sol_uv_bin }} pip install --python {{ sol_venv_path }}/bin/python -r {{ sol_requirements_file }}"
+  become: false
+  when: sol_dep_mode == "requirements"
+
+- name: Install Python deps via uv sync (pyproject.toml mode)
+  ansible.builtin.command:
+    cmd: "{{ sol_uv_bin }} sync --project {{ sol_repo_path }}"
+  become: false
+  environment:
+    UV_PROJECT_ENVIRONMENT: "{{ sol_venv_path }}"
+  when: sol_dep_mode == "pyproject"
+
+# ── 8. Deploy .bashrc ─────────────────────────────────────────────────────────
+# The template activates the venv for ALL interactive logins (SSH, TTY5, etc).
+# It does NOT call startx or launch any application — the systemd service owns
+# the app lifecycle and runs it on VT1 via xinit at boot.
+- name: Deploy .bashrc with venv auto-activation
+  ansible.builtin.template:
+    src:   bashrc.j2
+    dest:  "/home/{{ sol_user }}/.bashrc"
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0644"
+
+# ── 9. /storage tmpfs ─────────────────────────────────────────────────────────
+- name: Create /storage mount point
+  ansible.builtin.file:
+    path:  "{{ sol_storage_path }}"
+    state: directory
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0755"
+  become: true
+
+- name: Add /storage tmpfs to /etc/fstab
+  ansible.builtin.lineinfile:
+    path:   /etc/fstab
+    line:   "tmpfs {{ sol_storage_path }} tmpfs defaults,noatime,size={{ sol_storage_size_mb }}m 0 0"
+    regexp: "^tmpfs {{ sol_storage_path }}"
+    state:  present
+  become: true
+
+- name: Mount /storage tmpfs (if not already mounted)
+  ansible.posix.mount:
+    path:   "{{ sol_storage_path }}"
+    src:    tmpfs
+    fstype: tmpfs
+    opts:   "defaults,noatime,size={{ sol_storage_size_mb }}m"
+    state:  mounted
+  become: true
+
+# ── 10. storage.service — copies media → /storage at boot ─────────────────────
+- name: Copy storage.service to systemd
+  ansible.builtin.copy:
+    src:        "{{ sol_repo_path }}/configurations/systemd/storage.service"
+    dest:       /etc/systemd/system/storage.service
+    remote_src: yes
+  become: true
+  notify: Reload systemd
+
+- name: Enable and start storage service
+  ansible.builtin.systemd:
+    name:          storage.service
+    enabled:       true
+    state:         started
+    daemon_reload: true
+  become: true
+

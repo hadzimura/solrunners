@@ -67,6 +67,7 @@ PLAYBOOKS=(
     "setup-fountain    — Full setup of Fountain node (RPi 3, audio-only)"
     "setup-entropy     — Full setup of Entropy node (RPi 5, M.2 SSD, 16:9 video)"
     "setup-heads       — Full setup of Heads node (RPi 5, SD card, 10:16 video)"
+    "setup-tate        — Full setup of Tate node (RPi, random MP4 loop, DRM/KMS)"
     "deploy-media      — Sync media files from this Mac to a target RPi"
     "restart-services  — Pull latest code + restart service on a target RPi"
     "quit              — Exit without doing anything"
@@ -76,7 +77,7 @@ PS3=$'\nEnter number: '
 select choice in "${PLAYBOOKS[@]}"; do
     PLAYBOOK_KEY="${choice%% *}"   # extract first word (the key before the dash)
     case "${PLAYBOOK_KEY}" in
-        setup-fountain|setup-entropy|setup-heads|deploy-media|restart-services)
+        setup-fountain|setup-entropy|setup-heads|setup-tate|deploy-media|restart-services)
             PLAYBOOK="playbooks/${PLAYBOOK_KEY}.yml"
             ok "Selected playbook: ${PLAYBOOK}"
             break ;;
@@ -99,6 +100,7 @@ if [[ "${PLAYBOOK_KEY}" == "deploy-media" || "${PLAYBOOK_KEY}" == "restart-servi
 
     NODES=(
         "entropy-node    — RPi 5 @ 192.168.0.190 (Entropy)"
+        "tate-node       — RPi   @ 192.168.0.192 (Tate)"
         "heads-node      — RPi 5 @ TBD           (Heads)"
         "fountain-node   — RPi 3 @ TBD           (Fountain)"
         "all             — All nodes in the inventory"
@@ -108,7 +110,7 @@ if [[ "${PLAYBOOK_KEY}" == "deploy-media" || "${PLAYBOOK_KEY}" == "restart-servi
     select node_choice in "${NODES[@]}"; do
         NODE_KEY="${node_choice%% *}"
         case "${NODE_KEY}" in
-            entropy-node|heads-node|fountain-node|all)
+            entropy-node|tate-node|heads-node|fountain-node|all)
                 if [[ "${NODE_KEY}" != "all" ]]; then
                     LIMIT_FLAG="--limit ${NODE_KEY}"
                 fi

@@ -1,0 +1,18 @@
+---
+# playbooks/setup-tate.yml
+# Full setup for the Tate node (Raspberry Pi, user: zer).
+# Run this after a fresh Raspberry Pi OS Lite installation.
+#
+# The Tate node plays short MP4 clips in a random loop via mpv DRM/KMS.
+# No Xorg is required — mpv renders directly to the Linux framebuffer.
+#
+# Usage:
+#   ansible-playbook playbooks/setup-tate.yml --ask-pass --ask-become-pass
+
+- name: "Springs of Life — Tate node setup"
+  hosts: tate
+  gather_facts: true
+
+  roles:
+    - role: common    # base OS: hostname, packages, git clone, uv, venv, tmpfs
+    - role: tate      # mpv install, python-mpv in venv, systemd service

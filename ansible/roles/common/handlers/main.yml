@@ -1,0 +1,16 @@
+---
+# roles/common/handlers/main.yml
+# Handlers are triggered by 'notify' in tasks and run once at the end of a play.
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+
+# Rebuilds the initramfs so Plymouth picks up the new splash image and theme.
+# Triggered whenever the boot logo or Plymouth theme changes.
+- name: Rebuild initramfs
+  ansible.builtin.command:
+    cmd: update-initramfs -u
+  become: true
+  changed_when: true
