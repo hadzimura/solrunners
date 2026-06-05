@@ -173,11 +173,12 @@
     path:  "{{ sol_venv_path }}"
     state: absent
   become: false
-  # Remove when the venv exists but its Python major.minor doesn't match /usr/bin/python3.
-  # 'python3' on the system resolves to 3.13; if the venv reports something older
-  # (e.g. 3.11 downloaded by uv), it needs to be recreated.
+  # Remove if: venv doesn't exist yet (rc!=0), or its Python is not system Python.
+  # A bad venv has its binary pointing into uv's managed cache (/root/.local or
+  # /home/zero/.local/share/uv) rather than /usr/bin — this happens when uv runs
+  # under root's HOME despite become: false (pipelining side-effect).
   when: >
-    _venv_python_ver.rc == 0 and
+    _venv_python_ver.rc != 0 or
     '3.13' not in _venv_python_ver.stdout
 
 - name: Create venv using system Python ({{ sol_python_version }})
@@ -185,6 +186,8 @@
     cmd: "{{ sol_uv_bin }} venv --python {{ sol_python_version }} {{ sol_venv_path }}"
     creates: "{{ sol_venv_path }}/bin/activate"
   become: false
+  environment:
+    HOME: "/home/{{ sol_user }}"   # prevent uv from using /root/.local under sudo pipelining
 # ── 7. Install Python dependencies ───────────────────────────────────────────
 # Two modes controlled by sol_dep_mode in group_vars/all.yml:
 #   "requirements" → uv pip install -r requirements.txt  (proven-stable baseline)
@@ -193,6 +196,8 @@
   ansible.builtin.command:
     cmd: "{{ sol_uv_bin }} pip install --python {{ sol_venv_path }}/bin/python -r {{ sol_requirements_file }}"
   become: false
+  environment:
+    HOME: "/home/{{ sol_user }}"
   when: sol_dep_mode == "requirements"
 
 - name: Install Python deps via uv sync (pyproject.toml mode)
@@ -200,6 +205,7 @@
     cmd: "{{ sol_uv_bin }} sync --project {{ sol_repo_path }}"
   become: false
   environment:
+    HOME:                  "/home/{{ sol_user }}"
     UV_PROJECT_ENVIRONMENT: "{{ sol_venv_path }}"
   when: sol_dep_mode == "pyproject"
 

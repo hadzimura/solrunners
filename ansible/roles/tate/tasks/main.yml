@@ -33,6 +33,8 @@
       --python {{ sol_venv_path }}/bin/python
       python-mpv
   become: false
+  environment:
+    HOME: "/home/{{ sol_user }}"
   changed_when: false   # uv pip install is idempotent; suppress false changes
 
 # ── Make tate.py executable ───────────────────────────────────────────────────
