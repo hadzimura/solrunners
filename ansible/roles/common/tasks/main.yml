@@ -233,7 +233,51 @@
     mode:  "0644"
   become: false
 
-# ── 9. /storage tmpfs ─────────────────────────────────────────────────────────
+# ── 9. SD card wear reduction ─────────────────────────────────────────────────
+# SD card longevity strategy — three complementary layers:
+#
+# Layer A — noatime on all filesystems (this section)
+#   Every filesystem read normally triggers an atime (access time) metadata
+#   write-back on the SD card. On a gallery node that reads the same media
+#   files hundreds of times per day, this produces enormous unnecessary write
+#   amplification. noatime disables those write-backs.
+#
+#   • Root partition (/): RPi OS already sets 'noatime' by default in fstab.
+#   • /storage tmpfs: noatime is set in the fstab line added below (no-op for
+#     RAM, but consistent policy).
+#   • /boot/firmware: vfat — NOT set by default; we add it here so that the
+#     boot partition is also protected after the next remount.
+#
+# Layer B — tmpfs ramdisk for media (section 9b below)
+#   Media files are copied to /storage (tmpfs in RAM) at boot by storage.service.
+#   During playback mpv reads ONLY from RAM — the SD card receives zero reads.
+#   This makes Layer A redundant for media reads but it still protects the OS
+#   partition from other read-triggered atime writes (logs, apt, etc.).
+#
+# Layer C — noatime on kernel cmdline (complementary)
+#   Adding 'rootflags=noatime' to cmdline.txt ensures noatime is applied even
+#   before /etc/fstab is parsed (early boot). This is belt-and-suspenders.
+
+- name: Ensure /boot/firmware is mounted with noatime (SD card wear reduction)
+  ansible.builtin.replace:
+    path:    /etc/fstab
+    regexp:  '^(PARTUUID=\S+\s+/boot/firmware\s+vfat\s+)(defaults)(\s+.*)$'
+    replace: '\1defaults,noatime\3'
+  become: true
+
+- name: Add rootflags=noatime to kernel cmdline (early-boot SD protection)
+  ansible.builtin.shell: |
+    CMDFILE=/boot/firmware/cmdline.txt
+    CMDLINE=$(cat "$CMDFILE")
+    if ! echo "$CMDLINE" | grep -qw "rootflags=noatime"; then
+      echo "$CMDLINE rootflags=noatime" > "$CMDFILE"
+      echo "changed"
+    fi
+  register:     _noatime_result
+  changed_when: "'changed' in _noatime_result.stdout"
+  become:       true
+
+# ── 9b. /storage tmpfs ────────────────────────────────────────────────────────
 - name: Create /storage mount point
   ansible.builtin.file:
     path:  "{{ sol_storage_path }}"

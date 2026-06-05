@@ -127,7 +127,43 @@ The tate Ansible role installs it explicitly into the venv after mpv is present.
 
 ---
 
-## Boot splash (all nodes)
+## SD card wear reduction
+
+Raspberry Pi nodes in a gallery installation run 24/7, reading and writing the
+SD card continuously. Without mitigation this can kill an SD card in weeks.
+
+### Why atime is harmful
+
+Every filesystem read normally triggers an **access time (atime)** metadata
+write-back on the underlying block device. A node playing 35 clips on a loop
+reads the same files hundreds of times per day — generating thousands of
+unnecessary SD write operations per hour from atime alone.
+
+### Three-layer protection (all applied by the Ansible common role)
+
+| Layer | Mechanism | Effect |
+|-------|-----------|--------|
+| **A — noatime** | `/boot/firmware` fstab entry gets `noatime`; root already has it by default; `rootflags=noatime` added to `cmdline.txt` for early boot | Eliminates atime write-backs on all partitions |
+| **B — tmpfs ramdisk** | `storage.service` copies media to `/storage` (tmpfs in RAM) at boot; mpv reads from RAM only | **Zero SD reads during playback** — makes Layer A redundant for media, but Layer A still protects the OS partition |
+| **C — consistent policy** | All three filesystems (`/`, `/boot/firmware`, `/storage`) explicitly set `noatime` in fstab | Belt-and-suspenders for future mounts / remounts |
+
+### Why reads matter (NAND flash endurance)
+
+SD cards use NAND flash with a finite **P/E cycle** budget (~10k cycles for
+consumer cards). While *reads* themselves do not consume P/E cycles, the
+write-back triggered by an atime update does. At playback rates of ~30 clips/hour:
+
+- Without protection: ~720 unnecessary atime writes/hour on the media files
+- With noatime + tmpfs: **0 SD writes during playback**
+
+### Root partition (already protected)
+
+Raspberry Pi OS ships with `defaults,noatime` on the root ext4 partition by
+default. The Ansible role verifies this is in place but does not need to add it.
+
+---
+
+
 
 All nodes display `media/boot_logo.png` as the Plymouth splash screen during boot.
 Boot messages are suppressed via kernel parameters in `/boot/firmware/cmdline.txt`:
