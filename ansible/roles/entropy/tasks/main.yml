@@ -14,6 +14,38 @@
     path: "{{ sol_repo_path }}/configurations/xinit.entropy.ai.sh"
     mode: "0755"
 
+# ── Audio: PipeWire ───────────────────────────────────────────────────────────
+# pyglet uses OpenAL which connects to PipeWire for audio output.
+# pipewire-audio meta-package pulls pipewire + wireplumber + pipewire-pulse.
+# The user session PipeWire must start at boot (before login) via linger.
+- name: Install PipeWire audio stack
+  ansible.builtin.apt:
+    name:
+      - pipewire
+      - pipewire-audio      # meta-package: wireplumber + pipewire-pulse
+      - pipewire-alsa       # ALSA→PipeWire bridge
+    state: present
+  become: true
+
+- name: Enable user linger for {{ sol_user }} (PipeWire starts at boot without login)
+  ansible.builtin.command:
+    cmd: loginctl enable-linger {{ sol_user }}
+  become: true
+  changed_when: false
+
+- name: Enable PipeWire user services (pipewire, pipewire-pulse, wireplumber)
+  ansible.builtin.systemd:
+    name:    "{{ item }}"
+    enabled: true
+    scope:   user
+  become: false
+  loop:
+    - pipewire
+    - pipewire-pulse
+    - wireplumber
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ sol_user_uid | default('1000') }}"
+
 # ── Persistent .ready sentinel ────────────────────────────────────────────────
 # On tmpfs nodes this is touched by storage.service after media copy.
 # On entropy (no tmpfs) /storage is a plain dir on the SD card, so the sentinel
@@ -32,6 +64,8 @@
 #   /usr/bin/xinit configurations/xinit.entropy.ai.sh -- :0 -nocursor
 # xinit.entropy.ai.sh then calls:
 #   python Entro.ai.py --system rpi --fullscreen
+# XDG_RUNTIME_DIR is set in the service unit so OpenAL finds the PipeWire socket
+# at /run/user/1000/pipewire-0 from the system service context.
 - name: Copy sol.entropy.ai.service to systemd
   ansible.builtin.copy:
     src:        "{{ sol_repo_path }}/configurations/systemd/sol.entropy.ai.service"
