@@ -46,3 +46,4 @@
   loop:
     - xinit.entropy.ai.sh
     - xinit.heads.ai.sh
+    - xinit.tate.sh

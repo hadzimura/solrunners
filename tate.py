@@ -3,7 +3,13 @@
 tate.py — Springs of Life: Tate node video player
 ==================================================
 Plays all MP4 files from media/tate/ in an endless random loop using mpv
-rendered directly to the framebuffer via DRM/KMS (no Xorg required).
+rendered via X11 + GPU (OpenGL). Launched by xinit from sol.tate.service.
+
+Rendering:
+  vo=gpu       — GPU-accelerated renderer over X11 (OpenGL / EGL)
+  hwdec=auto   — hardware video decoding (V4L2M2M on Raspberry Pi)
+  video-sync=display-resample — frame timing locked to display refresh,
+                                eliminates screen tearing
 
 Randomisation rules:
   - Next video is chosen randomly from the full library.
@@ -11,11 +17,11 @@ Randomisation rules:
     so a clip won't repeat sooner than 5 random choices ahead.
 
 Controls:
-  - ESC key   → quit cleanly
-  - SIGTERM   → quit cleanly (systemd stop / kill)
+  - ESC / q key → quit cleanly
+  - SIGTERM      → quit cleanly (systemd stop / kill)
 
-Run inside the project venv:
-  .venv/bin/python tate.py
+Run inside the project venv (requires DISPLAY to be set):
+  DISPLAY=:0 .venv/bin/python tate.py
 
 See docs/TATE.md for full documentation and deployment instructions.
 """
@@ -75,36 +81,49 @@ def main() -> None:
     quit_event = threading.Event()
 
     # ── mpv player setup ──────────────────────────────────────────────────────
-    # vo=drm  — render directly to the Linux framebuffer (KMS/DRM).
-    #           No Xorg, no Wayland, no window manager required.
-    # ao=alsa — ALSA audio output; default on Raspberry Pi OS Lite.
-    # fs      — start in fullscreen (fills the entire display).
-    # input_default_bindings=False — disable mpv's built-in key map so only
-    #           our explicit bindings are active (prevents accidental q/Quit).
-    # input_vo_keyboard=True       — mpv reads keyboard events from the VO
-    #           (needed for DRM mode where there is no X window manager).
+    # vo=gpu           — GPU-accelerated renderer via X11/OpenGL; handles vsync
+    #                    correctly, eliminating the tearing seen with vo=drm.
+    # hwdec=auto       — hardware video decoding (V4L2M2M on Raspberry Pi);
+    #                    offloads decode from CPU, reduces latency.
+    # video_sync=      — lock frame delivery to the display refresh rate;
+    #  display_resample  resamples audio to compensate, giving smooth playback.
+    # fullscreen=True  — fill the entire display.
+    # input_default_bindings=False — disable mpv's built-in key map; only our
+    #                    explicit bindings are active.
+    # input_vo_keyboard=True — mpv reads keyboard events from the X11 window
+    #                    (required when there is no window manager).
     player = mpv.MPV(
-        vo="drm",
-        ao="alsa",
-        fs=True,
+        vo="gpu",
+        hwdec="auto",
+        video_sync="display-resample",
+        fullscreen=True,
         input_default_bindings=False,
         input_vo_keyboard=True,
         log_handler=print,
         loglevel="warn",
     )
 
-    @player.on_key_press("ESC")
-    def _on_esc() -> None:
-        """Handle ESC key: signal the main loop and stop current playback."""
-        print("[tate] ESC pressed — quitting")
+    def _quit():
+        """Signal the main loop to stop and terminate the current clip."""
         quit_event.set()
         player.quit()
+
+    @player.on_key_press("ESC")
+    def _on_esc() -> None:
+        """ESC key: quit playback."""
+        print("[tate] ESC pressed — quitting")
+        _quit()
+
+    @player.on_key_press("q")
+    def _on_q() -> None:
+        """q key: quit playback (convenience alias for ESC)."""
+        print("[tate] q pressed — quitting")
+        _quit()
 
     def _handle_signal(sig, _frame) -> None:
         """Handle SIGTERM / SIGINT (e.g. systemd stop or Ctrl-C)."""
         print(f"[tate] Received signal {sig} — quitting")
-        quit_event.set()
-        player.quit()
+        _quit()
 
     signal.signal(signal.SIGTERM, _handle_signal)
     signal.signal(signal.SIGINT, _handle_signal)

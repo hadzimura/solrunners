@@ -14,5 +14,6 @@
   gather_facts: true
 
   roles:
-    - role: common    # base OS: hostname, packages, git clone, uv, venv, tmpfs
-    - role: tate      # mpv install, python-mpv in venv, systemd service
+    - role: common     # base OS: hostname, packages, git clone, uv, venv, tmpfs
+    - role: display    # minimal X11 stack (xserver-xorg-core, xinit, x11-utils)
+    - role: tate       # mpv install, python-mpv in venv, systemd service

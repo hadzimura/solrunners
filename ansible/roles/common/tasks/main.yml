@@ -106,6 +106,17 @@
     state: present
   become: true
 
+# Suppress the MOTD, "last login" banner and PAM login messages on the
+# auto-login console session — keeps the boot-to-playback experience clean.
+- name: Create ~/.hushlogin to suppress MOTD and login banners
+  ansible.builtin.file:
+    path:  "/home/{{ sol_user }}/.hushlogin"
+    state: touch
+    owner: "{{ sol_user }}"
+    group: "{{ sol_user }}"
+    mode:  "0644"
+  become: false
+
 # ── 4. Install uv ─────────────────────────────────────────────────────────────
 # uv is a fast Rust-based Python package/venv manager from Astral.
 # The official installer places the binary at ~/.local/bin/uv.

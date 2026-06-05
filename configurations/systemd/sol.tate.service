@@ -1,5 +1,5 @@
 [Unit]
-Description=Springs of Life — Tate node (mpv DRM video loop)
+Description=Springs of Life — Tate node (mpv X11/GPU video loop)
 # Start after the storage.service has copied media to /storage.
 After=storage.service network.target
 Requires=storage.service
@@ -13,11 +13,11 @@ WorkingDirectory=/home/zero/solrunners
 # Unbuffered Python output so journalctl shows print() in real time.
 Environment=PYTHONUNBUFFERED=1
 
-# Run directly from the venv — no xinit needed, mpv uses DRM/KMS.
-ExecStart=/home/zero/solrunners/.venv/bin/python /home/zero/solrunners/tate.py
+# xinit starts the bare X server (:0) and immediately runs xinit.tate.sh,
+# which activates the venv and launches tate.py.
+# -nocursor hides the mouse pointer during playback.
+ExecStart=/usr/bin/xinit /home/zero/solrunners/configurations/xinit.tate.sh -- :0 -nocursor
 
-# Restart automatically after crashes; ESC / SIGTERM exit cleanly with code 0
-# so the service won't restart on intentional quits.
 Restart=on-failure
 RestartSec=3
 
