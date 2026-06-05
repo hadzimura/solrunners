@@ -3,7 +3,10 @@
 
 set -euo pipefail
 
-xrandr --output HDMI-1 --rotate normal
+# Auto-detect connected HDMI output — handles HDMI-1 vs HDMI-2 across RPi models
+DISPLAY_OUTPUT=$(xrandr | awk '/ connected/ {print $1; exit}')
+xrandr --output "$DISPLAY_OUTPUT" --auto --rotate normal
+
 cd /home/zero/solrunners
 export PYTHONPATH="${PYTHONPATH:-}:/home/zero/solrunners"
 export PYTHONUNBUFFERED=1
