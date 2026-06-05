@@ -41,11 +41,14 @@
 # node. Installing them on other nodes without those libs would cause errors.
 - name: Install fountain Python packages into project venv
   ansible.builtin.command:
-    cmd: "{{ sol_uv_bin }} pip install --python {{ sol_venv_path }}/bin/python {{ sol_fountain_pip_packages | join(' ') }}"
+    # --no-deps: skips dependency resolution; numpy is already provided by the
+    # python3-numpy apt package via --system-site-packages venv. This prevents
+    # uv from resolving and building numpy 2.x from source on armv7l.
+    cmd: "{{ sol_uv_bin }} pip install --python {{ sol_venv_path }}/bin/python --no-deps {{ sol_fountain_pip_packages | join(' ') }}"
   become: false
   environment:
     HOME: "/home/{{ sol_user }}"
-  changed_when: false   # uv pip install is idempotent but doesn't report changes
+  changed_when: false
 
 # ── systemd service ───────────────────────────────────────────────────────────
 - name: Copy sol.fountain.service to systemd

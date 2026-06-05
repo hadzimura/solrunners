@@ -23,6 +23,11 @@ sol_skip_upgrade: true
 # Git branch override (remove once merged to main)
 sol_git_branch: "2.0.26.ai"
 
+# Skip uv sync from pyproject.toml — ruamel-yaml has no armv7l wheel and builds
+# from source (takes hours, drops SSH). The fountain role installs sounddevice +
+# soundfile directly via uv pip after system packages are in place.
+sol_dep_mode: "skip"
+
 # ── Audio ────────────────────────────────────────────────────────────────────
 # System packages installed by the fountain role
 sol_audio_packages:
@@ -32,11 +37,17 @@ sol_audio_packages:
   - libsndfile1         # libsndfile runtime — required by soundfile (Python pkg)
   - python3-numpy       # numpy for armv7l: no binary wheel on PyPI for numpy 2.x;
                         # system package is numpy 1.24 which works fine with sounddevice
+  - python3-cffi        # cffi for armv7l: sounddevice needs cffi; system package avoids
+                        # compiling cffi 2.0 from source (requires libffi-dev, very slow)
 
-# Python packages installed into the venv by the fountain role (after system pkgs)
+# Python packages installed into the venv by the fountain role (after system pkgs).
+# sounddevice is pinned to 0.4.x: the 0.5.x series switched from ctypes to cffi,
+# which requires compiling cffi from source on armv7l (no binary wheel). 0.4.6
+# uses ctypes and only needs numpy (already supplied by python3-numpy apt package).
+# soundfile has a pure-Python wheel and installs instantly.
 sol_fountain_pip_packages:
-  - sounddevice         # Python PortAudio binding — real-time stereo playback
-  - soundfile           # WAV/FLAC loader → numpy array
+  - "sounddevice==0.4.6"  # ctypes-based: no cffi build dep; numpy via system pkg
+  - soundfile              # WAV/FLAC loader → numpy array
 
 # ── Phase 1 static gain (passed as ExecStart args in sol.fountain.service) ───
 # Adjust these if the speaker balance needs correcting for the installation.

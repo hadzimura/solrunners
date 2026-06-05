@@ -214,9 +214,11 @@
   environment:
     HOME: "/home/{{ sol_user }}"   # prevent uv from using /root/.local under sudo pipelining
 # ── 7. Install Python dependencies ───────────────────────────────────────────
-# Two modes controlled by sol_dep_mode in group_vars/all.yml:
+# Three modes controlled by sol_dep_mode in group_vars/all.yml:
 #   "requirements" → uv pip install -r requirements.txt  (proven-stable baseline)
 #   "pyproject"    → uv sync (uses pyproject.toml + uv.lock)
+#   "skip"         → no common-level install; the node role handles its own deps
+#                    (used by fountain: avoids building ruamel-yaml from source on armv7l)
 - name: Install Python deps via uv pip (requirements.txt mode)
   ansible.builtin.command:
     cmd: "{{ sol_uv_bin }} pip install --python {{ sol_venv_path }}/bin/python -r {{ sol_requirements_file }}"
