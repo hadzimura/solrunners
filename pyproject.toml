@@ -13,7 +13,8 @@ dependencies = [
     "opencv-contrib-python ; platform_machine != 'armv7l'",   # contrib for face-detection (Heads.py)
     "ruamel.yaml",
     "scipy ; platform_machine != 'armv7l'",  # no armv7l wheel in recent versions
-    # Ansible runs from the project venv so deployment.sh doesn't need a system-level install.
-    # ansible-core is the lean core package; full `ansible` meta-package pulls all collections.
-    "ansible-core",
+    # Ansible runs from the project venv on the CONTROL machine only.
+    # RPi target nodes never need ansible-core; excluding on armv7l also avoids
+    # cffi/cryptography build failures (no libffi-dev on small SD cards).
+    "ansible-core ; platform_machine != 'armv7l'",
 ]
