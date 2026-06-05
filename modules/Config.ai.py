@@ -23,26 +23,19 @@ def extract_system_arg(argv: Optional[List[str]] = None) -> Tuple[str, List[str]
 
 
 def configure_pyglet_for_system(system_name: str) -> None:
-    """Set and lock pyglet headless mode for the selected runtime target."""
+    """Set pyglet headless mode for the selected runtime target.
+
+    On RPi (system_name='rpi') headless=True so pyglet does not try to open
+    its own display window (OpenCV/xinit owns the display).
+    On macOS headless=False so pyglet can use the local display.
+
+    The monkey-patch guard that was here previously is removed: Python 3.12+
+    forbids setting __setitem__ on built-in dict subclasses (TypeError: cannot
+    set '__setitem__' attribute of immutable type). Plain assignment is enough.
+    """
     import pyglet
 
-    target_headless = system_name == "rpi"
-    pyglet.options["headless"] = target_headless
-
-    # Guard future writes so legacy files cannot override the selected mode.
-    options_type = type(pyglet.options)
-    if not getattr(options_type, "_sol_ai_guard_installed", False):
-        original_setitem = options_type.__setitem__
-
-        def _guarded_setitem(self, key, value):
-            if key == "headless" and hasattr(self, "_sol_ai_headless_lock"):
-                value = getattr(self, "_sol_ai_headless_lock")
-            return original_setitem(self, key, value)
-
-        options_type.__setitem__ = _guarded_setitem
-        options_type._sol_ai_guard_installed = True
-
-    setattr(pyglet.options, "_sol_ai_headless_lock", target_headless)
+    pyglet.options["headless"] = (system_name == "rpi")
 
 
 def run_original_script(original_script_name: str, argv: Optional[List[str]] = None) -> None:
