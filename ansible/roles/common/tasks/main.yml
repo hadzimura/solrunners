@@ -293,6 +293,26 @@
   changed_when: "'changed' in _noatime_result.stdout"
   become:       true
 
+# Remove any hardcoded video= resolution injected by the RPi imager.
+# e.g. "video=HDMI-A-1:1440x900M@60" forces a specific output at a fixed
+# resolution, which breaks auto-negotiation when a different display (projector,
+# TV) is connected. Removing it lets the GPU driver negotiate the native mode
+# of whichever display is plugged in. Our xinit scripts and Config.py already
+# auto-detect the connected output and screen size at runtime via xrandr.
+- name: Remove imager-injected video= resolution from cmdline.txt
+  ansible.builtin.shell: |
+    CMDFILE=/boot/firmware/cmdline.txt
+    BEFORE=$(cat "$CMDFILE")
+    # Strip any "video=HDMI-*:..." token (imager artifact)
+    AFTER=$(echo "$BEFORE" | sed 's/video=HDMI-[^ ]* //g')
+    if [ "$BEFORE" != "$AFTER" ]; then
+      echo "$AFTER" > "$CMDFILE"
+      echo "changed"
+    fi
+  register:     _video_param_result
+  changed_when: "'changed' in _video_param_result.stdout"
+  become:       true
+
 # ── 9b. /storage — tmpfs ramdisk OR plain directory symlink ──────────────────
 # Controlled by sol_skip_storage_tmpfs (default: false).
 #
