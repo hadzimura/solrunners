@@ -31,10 +31,11 @@
 
     - name: Update Python requirements via uv sync
       ansible.builtin.command:
-        cmd: "{{ sol_uv_bin }} sync"
+        cmd: "{{ sol_uv_bin }} sync --project {{ sol_repo_path }}"
         chdir: "{{ sol_repo_path }}"
       become: false
       environment:
+        HOME:                   "/home/{{ sol_user }}"
         UV_PROJECT_ENVIRONMENT: "{{ sol_venv_path }}"
       when: sol_dep_mode == "pyproject"
 

@@ -1,8 +1,12 @@
 ---
 # roles/entropy/tasks/main.yml
-# Configures the Entropy node: RPi 5, 8 GB RAM, 128 GB M.2 SSD.
+# Configures the Entropy node: RPi 5, 29 GB SD card.
 # Plays a 16:9 horizontal video with per-frame OpenCV processing + pyglet audio.
 # Display: minimal X11 via xinit (bare X server, no window manager).
+#
+# Storage: no tmpfs ramdisk. /storage/entropy is a symlink (created by common role)
+# pointing to sol_repo_path/media/entropy. The .ready sentinel lives directly on
+# the SD card at /storage/.ready so wait_for_storage() passes on every boot.
 
 # ── Make xinit script executable ─────────────────────────────────────────────
 - name: Make xinit.entropy.ai.sh executable
@@ -10,11 +14,58 @@
     path: "{{ sol_repo_path }}/configurations/xinit.entropy.ai.sh"
     mode: "0755"
 
+# ── Audio: PipeWire ───────────────────────────────────────────────────────────
+# pyglet uses OpenAL which connects to PipeWire for audio output.
+# pipewire-audio meta-package pulls pipewire + wireplumber + pipewire-pulse.
+# The user session PipeWire must start at boot (before login) via linger.
+- name: Install PipeWire audio stack
+  ansible.builtin.apt:
+    name:
+      - pipewire
+      - pipewire-audio      # meta-package: wireplumber + pipewire-pulse
+      - pipewire-alsa       # ALSA→PipeWire bridge
+    state: present
+  become: true
+
+- name: Enable user linger for {{ sol_user }} (PipeWire starts at boot without login)
+  ansible.builtin.command:
+    cmd: loginctl enable-linger {{ sol_user }}
+  become: true
+  changed_when: false
+
+- name: Enable PipeWire user services (pipewire, pipewire-pulse, wireplumber)
+  ansible.builtin.systemd:
+    name:    "{{ item }}"
+    enabled: true
+    scope:   user
+  become: false
+  loop:
+    - pipewire
+    - pipewire-pulse
+    - wireplumber
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ sol_user_uid | default('1000') }}"
+
+# ── Persistent .ready sentinel ────────────────────────────────────────────────
+# On tmpfs nodes this is touched by storage.service after media copy.
+# On entropy (no tmpfs) /storage is a plain dir on the SD card, so the sentinel
+# persists across reboots without any service needed.
+- name: Create persistent /storage/.ready sentinel
+  ansible.builtin.file:
+    path:  "{{ sol_storage_path }}/.ready"
+    state: touch
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0644"
+  become: true
+
 # ── systemd service ───────────────────────────────────────────────────────────
 # sol.entropy.ai.service calls:
 #   /usr/bin/xinit configurations/xinit.entropy.ai.sh -- :0 -nocursor
 # xinit.entropy.ai.sh then calls:
 #   python Entro.ai.py --system rpi --fullscreen
+# XDG_RUNTIME_DIR is set in the service unit so OpenAL finds the PipeWire socket
+# at /run/user/1000/pipewire-0 from the system service context.
 - name: Copy sol.entropy.ai.service to systemd
   ansible.builtin.copy:
     src:        "{{ sol_repo_path }}/configurations/systemd/sol.entropy.ai.service"

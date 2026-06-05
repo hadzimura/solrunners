@@ -3,15 +3,20 @@
 from argparse import ArgumentParser
 from argparse import ArgumentDefaultsHelpFormatter
 from argparse import BooleanOptionalAction
-from platform import system
+import cv2 as cv
 from datetime import datetime as dt
 from glob import glob
 from os import environ
 from pathlib import Path
 from pprint import pprint
+from os.path import isdir
+from os.path import isfile
+from ruamel.yaml import YAML, YAMLError
+from platform import system
+import re
+import subprocess
 from random import choice
 import requests
-from ruamel.yaml import YAML
 
 if system() != 'Darwin':
     from gpiozero import Button
@@ -19,460 +24,271 @@ if system() != 'Darwin':
     from gpiozero import LED
     from gpiozero import MotionSensor
 
-import cv2 as cv
 from modules.Controllers import Effect
 from modules.Controllers import Font
 from modules.Controllers import Text
 from modules.Controllers import Draw
 
+# Run pyglet in headless mode
+import pyglet
+pyglet.options['headless'] = True
+
+def get_display_resolution(display=':0'):
+    """Return (width, height) of the connected display via xrandr.
+
+    On macOS or when xrandr is unavailable, returns (None, None).
+    Used by window setup to manually fill the screen when no window manager
+    is running (bare xinit) — EWMH fullscreen hints require a WM to handle.
+    """
+    if system() == 'Darwin':
+        return None, None
+    try:
+        out = subprocess.check_output(
+            ['xrandr', '--display', display],
+            stderr=subprocess.DEVNULL
+        ).decode()
+        # Match the active/connected output line: "HDMI-2 connected 1440x900+0+0 ..."
+        m = re.search(r' connected (?:primary )?(\d+)x(\d+)\+0\+0', out)
+        if m:
+            return int(m.group(1)), int(m.group(2))
+    except Exception:
+        pass
+    return None, None
+
+
+def setup_cv2_fullscreen(window_name, display_w, display_h):
+    """Position and resize a cv2 window to fill the screen without a WM.
+
+    cv2's WND_PROP_FULLSCREEN relies on EWMH hints that only work when a window
+    manager is present. In a bare xinit session (no WM), the hint is silently
+    ignored and the window stays at video native resolution. This function
+    explicitly moves the window to (0,0) and resizes it to screen dimensions,
+    which works without any WM. setWindowProperty is also called as a fallback
+    for environments that do have a WM.
+    """
+    if display_w and display_h:
+        cv.moveWindow(window_name, 0, 0)
+        cv.resizeWindow(window_name, display_w, display_h)
+    cv.setWindowProperty(window_name, cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
 
 def arg_parser():
     # Parse the runtime arguments to decide 'who we are'
     parser = ArgumentParser(description='Sol Audio Runner',
                             epilog='Author: rkucera@gmail.com',
                             formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-m', '--master',
+    parser.add_argument('-f', '--fullscreen',
                         action=BooleanOptionalAction,
                         default=False,
-                        dest='master',
-                        help='Master node?')
-    parser.add_argument('-r', '--room',
-                        default=None,
-                        dest='room',
-                        help='Which room is this Runner in?')
+                        dest='fullscreen',
+                        help='Play in fullscreen window')
+    parser.add_argument('-r', '--recognition',
+                        action=BooleanOptionalAction,
+                        default=False,
+                        dest='recognition',
+                        help='Enable Face Recognition runtime')
 
     return parser.parse_args()
 
+def wait_for_storage(location='/storage'):
+
+    """ Wait for the SHM storage become available """
+
+    if system() != "Darwin":
+        print('Waiting for the SHM storage ({}) to be available...'.format(location))
+        storage_available = False
+        while storage_available is False:
+            if isfile('{}/.ready'.format(location)):
+                storage_available = True
+
+    print('Storage available, starting runtime')
+    return True
 
 class Configuration(object):
 
-    def __init__(self, room=None, master=False, width=1920, height=1080, fps=25, fullscreen=True):
+    def __init__(self, fullscreen, runtime=None, fountain_version=1):
 
-        self.verbose = False
-
-        if room is None:
-            print('Room needs to be specified, exiting...')
+        if runtime is None:
+            print('Need to select runtime from (entropy|heads), exiting...')
             exit(1)
-        else:
-            self.room = int(room)
 
-        self.node_type = 'slave'
-        self.master = False
-        if master is True:
-            print('This is the Master Node')
-            self.node_type = 'master'
-            self.master = True
-        else:
-            print('This is Slave Node')
+        self.fullscreen = fullscreen
+
+        self.fountain_version = int(fountain_version)
 
         # Running Environment locations
         env_var = environ
         self.project_root = Path(env_var['PWD'])
 
-        if system() == 'Darwin':
+        if system() == 'Darwin' or not isdir('/storage'):
             self.media_root = self.project_root / Path('media')
         else:
             self.media_root = Path('/storage')
 
-        self.fonts = self.media_root / Path('fonts')
-        self.fastapi_static = self.media_root / Path('static')
-        self.fastapi_templates = self.media_root / Path('templates')
+        # Base Path definitions
+        self.entropy_path = self.media_root / Path('entropy')
+        self.heads_path = self.media_root / Path('heads')
 
-        self.audio_path = self.media_root / Path('audio')
-        self.video_path = self.media_root / Path('video')
-        self.entropy_audio = self.media_root / Path('audio/entropy/1.wav')
-        self.entropy_video = self.media_root / Path('video/entropy/entropy.mov')
-        self.entropy_subtitles = self.media_root / Path('video/entropy/entropy.subtitles')
-        self.entropy = False
-        self.tate = False
+        # Video Color Effects
+        self.color_effect = [
+            cv.COLOR_BGR2GRAY,
+            cv.COLORMAP_PLASMA,
+            cv.COLORMAP_TWILIGHT,
+            cv.COLORMAP_OCEAN,
+            cv.COLORMAP_WINTER
+        ]
 
-        # Load RPi configurations
+        # text Fonts
+        self.font = [
+            cv.FONT_HERSHEY_SIMPLEX,
+            cv.FONT_HERSHEY_PLAIN,
+            cv.FONT_HERSHEY_TRIPLEX,
+            cv.FONT_HERSHEY_COMPLEX,
+            cv.FONT_HERSHEY_DUPLEX,
+            cv.FONT_HERSHEY_COMPLEX_SMALL
+        ]
+
+        # Entropy
+        self.entropy_main_audio = self.entropy_path / Path('entropy.wav')
+        self.entropy_main_video = self.entropy_path / Path('entropy.mov')
+        self.entropy_main_subtitles = self.entropy_path / Path('entropy.subtitles')
+        self.entropy_countdown_video = self.entropy_path / Path('countdown.mov')
+        self.entropy_countdown_audio = self.entropy_path / Path('countdown.wav')
+        self.entropy_qr_code = self.entropy_path / Path('entropy_qr.png')
+
+        # Heads
+        self.heads_video = self.heads_path / Path('silent_heads.mov')
+        self.heads_audio = self.heads_path / Path('silent_heads.wav')
+        self.heads_subtitles = self.heads_path / Path('quotes')
+        self.heads_samples = self.heads_path / Path('samples/*.wav')
+        self.heads_qr_code = self.heads_path / Path('heads_qr.png')
+        self.heads_metadata = self.project_root / Path('sol.heads.yaml')
+        self.authors_metadata = self.project_root / Path('sol.authors.yaml')
+        self.heads_vector = {
+            'top': 1,
+            'bottom': 2,
+            'left': 3,
+            'right': 4
+        }
+
+        # Face Recognition models
+        self.fr = self.heads_path / Path('face_detections/haarcascade_frontalface_alt.xml')
+        self.fre = self.heads_path / Path('face_detections/haarcascade_eye_tree_eyeglasses.xml')
+        self.frex = self.heads_path / Path('face_detections/haarcascade_frontalcatface_extended.xml')
+        self.lbp = self.heads_path / Path('face_detections/lbpcascade_frontalface_improved.xml')
+
+        # Initialize YAM parser
         self.yaml = YAML()
         self.yaml.preserve_quotes = True
-        self.configuration_file = self.project_root / Path('sol.config.yaml')
 
+        # Entropy initialization
+        if runtime == 'entropy':
+            self.entropy_subs = dict()
+            self.entropy_expedition = 1
+            # Entropy runtime text overlays
+            self.entropy_overlays = {
+                'countdown': ['PLEASE STAND BY', 'THE ENTROPY WILL LAND IN'],
+                'intro': ['WE ARE SEARCHING', 'FOR ANYTHING', 'THAT IS LEFT'],
+                'outro': ['WE ARE SEARCHING', 'FOR THE THINGS', 'THAT ARE STILL RIGHT']
+            }
+            self._get_entropy_subtitles()
+
+        # Heads initialization
+        if runtime == 'heads':
+            self.heads_framecode = dict()
+            self.heads_authors = dict()
+            self.heads_overlays = {
+                0: {
+                    'author_name_long': 'Roman Neruda',
+                    'author_name_short': 'roman',
+                    'text': 'Podkresová audio stopa',
+                    'subtitle': None,
+                    'sample': [pyglet.media.StaticSource(pyglet.media.load(str(self.heads_audio), streaming=False))],
+                    'sample_author': [['roman', 'Roman Neruda']]
+                }
+            }
+            self._get_heads_data()
+            self._get_heads_overlays()
+
+    def _get_heads_data(self):
+
+        """ Load the Heads samples metadata for runtime """
+        quotes = dict()
+        print('Importing HEADS metadata')
         try:
-            print("Loading configuration file: '{}'".format(self.configuration_file))
-            self.configuration = dict(self.yaml.load(self.configuration_file))
-            self.runner = self.configuration['runners'][self.room]
-        except FileNotFoundError:
-            print("Configuration file not found: {}".format(self.configuration_file))
+            print("Loading HEADS audio metadata from: {}".format(self.heads_metadata))
+            quotes = dict(self.yaml.load(self.heads_metadata))
+            print("Loading HEADS authors metadata from: {}".format(self.authors_metadata))
+            self.heads_authors = dict(self.yaml.load(self.authors_metadata))
+        except FileNotFoundError as fnf:
+            print('Not found HEADS metadata, exiting...')
+            print(fnf)
+            exit(1)
+        except YAMLError as yamlerr:
+            print('Problem parsing YAM file, exiting...')
+            print(yamlerr)
+            exit(1)
+        except Exception as e:
+            print('Problem encountered, exiting...')
+            print(e)
             exit(1)
 
-        # Initialize possible Sensors
-        self.pinout = {'enabled': False}
-        self.media = dict()
-        self.files = dict()
-        self.authors = dict()
-        self.mix_queues = dict()
-        self.tracks = dict()
-        self.audio_queue = dict()
-
-        self.pir = None
-        self.blue = None
-        self.green = None
-        self.button = None
-        self.jitter_button = self.configuration['jitter']['button']
-        self.jitter_presence = self.configuration['jitter']['presence']
-        self.presence_delay = self.configuration['jitter']['presence_delay']
-        self.pir_test = self.configuration['global']['pirTest']
-
-        # Pinout definitions
-        try:
-            print('Loading pinout for room: {}'.format(self.room))
-            if self.runner['pinout']['enabled'] is True:
-                self._init_sensors(self.runner['pinout'])
-        except KeyError as error:
-            print("Configuration file does not contain a pinout section: {}".format(error))
-
-        # Global audio tracks metadata
-        tracks_metadata = self.project_root / Path('sol.audio.yaml')
-        try:
-            print("Loading global audio metadata: {}".format(tracks_metadata))
-            all_tracks = self.yaml.load(tracks_metadata)
-            for batch_name in all_tracks:
-                if batch_name in self.runner['audio']:
-                    print("Initializing tracks for: '{}'".format(batch_name))
-                    self.tracks[batch_name] = dict(all_tracks[batch_name])
-            self._verbose(self.tracks)
-        except KeyError as error:
-            print("Audio not configured".format(tracks_metadata))
-        except FileNotFoundError:
-            print("Audio metadata config file not found: '{}'".format(tracks_metadata))
-            exit(1)
-
-        # Heads audio tracks metadata (always loaded)
-        # heads_metadata = self.project_root / Path('sol.audio.heads.yaml')
-        # authors_metadata = self.project_root / Path('sol.authors.yaml')
-        # try:
-        #     print("Loading audio heads metadata: {}".format(heads_metadata))
-        #     self.tracks['heads'] = dict(self.yaml.load(heads_metadata))
-        #     print("Loading authors metadata: {}".format(authors_metadata))
-        #     authors = dict(self.yaml.load(authors_metadata))
-        #     for head in self.tracks['heads']:
-        #         a = self.tracks['heads'][head]['author']
-        #         self.tracks['heads'][head]['fullname'] = authors[a]['name']
-        # except FileNotFoundError as e:
-        #     print('Audio metadata config file not found')
-        #     print(e)
-        #     exit(1)
-
-        # Total beats of the runtime
-        self.beats = 0
-        self.second = 0
-        self.elapsed = 0
-
-        # Video attributes definition
-        self.fps = fps
-        self.width = width
-        self.height = height
-        self.fullscreen = fullscreen
-        self.x = 0
-        self.y = 0
-
-        # Video effects definitions
-        self.blur = Effect('blur')
-        self.mix = Effect('mix')
-        self.offset = Effect('offset')
-
-        # Video streams and functions definitions
-        self.video = dict()
-        self.videos = list()
-        self.font = dict()
-        self.draw = dict()
-
-        self.playing = dict()
-
-        if 'video' in self.runner or self.room in [3, 4, 5]:
-
-            self.font = {
-                'status': Font()
+        for sub_id, data in quotes.items():
+            author = data['author']
+            self.heads_overlays[int(sub_id)] = {
+                'author_name_long': self.heads_authors[author]['name'],
+                'author_name_short': data['author'],
+                'text': data['text'],
+                'placeholder': data['placeholder']
             }
 
-            # Fonts
-            # self.text = {
-            #     'status': Text(path=self.fonts, coordinates=(50, 50)),
-            #     'subtitles': Text(path=self.fonts, coordinates=(50, self.height - 100))
-            # }
-            # Drawings
-            self.draw = {
-                'mission': Draw(shape='rectangle',
-                                pos1=(1680, 1015),
-                                pos2=(1920, 1065),
-                                color=(36, 204, 68),
-                                thickness=3)
-            }
+            # Prepare TIMECODE for Silent Heada video
+            for f_code in self.heads_authors[author]['position']:
+                self.heads_framecode[f_code] = self.heads_authors[author]['sucher']
+        print('Done importing HEADS metadata')
 
-            # self._load_assets(self.runner['video'])
+    def _get_heads_overlays(self):
 
-        # Subtitle acquisition is for both Audio / Video Nodes
-        self.sub = dict()
-        self.subtitle = None
-        self._get_subtitles(self.entropy_subtitles)
+        """ Load the Entropy subtitles for runtime """
 
-        # Presence setup
-        self.presence = {
-            1: dict(),
-            2: dict(),
-            3: dict(),
-            4: dict(),
-            5: dict(),
-        }
-
-        if self.node_type is True:
-            # TBD
-            pass
-
-        # Publish summary of the runtime
-        self.summary = {
-            'room': self.room,
-            'node_type': self.node_type
-        }
-
-    def _verbose(self, content):
-
-        if self.verbose is True:
-            pprint(content, indent=2)
-
-    def scheduler(self, play_time, track_id):
-        self.audio_queue[play_time] = track_id
-
-    def dispatcher(self):
-        payload = {'play_time': dt.now(), 'track_id': 1}
-        response = requests.post(url='http://127.0.0.1:8002/schedule', params=payload)
-
-    def _get_subtitles(self, srt_file):
-
-        """ Load the subtitles for runtime """
-
-        try:
-            # track = srt_file.split('.')[0]
-            track = srt_file.stem
-            if track not in self.sub:
-                self.sub[track] = dict()
-
-            print('Importing subtitles: {}'.format(srt_file))
-            with open(srt_file, 'r') as subtitles:
-
-                for line in subtitles.read().splitlines():
-                    # start_time = dt.strptime(line.split('|')[0].removesuffix(':{}'.format(line.split('|')[0].split(':')[-1])), '%H:%M:%S').time()
-                    # stop_time = dt.strptime(line.split('|')[1].removesuffix(':{}'.format(line.split('|')[1].split(':')[-1])), '%H:%M:%S').time()
-                    start_time = dt.strptime(line.split('|')[0], '%H:%M:%S:%f').time().replace(microsecond=0)
-                    stop_time = dt.strptime(line.split('|')[1], '%H:%M:%S:%f').time().replace(microsecond=0)
-                    stop_time.replace(second=stop_time.second +1)
-                    self.sub[track][start_time] = line.split('|')[2].strip()
-                    self.sub[track][stop_time] = None
-            print("Subtitles loaded: '{}'".format(srt_file))
-            self._verbose(self.sub)
-
-        except FileNotFoundError as e:
-
-            print('Subtitle file not found: {}'.format(srt_file))
-
-    def _load_assets(self, entities):
-
-        for entity in entities:
-            if '.' in entity:
-                # These are singular video files
-                self._get_entropy(entity)
+        print('Importing HEADS overlays frames from: {}'.format(self.heads_subtitles))
+        total_subs = 21
+        for sub_id in range(1, total_subs + 1):
+            sub_file = self.heads_subtitles / Path('{}.png'.format(sub_id))
+            if isfile(sub_file):
+                print("Importing: {}".format(sub_file))
+                self.heads_overlays[sub_id]['subtitle'] = cv.imread(str(sub_file))
             else:
-                # These are folders of video files
-                self._get_folder(entity)
+                print('Not found HEADS overlay frame: {}'.format(sub_id))
+        print('Done importing HEADS overlay frames')
 
-    def _get_folder(self, folder_name):
+        print('Importing HEADS overlays samples from: {}'.format(self.heads_samples))
+        sample_count = 0
+        for sample_file in glob(str(self.heads_samples)):
+            sub_id = int(sample_file.split('/')[-1].split('.')[0])
+            sample_author = sample_file.split('/')[-1].split('.')[1]
+            print('Importing: {}'.format(sample_file))
+            if 'sample' not in self.heads_overlays[sub_id]:
+                self.heads_overlays[sub_id]['sample'] = list()
+                self.heads_overlays[sub_id]['sample_author'] = list()
+            self.heads_overlays[sub_id]['sample'].append(pyglet.media.StaticSource(pyglet.media.load(sample_file, streaming=False)))
+            self.heads_overlays[sub_id]['sample_author'].append([sample_author, self.heads_authors[sample_author]['name']])
+            sample_count += 1
+        print('Found {} HEADS overlay samples'.format(sample_count))
+        print('Done importing HEADS overlays')
+        # pprint(self.heads_overlays, indent=4)
 
-        folder_path = self.video_path / Path(folder_name)
-        print("Processing videos in folder: '{}'".format(folder_path))
+    def _get_entropy_subtitles(self):
 
-        for filename in sorted(glob('{}/*.mp4'.format(folder_path))):
+        """ Load the Entropy subtitles for runtime """
 
-            try:
-                video_name = filename.split('/')[-1]
-                print("Importing video: '{}'".format(video_name))
+        print('Importing ENTRPY subtitles from: {}'.format(self.entropy_main_subtitles))
+        with open(self.entropy_main_subtitles, 'r') as subtitles:
 
-                self.videos.append(cv.VideoCapture(filename))
-
-            except Exception as error:
-                print('Problem acquiring video stream: {}'.format(filename))
-                print(error)
-                exit(1)
-
-        # pprint(self.video, indent=2)
-        # self._reset_queue(folder_name, 'main')
-        # self._reset_queue(folder_name, 'overlay')
-
-    def _get_entropy(self, filename):
-        """ Entropy only loader """
-        print("Loading Entropy Main video file: '{}'".format(self.entropy_video))
-        try:
-            self.entropy = self._stream_metadata(cv.VideoCapture(str(self.entropy_video)), 'entropy', 'entropy.mov')
-        except Exception as error:
-            print('Problem acquiring video stream: {}'.format(self.entropy_video))
-            print('Error message: {}'.format(error))
-            exit(1)
-
-    def _init_sensors(self, pinout):
-
-        """ Initialize sensor peripherals """
-        print('Initializing Sensors...')
-        for input_name in pinout:
-
-            if input_name == 'enabled':
-                # Skip the 'enabled' key
-                continue
-
-            pin = pinout[input_name]
-
-            if input_name == 'pir':
-                print('Initializing PIR ({})'.format(pin))
-                self.pir = MotionSensor(pin)
-            elif input_name == 'blue':
-                print('Initializing Blue LED ({})'.format(pin))
-                self.blue = LED(pin)
-            elif input_name == 'green':
-                print('Initializing Green LED ({})'.format(pin))
-                self.green = LED(pin)
-            elif input_name == 'button':
-                print('Initializing Button ({})'.format(pin))
-                self.button = Button(pin)
-        print('Done initializing Sensors')
-
-    @staticmethod
-    def _stream_metadata(stream, category, filename):
-        """ Get metadata from stream"""
-        metadata = dict()
-        metadata['name'] = filename.split('.')[0]
-        metadata['filename'] = filename
-        metadata['category'] = category
-        metadata['frames'] = int(stream.get(cv.CAP_PROP_FRAME_COUNT))
-        metadata['fps'] = int(stream.get(cv.CAP_PROP_FPS))
-        metadata['duration'] = round(metadata['frames'] / metadata['fps'])
-        metadata['stream'] = stream
-        return metadata
-
-    def _reset_queue(self, category, q_name):
-        if category not in self.mix_queues:
-            self.mix_queues[category] = dict()
-        self.mix_queues[category][q_name] = list(self.video[category].keys())
-
-    def action(self):
-
-        pass
-
-    def get_info(self, resource):
-
-        """ Get runtime information for various resources. Intended for text overlays. """
-
-        result = str()
-        if resource == 'status':
-
-            result = '(b)lur: {} {} | (m)ix: {} {}'.format(
-                int(self.blur.enabled),
-                self.blur_value,
-                int(self.mix.enabled),
-                self.blend_value
-            )
-
-        elif resource == 'runtime':
-
-            result = '{}: {} | {} frames | {} fps | duration: {}'.format(
-                self.playing[0]['name'],
-                self.playing[0]['category'],
-                self.playing[0]['frames'],
-                self.playing[0]['fps'],
-                self.playing[0]['duration']
-            )
-
-        elif resource == 'mission':
-
-            result = '{}f | {}s'.format(self.playing[0]['frame'], int(self.second))
-
-        return result
-
-    def update(self):
-
-        # Accumulate runtime beats
-        self.beats += 1
-
-        # Update frame for each layer
-        for layer in self.playing:
-            if self.playing[layer]['frame'] is not None:
-                self.playing[layer]['frame'] += 1
-
-        # Total runtime seconds
-        if (self.beats / self.fps).is_integer():
-            self.second = self.beats / self.fps
-
-        #25 fps = HH:MM:SS:
-        # Divide 1,000 by the frame rate will give you milliseconds per frame..
-        # 1000ms = 1 second
-        self.elapsed = self.beats / self.fps
-        self.action()
-
-    def read_input(self, input_key):
-
-        match input_key:
-
-            case -1:
-                # Nothing pressed
-                # zc.volume = None
-                return True
-            # case 9:
-            #     # 'tab'
-            #     self.control.active()
-            case 27:
-                # 'esc'
-                return False
-            case 102:
-                # 'f'
-                self.flip.enabled = not self.flip.enabled
-            case 103:
-                # 'g'
-                self.gray.enabled = not self.gray.enabled
-            case 111:
-                # 'o'
-                self.offset.enabled = not self.offset.enabled
-            case 109:
-                # 'm'
-                self.mix.enabled = not self.mix.enabled
-                print('Mix: {}'.format(self.mix.enabled))
-            case 98:
-                # 'b'
-                self.blur.enabled = not self.blur.enabled
-            case _:
-                # if input_key in self.volumes:
-                #     self.volume = self.volumes[input_key]
-                # else:
-                print("Undefined key pressed: '{}'".format(input_key))
-        return True
-
-    def set_playhead2(self, layer='main', category=None, stream=None, start_frame=0):
-
-        """ Set playhead of Tate stream """
-
-        # if len(self.mix_queues[category][layer]) == 0:
-        #     self._reset_queue(category, layer)
-        stream = choice(self.mix_queues[category][layer])
-
-        # Set stream into the layer
-        self.playing[layer] = self.video[category][stream]
-        self.playing[layer]['frame'] = start_frame
-        self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
-        self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_WIDTH, self.width)
-        self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_HEIGHT, self.height)
-        self.playing[layer]['stream'].set(cv.CAP_PROP_FPS, self.fps)
-
-        # Remove latest stream from selector queue
-        self.mix_queues[category][layer].remove(stream)
-
-
-    def set_entropy_playhead(self, layer='main', start_frame=0):
-
-        # Set stream into the layer
-        self.playing[layer] = self.entropy
-        self.playing[layer]['frame'] = start_frame
-        self.playing[layer]['stream'].set(cv.CAP_PROP_POS_FRAMES, start_frame)
-        self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_WIDTH, self.width)
-        self.playing[layer]['stream'].set(cv.CAP_PROP_FRAME_HEIGHT, self.height)
-        self.playing[layer]['stream'].set(cv.CAP_PROP_BUFFERSIZE, self.fps)
-        self.playing[layer]['stream'].set(cv.CAP_PROP_FPS, self.fps)
+            for line in subtitles.read().splitlines():
+                start_time = dt.strptime(line.split('|')[0], '%H:%M:%S:%f').time().replace(microsecond=0)
+                stop_time = dt.strptime(line.split('|')[1], '%H:%M:%S:%f').time().replace(microsecond=0)
+                stop_time.replace(second=stop_time.second)
+                self.entropy_subs[start_time] = line.split('|')[2].strip()
+                self.entropy_subs[stop_time] = None
+        print('Done importing ENTROPY subtitles')
+        # pprint(self.entropy_subs, indent=4)

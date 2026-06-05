@@ -76,3 +76,27 @@
     - xinit.entropy.ai.sh
     - xinit.heads.ai.sh
     - xinit.tate.sh
+
+# ── RPi 5 (aarch64) xorg.conf — explicit modesetting on display card ─────────
+# RPi 5 exposes two DRM devices:
+#   card0 — V3D GPU (3D/compute)
+#   card1 — Display pipeline / HDMI output
+# Without explicit config X falls back to "old probe method" and fails with
+# "Cannot run in framebuffer mode". This snippet pins modesetting to card1.
+# Only deployed on aarch64 (RPi 5); RPi 3 (armv7l) auto-detects fine.
+- name: Deploy RPi5 xorg.conf (modesetting on card1) for aarch64
+  ansible.builtin.copy:
+    dest:  /etc/X11/xorg.conf.d/10-rpi5-modesetting.conf
+    content: |
+      # Springs of Life — RPi 5 X11 config
+      # card0=V3D (GPU), card1=display pipeline (HDMI) — pin to card1.
+      Section "Device"
+          Identifier  "RPi5 Display"
+          Driver      "modesetting"
+          Option      "kmsdev"  "/dev/dri/card1"
+      EndSection
+    owner: root
+    group: root
+    mode:  "0644"
+  become: true
+  when: ansible_architecture == 'aarch64'

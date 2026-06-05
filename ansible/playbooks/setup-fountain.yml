@@ -3,7 +3,7 @@
 # Full setup for the Fountain node (RPi 3, audio-only).
 # Run this after a fresh Raspberry Pi OS Lite installation.
 #
-# Usage (via deployment.sh or directly):
+# Usage (via dopeployment.sh or directly):
 #   ansible-playbook playbooks/setup-fountain.yml --ask-pass --ask-become-pass
 
 - name: "Springs of Life — Fountain node setup"

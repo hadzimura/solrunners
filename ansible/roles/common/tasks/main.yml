@@ -236,6 +236,19 @@
     UV_PROJECT_ENVIRONMENT: "{{ sol_venv_path }}"
   when: sol_dep_mode == "pyproject"
 
+# Fix venv ownership: uv creates files under the venv path; with global
+# ansible_become: true and SSH pipelining, files can end up root-owned even
+# when tasks declare become: false. Enforce zero:zero on the whole venv tree.
+- name: Fix venv ownership (ensure {{ sol_user }}:{{ sol_group }} throughout)
+  ansible.builtin.file:
+    path:    "{{ sol_venv_path }}"
+    state:   directory
+    owner:   "{{ sol_user }}"
+    group:   "{{ sol_group }}"
+    recurse: yes
+  become: true
+  when: sol_dep_mode != "skip"
+
 # ── 8. Deploy .bashrc ─────────────────────────────────────────────────────────
 # The template activates the venv for ALL interactive logins (SSH, TTY5, etc).
 # It does NOT call startx or launch any application — the systemd service owns
@@ -293,8 +306,39 @@
   changed_when: "'changed' in _noatime_result.stdout"
   become:       true
 
-# ── 9b. /storage tmpfs ────────────────────────────────────────────────────────
-- name: Create /storage mount point
+# Remove any hardcoded video= resolution injected by the RPi imager.
+# e.g. "video=HDMI-A-1:1440x900M@60" forces a specific output at a fixed
+# resolution, which breaks auto-negotiation when a different display (projector,
+# TV) is connected. Removing it lets the GPU driver negotiate the native mode
+# of whichever display is plugged in. Our xinit scripts and Config.py already
+# auto-detect the connected output and screen size at runtime via xrandr.
+- name: Remove imager-injected video= resolution from cmdline.txt
+  ansible.builtin.shell: |
+    CMDFILE=/boot/firmware/cmdline.txt
+    BEFORE=$(cat "$CMDFILE")
+    # Strip any "video=HDMI-*:..." token (imager artifact)
+    AFTER=$(echo "$BEFORE" | sed 's/video=HDMI-[^ ]* //g')
+    if [ "$BEFORE" != "$AFTER" ]; then
+      echo "$AFTER" > "$CMDFILE"
+      echo "changed"
+    fi
+  register:     _video_param_result
+  changed_when: "'changed' in _video_param_result.stdout"
+  become:       true
+
+# ── 9b. /storage — tmpfs ramdisk OR plain directory symlink ──────────────────
+# Controlled by sol_skip_storage_tmpfs (default: false).
+#
+# When false (default — tate, fountain, heads):
+#   /storage is a tmpfs ramdisk sized sol_storage_size_mb. Media is copied into
+#   it at boot by storage.service so the SD card is never read during playback.
+#
+# When true (entropy):
+#   No ramdisk. Media lives directly in the repo clone on the SD card.
+#   /storage is a plain directory; /storage/<subdir> is a symlink into the repo.
+#   This avoids the RAM cost for larger media that doesn't need read protection.
+
+- name: Create /storage mount point (tmpfs mode)
   ansible.builtin.file:
     path:  "{{ sol_storage_path }}"
     state: directory
@@ -302,6 +346,7 @@
     group: "{{ sol_group }}"
     mode:  "0755"
   become: true
+  when: not (sol_skip_storage_tmpfs | default(false))
 
 - name: Add /storage tmpfs to /etc/fstab
   ansible.builtin.lineinfile:
@@ -310,6 +355,7 @@
     regexp: "^tmpfs {{ sol_storage_path }}"
     state:  present
   become: true
+  when: not (sol_skip_storage_tmpfs | default(false))
 
 - name: Mount /storage tmpfs (if not already mounted)
   ansible.posix.mount:
@@ -319,6 +365,37 @@
     opts:   "defaults,noatime,size={{ sol_storage_size_mb }}m"
     state:  mounted
   become: true
+  when: not (sol_skip_storage_tmpfs | default(false))
+
+# ── 9c. /storage plain directory + symlink (no-tmpfs mode) ───────────────────
+- name: Create /storage as plain directory (no-tmpfs mode)
+  ansible.builtin.file:
+    path:  "{{ sol_storage_path }}"
+    state: directory
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0755"
+  become: true
+  when: sol_skip_storage_tmpfs | default(false)
+
+- name: Remove any existing tmpfs entry for /storage from fstab (no-tmpfs mode)
+  ansible.builtin.lineinfile:
+    path:   /etc/fstab
+    regexp: "^tmpfs {{ sol_storage_path }}"
+    state:  absent
+  become: true
+  when: sol_skip_storage_tmpfs | default(false)
+
+- name: Create /storage/{{ sol_media_subdir }} symlink → repo media folder
+  ansible.builtin.file:
+    src:   "{{ sol_repo_path }}/media/{{ sol_media_subdir }}"
+    dest:  "{{ sol_storage_path }}/{{ sol_media_subdir }}"
+    state: link
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    force: true
+  become: true
+  when: sol_skip_storage_tmpfs | default(false)
 
 # ── 10. storage.service — copies media → /storage at boot ─────────────────────
 - name: Copy storage.service to systemd
@@ -328,6 +405,7 @@
     remote_src: yes
   become: true
   notify: Reload systemd
+  when: not (sol_skip_storage_tmpfs | default(false))
 
 - name: Enable and start storage service
   ansible.builtin.systemd:
@@ -336,4 +414,14 @@
     state:         started
     daemon_reload: true
   become: true
+  when: not (sol_skip_storage_tmpfs | default(false))
+
+- name: Disable and remove storage.service (no-tmpfs mode)
+  ansible.builtin.systemd:
+    name:    storage.service
+    enabled: false
+    state:   stopped
+  become: true
+  ignore_errors: true   # service may not exist on fresh install
+  when: sol_skip_storage_tmpfs | default(false)
 
