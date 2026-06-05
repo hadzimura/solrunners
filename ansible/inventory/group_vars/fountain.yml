@@ -16,6 +16,10 @@ sol_service_name: "sol.fountain.service"
 # tmpfs size for /storage — audio files are small; 512 MB is generous
 sol_storage_size_mb: 512
 
+# Skip dist-upgrade — this node has a 4 GB SD card; the full kernel/firmware
+# upgrade (367 MB) exceeds available space. Use a larger card to re-enable.
+sol_skip_upgrade: true
+
 # Git branch override (remove once merged to main)
 sol_git_branch: "2.0.26.ai"
 

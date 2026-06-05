@@ -85,12 +85,22 @@
   become:        true
 
 # ── 2b. System update ─────────────────────────────────────────────────────────
+# dist upgrade pulls new kernel/firmware packages; skip on nodes with small
+# SD cards (set sol_skip_upgrade: true in group_vars to disable).
 - name: Update apt cache and upgrade all packages
   ansible.builtin.apt:
     update_cache: yes
     upgrade: dist
     cache_valid_time: 3600
   become: true
+  when: not (sol_skip_upgrade | default(false))
+
+- name: Update apt cache only (upgrade skipped for this node)
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  become: true
+  when: sol_skip_upgrade | default(false)
 
 # ── 3. Base packages ──────────────────────────────────────────────────────────
 - name: Install base system packages
