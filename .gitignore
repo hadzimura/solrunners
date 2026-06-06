@@ -3,4 +3,4 @@ source
 ssh
 .idea
 .venv
-.DS_Store
+.DS_Store* 2.*
