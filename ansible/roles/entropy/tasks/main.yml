@@ -76,8 +76,13 @@
       # Force OpenAL-soft to use ALSA backend and directly address the RPi DAC+ card.
       # Using plughw bypasses pipewire-alsa interception and handles format conversion.
       # Card name 'DAC' is stable across reboots (defined by the dtoverlay).
+      #
+      # sources: raise from the default 256 to 512 as defense-in-depth against OpenAL
+      # source pool exhaustion. The primary fix is reusing the Player via seek(0) in
+      # Entro.py; this limit is a safety net in case other code paths allocate sources.
       [general]
       drivers = alsa
+      sources = 512
 
       [alsa]
       device = plughw:DAC

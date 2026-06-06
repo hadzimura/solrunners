@@ -25,7 +25,15 @@ from modules.Config import get_display_resolution
 from modules.Config import setup_cv2_fullscreen
 
 
-def countdown(total_playtime=None, start_playtime=None):
+def countdown(bg_audio, total_playtime=None, start_playtime=None):
+    """
+    Countdown intro sequence.
+
+    'bg_audio' is a pyglet.media.StaticSource created once externally and passed in.
+    The Player is still created fresh each call (countdown runs infrequently so the
+    OpenAL source is allocated/freed at most once per entropy cycle — low-risk).
+    See __main__ for StaticSource creation.
+    """
 
     print("Initializing COUNTDOWN video file: '{}'".format(cfg.entropy_countdown_video))
     c_video = cv.VideoCapture(str(cfg.entropy_countdown_video))
@@ -33,9 +41,9 @@ def countdown(total_playtime=None, start_playtime=None):
     screen_height = int(c_video.get(cv.CAP_PROP_FRAME_HEIGHT))
     print('Video resolution detected as: {}x{}'.format(screen_width, screen_height))
 
-    print("Initializing COUNTDOWN audio file: '{}'".format(cfg.entropy_countdown_audio))
-    bg_audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_countdown_audio), streaming=False))
-    # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
+    # bg_audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_countdown_audio), streaming=False))
+    # ↑ MOVED to __main__ — StaticSource now passed in as 'bg_audio' to avoid reloading the file
+    #   on every countdown() call. Player is still created fresh below (low risk, infrequent call).
     print('All the COUNTDOWN media loaded')
 
     if start_playtime is not None:
@@ -203,7 +211,21 @@ def countdown(total_playtime=None, start_playtime=None):
         # This actually controls the playback speed!
         cv.waitKey(frame_time)
 
-def entropy(total_playtime=None, start_playtime=0):
+def entropy(audio, total_playtime=None, start_playtime=0):
+    """
+    Entropy main playback loop.
+
+    'audio' is a pyglet.media.StaticSource created ONCE in __main__ and passed in.
+    The Player ('aplayer') is also created once here and reused across every cycle via
+    aplayer.seek(0) + aplayer.play() — this avoids allocating a new OpenAL source
+    each cycle. OpenAL-soft has a hard 256-source limit; the old pattern of
+    aplayer.delete() + audio.play() on every cycle exhausted it after ~256 plays
+    and crashed audio entirely.
+
+    The function loops internally (while True) — it never returns. The outer while True
+    in __main__ is therefore effectively dead after the first call; countdown() runs once
+    at boot before entropy() takes over indefinitely.
+    """
 
     print("Initializing ENTROPY video file: '{}'".format(cfg.entropy_main_video))
     e_video = cv.VideoCapture(str(cfg.entropy_main_video))
@@ -212,9 +234,11 @@ def entropy(total_playtime=None, start_playtime=0):
     print('Video resolution detected as: {}x{}'.format(screen_width, screen_height))
     total_frames = e_video.get(cv.CAP_PROP_FRAME_COUNT)
     print('Total video frames: {}'.format(total_frames))
-    # print(video.get(cv.CAP_PROP_FRAME_COUNT))
     print("Initializing ENTROPY audio file: '{}'".format(cfg.entropy_main_audio))
-    audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_main_audio), streaming=False))
+    # audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_main_audio), streaming=False))
+    # ↑ MOVED to __main__ — StaticSource and the Player are now created once and reused
+    #   across all cycles via seek(0). Creating it here allocated a new OpenAL source
+    #   on every entropy() call, exhausting the 256-source pool after ~256 video loops.
     # video.set(cv.CAP_PROP_BUFFERSIZE, 5)
     print('All the ENTROPY media loaded')
 
@@ -258,12 +282,15 @@ def entropy(total_playtime=None, start_playtime=0):
     cv.waitKey(100)
 
 
-    # Run audio track
+    # Run audio track — Player created once here; reused across all cycles via seek(0).
+    # Previously: aplayer = audio.play() was inside entropy() which got called fresh each
+    # cycle from the outer while True, allocating a new OpenAL source every time.
     aplayer = audio.play()
-    playback = True
+    # playback = True  # REMOVED: loop is now internal (while True below); no longer needed
 
-    # Main video loop
-    while playback is True:
+    # Main video loop — runs indefinitely; entropy() never returns.
+    # The outer `while True` in __main__ is dead code after the first call.
+    while True:
 
         # Get next video frame
         status, frame = e_video.read()
@@ -388,13 +415,17 @@ def entropy(total_playtime=None, start_playtime=0):
             print('Releasing AV media')
             try:
                 e_video.release()
-                cv.destroyAllWindows()
-                cv.waitKey(1)  # Need this line to wait for the destroy actions to complete
-                aplayer.delete()
-                print('AV media released')
+                # cv.destroyAllWindows()  # OLD: destroyed window each cycle — removed to avoid flash between loops
+                # cv.waitKey(1)           # OLD: was needed after destroyAllWindows; no longer required
+                # aplayer.delete()        # OLD: freed the OpenAL source each cycle → exhausted pool at ~256 plays
+                aplayer.seek(0)           # NEW: rewind audio to start — same OpenAL source reused indefinitely
+                aplayer.play()            # resume from the beginning
+                e_video = cv.VideoCapture(str(cfg.entropy_main_video))   # reopen video stream from the start
+                frame_counter = 1
+                print('AV media reset for next cycle')
             except Exception as av_error:
-                print('AV media releasing fail: {}'.format(av_error))
-            playback = False
+                print('AV media reset fail: {}'.format(av_error))
+            # playback = False  # OLD: exited inner loop so outer while True would call entropy() fresh next cycle
 
         # cv.waitKey(0)
         if av_sync == 0:
@@ -426,6 +457,18 @@ if __name__ == "__main__":
 
     cfg = Configuration(arg.fullscreen, runtime='entropy')
 
+    # Create audio StaticSources once for the entire runtime lifetime.
+    # Previously these were created inside countdown()/entropy() on every call (every video cycle),
+    # allocating a new OpenAL source each time. OpenAL-soft has a hard 256-source limit;
+    # after ~256 cycles the pool was exhausted and audio crashed with no recovery.
+    # By creating them here and passing them in, the Player is also reused via seek(0)
+    # in entropy(), meaning the OpenAL source count stays constant at 1 indefinitely.
+    countdown_audio = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_countdown_audio), streaming=False))
+    entropy_audio   = pyglet.media.StaticSource(pyglet.media.load(str(cfg.entropy_main_audio),      streaming=False))
+
     while True:
-        countdown_thread = Thread(target=countdown())
-        entropy_thread = Thread(target=entropy())
+        # countdown() runs once at boot (entropy() loops internally and never returns).
+        # countdown_thread = Thread(target=countdown())  # OLD: countdown() took no audio arg
+        countdown_thread = Thread(target=countdown(countdown_audio))
+        # entropy_thread = Thread(target=entropy())      # OLD: entropy() took no audio arg; created StaticSource fresh each call
+        entropy_thread = Thread(target=entropy(entropy_audio))
