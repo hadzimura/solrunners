@@ -7,9 +7,163 @@
 # Storage: no tmpfs ramdisk. /storage/entropy is a symlink (created by common role)
 # pointing to sol_repo_path/media/entropy. The .ready sentinel lives directly on
 # the SD card at /storage/.ready so wait_for_storage() passes on every boot.
+#
+# DAC variant (sol_audio_dac: true):
+#   When an RPi DAC+ shield is present, additional tasks set ALSA + WirePlumber
+#   to route audio to the DAC rather than HDMI outputs.
 
 # ── Make xinit script executable ─────────────────────────────────────────────
 - name: Make xinit.entropy.ai.sh executable
+  ansible.builtin.file:
+    path: "{{ sol_repo_path }}/configurations/xinit.entropy.ai.sh"
+    mode: "0755"
+
+# ── Audio: PipeWire ───────────────────────────────────────────────────────────
+# pyglet uses OpenAL which connects to PipeWire for audio output.
+# pipewire-audio meta-package pulls pipewire + wireplumber + pipewire-pulse.
+# The user session PipeWire must start at boot (before login) via linger.
+- name: Install PipeWire audio stack
+  ansible.builtin.apt:
+    name:
+      - pipewire
+      - pipewire-audio      # meta-package: wireplumber + pipewire-pulse
+      - pipewire-alsa       # ALSA→PipeWire bridge
+    state: present
+  become: true
+
+- name: Enable user linger for {{ sol_user }} (PipeWire starts at boot without login)
+  ansible.builtin.command:
+    cmd: loginctl enable-linger {{ sol_user }}
+  become: true
+  changed_when: false
+
+- name: Enable PipeWire user services (pipewire, pipewire-pulse, wireplumber)
+  ansible.builtin.systemd:
+    name:    "{{ item }}"
+    enabled: true
+    scope:   user
+  become: false
+  loop:
+    - pipewire
+    - pipewire-pulse
+    - wireplumber
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ sol_user_uid | default('1000') }}"
+
+# ── DAC audio routing (RPi DAC+ shield) ──────────────────────────────────────
+# When sol_audio_dac is true the node has an RPi DAC+ (pcm512x I2S) shield.
+# Two things must be configured so audio reaches the DAC instead of HDMI:
+#
+#   1. /etc/asound.conf — sets the ALSA default device by card NAME ("DAC"),
+#      not by card number.  Card numbering can shift across kernel/firmware
+#      upgrades; the card name is stable as long as the overlay is loaded.
+#
+#   2. WirePlumber priority rule — WirePlumber (the PipeWire session manager)
+#      assigns every node a session priority and automatically selects the
+#      highest-priority sink as the default.  HDMI outputs typically get ~700.
+#      This Lua rule (WirePlumber 0.4.x format) matches the DAC+ by its nick
+#      name and boosts its priority to 2000, guaranteeing it wins at boot—
+#      before the Entropy service (and therefore pyglet/OpenAL) starts.
+#      This avoids the race condition of a post-boot pactl/wpctl call.
+
+- name: Configure ALSA default device to RPi DAC+ (by card name, not number)
+  ansible.builtin.copy:
+    dest:  /etc/asound.conf
+    owner: root
+    group: root
+    mode:  "0644"
+    content: |
+      # Direct ALSA applications to the RPi DAC+ by card name "DAC".
+      # Using the name instead of the card index avoids breakage if the
+      # kernel enumerates cards in a different order after a firmware update.
+      pcm.!default {
+          type hw
+          card "DAC"
+      }
+      ctl.!default {
+          type hw
+          card "DAC"
+      }
+  become: true
+  when: sol_audio_dac | default(false)
+
+- name: Create WirePlumber user config directory
+  ansible.builtin.file:
+    path:  "/home/{{ sol_user }}/.config/wireplumber/main.lua.d"
+    state: directory
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0755"
+  become: false
+  when: sol_audio_dac | default(false)
+
+- name: Deploy WirePlumber priority rule — prefer RPi DAC+ over HDMI sinks
+  ansible.builtin.copy:
+    dest:  "/home/{{ sol_user }}/.config/wireplumber/main.lua.d/51-rpi-dac.lua"
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0644"
+    content: |
+      -- WirePlumber 0.4.x rule: boost RPi DAC+ session priority to 2000.
+      --
+      -- WirePlumber applies this rule when the DAC node is created (device
+      -- discovery at boot), so the default sink is set before any PipeWire
+      -- client (including OpenAL used by pyglet) opens an audio stream.
+      -- HDMI outputs are typically at priority ~700; 2000 guarantees the DAC
+      -- wins without needing any post-boot wpctl/pactl intervention.
+      --
+      -- Matched by node.nick "RPi DAC+" — the card's display name from the
+      -- pcm512x driver, stable across reboots and card-number changes.
+      rule = {
+        matches = {
+          {
+            { "node.nick", "=", "RPi DAC+" },
+          },
+        },
+        apply_properties = {
+          ["priority.session"] = 2000,
+        },
+      }
+      table.insert(alsa_monitor.rules, rule)
+  become: false
+  when: sol_audio_dac | default(false)
+
+# ── Persistent .ready sentinel ────────────────────────────────────────────────
+# On tmpfs nodes this is touched by storage.service after media copy.
+# On entropy (no tmpfs) /storage is a plain dir on the SD card, so the sentinel
+# persists across reboots without any service needed.
+- name: Create persistent /storage/.ready sentinel
+  ansible.builtin.file:
+    path:  "{{ sol_storage_path }}/.ready"
+    state: touch
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0644"
+  become: true
+
+# ── systemd service ───────────────────────────────────────────────────────────
+# sol.entropy.ai.service calls:
+#   /usr/bin/xinit configurations/xinit.entropy.ai.sh -- :0 -nocursor
+# xinit.entropy.ai.sh then calls:
+#   python Entro.ai.py --system rpi --fullscreen
+# XDG_RUNTIME_DIR is set in the service unit so OpenAL finds the PipeWire socket
+# at /run/user/1000/pipewire-0 from the system service context.
+- name: Copy sol.entropy.ai.service to systemd
+  ansible.builtin.copy:
+    src:        "{{ sol_repo_path }}/configurations/systemd/sol.entropy.ai.service"
+    dest:       /etc/systemd/system/sol.entropy.ai.service
+    remote_src: yes
+  become: true
+  notify: Reload systemd and restart entropy
+
+- name: Enable and start Entropy service
+  ansible.builtin.systemd:
+    name:          sol.entropy.ai.service
+    enabled:       true
+    state:         started
+    daemon_reload: true
+  become: true
+
   ansible.builtin.file:
     path: "{{ sol_repo_path }}/configurations/xinit.entropy.ai.sh"
     mode: "0755"

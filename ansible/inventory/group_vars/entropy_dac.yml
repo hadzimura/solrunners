@@ -1,0 +1,41 @@
+# group_vars/entropy_dac.yml — variables for the Entropy DAC node
+#
+# Entropy DAC is a second Entropy-class deployment on an RPi 5 fitted with the
+# RPi DAC+ shield (pcm512x I2S audio).  The runtime is identical to entropy:
+# OpenCV video + pyglet audio via PipeWire/OpenAL, minimal X11, no tmpfs.
+#
+# Key differences from the base entropy node:
+#   • Python 3.11.2 shipped with this Bookworm image (entropy-node has 3.13)
+#   • RPi DAC+ on ALSA card "DAC" (pcm512x) — must be preferred over HDMI
+#   • sol_audio_dac: true — triggers DAC-specific tasks in the entropy role
+
+sol_hostname:        "entropy-dac"
+sol_media_subdir:    "entropy"
+sol_service_name:    "sol.entropy.ai"
+
+# xinit startup script shared with entropy-node
+sol_xinit_script:    "xinit.entropy.ai.sh"
+
+# Git branch for this deployment
+sol_git_branch: "main"
+
+# Python 3.11.2 present on this image (Bookworm baseline; pyproject requires >=3.11)
+sol_venv_python_check: "3.11"
+
+# aarch64 — full PyPI binary wheels available, use pyproject.toml lock file
+sol_dep_mode: "pyproject"
+
+# No tmpfs ramdisk — media symlinked from repo clone on SD card, same as entropy
+sol_skip_storage_tmpfs: true
+
+# DAC+ shield present — entropy role will:
+#   • set ALSA default by card name (not number) via /etc/asound.conf
+#   • install a WirePlumber priority rule so PipeWire auto-selects the DAC
+#     before any client (incl. the Entropy service) connects
+sol_audio_dac: true
+
+# Display rotation — landscape, no rotation needed
+sol_display_rotate: "normal"
+
+# Screen resolution for reference (update if a different display is attached)
+sol_display_resolution: "1920x1080"
