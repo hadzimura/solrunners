@@ -1,6 +1,0 @@
-numpy
-opencv-python
-pyglet>=2.1.14
-ruamel.yaml
-scipy
-
