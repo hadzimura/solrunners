@@ -62,9 +62,30 @@
     - pipewire-pulse
     - wireplumber
 
-# ── DAC audio routing note ────────────────────────────────────────────────────
-# Audio output routing to the RPi DAC+ shield is configured via raspi-config
-# on the node itself. No Ansible tasks are needed here — the OS handles it.
+# ── OpenAL → DAC routing ─────────────────────────────────────────────────────
+# By default, openal-soft picks up audio devices in ALSA enumeration order.
+# On RPi 5, HDMI cards (card 0, card 1) are enumerated before the DAC+ (card 2),
+# so OpenAL routes audio to HDMI even when PipeWire's default sink is the DAC.
+# Fix: ~/.alsoftrc forces the ALSA backend and addresses the DAC+ directly via
+# plughw:DAC (stable card name set by the dtoverlay). This bypasses pipewire-alsa
+# interception and hardware format negotiation issues (mono vs. stereo etc.).
+- name: Configure OpenAL to route audio to RPi DAC+ (plughw:DAC)
+  ansible.builtin.copy:
+    dest:    "/home/{{ sol_user }}/.alsoftrc"
+    content: |
+      # Force OpenAL-soft to use ALSA backend and directly address the RPi DAC+ card.
+      # Using plughw bypasses pipewire-alsa interception and handles format conversion.
+      # Card name 'DAC' is stable across reboots (defined by the dtoverlay).
+      [general]
+      drivers = alsa
+
+      [alsa]
+      device = plughw:DAC
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0644"
+  become: false
+  when: sol_audio_dac | default(false)
 
 # ── Persistent .ready sentinel ────────────────────────────────────────────────
 # On tmpfs nodes this is touched by storage.service after media copy.
