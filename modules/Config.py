@@ -19,15 +19,24 @@ from random import choice
 import requests
 
 if system() != 'Darwin':
-    from gpiozero import Button
-    from gpiozero import DistanceSensor
-    from gpiozero import LED
-    from gpiozero import MotionSensor
+    try:
+        # GPIO peripherals used by room-runner nodes only (Button, LED, sensors).
+        # entropy/entropy-dac/heads do not wire GPIO — import is optional.
+        from gpiozero import Button
+        from gpiozero import DistanceSensor
+        from gpiozero import LED
+        from gpiozero import MotionSensor
+    except ImportError:
+        pass
 
-from modules.Controllers import Effect
-from modules.Controllers import Font
-from modules.Controllers import Text
-from modules.Controllers import Draw
+try:
+    # Room-runner display helpers — not used by entropy/heads.
+    from modules.Controllers import Effect
+    from modules.Controllers import Font
+    from modules.Controllers import Text
+    from modules.Controllers import Draw
+except ImportError:
+    pass
 
 # Run pyglet in headless mode
 import pyglet
