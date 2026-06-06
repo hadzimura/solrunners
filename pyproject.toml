@@ -13,6 +13,7 @@ dependencies = [
     "pyglet==1.5.27 ; platform_machine != 'armv7l'",
     "opencv-contrib-python ; platform_machine != 'armv7l'",
     "ruamel.yaml",
+    "requests",
     "scipy ; platform_machine != 'armv7l'",
     # Ansible is only needed on the control machine, not on RPi target nodes.
     # On armv7l it also pulls cffi which requires libffi-dev to compile.
