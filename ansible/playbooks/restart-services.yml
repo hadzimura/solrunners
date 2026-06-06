@@ -21,6 +21,19 @@
         force:   yes
       become: false
 
+    # Pipelining with global ansible_become: true can cause git (and uv) to
+    # write files as root even when become: false is declared on the task.
+    # Explicitly re-assert ownership after every git pull so scripts keep
+    # their execute bits and the venv stays accessible to sol_user.
+    - name: Fix repo + venv ownership after git pull
+      ansible.builtin.file:
+        path:    "{{ sol_repo_path }}"
+        state:   directory
+        owner:   "{{ sol_user }}"
+        group:   "{{ sol_group }}"
+        recurse: yes
+      become: true
+
     # ── Update Python dependencies via uv ────────────────────────────────────
     - name: Update Python requirements via uv
       ansible.builtin.command:
