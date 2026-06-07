@@ -1,14 +1,28 @@
 adela:
   name: Adéla Leinweberová
+  sucher: natascha
+  position: [1, 8000]
 barbora:
   name: Barbora Liška Karpíšková
+  sucher: adina
+  position: [1000, 6000]
 denisa:
   name: Denisa Dimitrovová
-jan:
-  name: Jan Samec
+  sucher: lida
+  position: [2000, 10000]
 lukas:
   name: Lukáš Georgiev
+  sucher: konrad
+  position: [3000, 7000]
 radim:
   name: Radim Kučera
+  sucher: heinrich
+  position: [4000, 9000]
 roman:
   name: Roman Neruda
+  sucher: wilhelm
+  position: [5000, 11000]
+jan:
+  name: Jan Samec
+  sucher: samec
+  position: [12000]
