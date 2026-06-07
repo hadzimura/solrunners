@@ -3,6 +3,8 @@
 # Springs of Life (2025)
 # rkucera@gmail.com
 from ipaddress import summarize_address_range
+import re
+import subprocess
 
 import cv2 as cv
 from pprint import pprint
@@ -25,6 +27,21 @@ from pathlib import Path
 
 from threading import Thread
 from platform import node
+
+
+def get_display_size():
+    """Query the current X screen dimensions via xrandr.
+    Returns (width, height) of the logical X screen, or (None, None) on failure.
+    Needed because cv.WND_PROP_FULLSCREEN sends an EWMH hint that requires a
+    window manager to act on it — in a bare xinit session it is silently ignored."""
+    try:
+        out = subprocess.check_output(['xrandr'], text=True, timeout=5)
+        m = re.search(r'current (\d+) x (\d+)', out)
+        if m:
+            return int(m.group(1)), int(m.group(2))
+    except Exception as e:
+        print('get_display_size failed: {}'.format(e))
+    return None, None
 
 
 def detect_bounding_box(video_frame, head_name, still_name=None, sample_name=None, location=None):
@@ -123,6 +140,14 @@ def heads(bg_music, talking_head, total_playtime=None, face_detection=False):
     if cfg.fullscreen is True:
         print('Running in fullscreen mode')
         cv.setWindowProperty('heads', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
+        # In a bare X11 session without a window manager, WND_PROP_FULLSCREEN sends an EWMH
+        # hint that nobody acts on — the window stays at default size. Explicitly move and
+        # resize to the full logical X screen so the rotated framebuffer is fully covered.
+        disp_w, disp_h = get_display_size()
+        if disp_w and disp_h:
+            print('Forcing window to display size: {}x{}'.format(disp_w, disp_h))
+            cv.moveWindow('heads', 0, 0)
+            cv.resizeWindow('heads', disp_w, disp_h)
     else:
         print("Running in windowed mode (use '--fullscreen' runtime arg for fullscreen mode)")
 
