@@ -123,15 +123,16 @@ if [[ "${PLAYBOOK_KEY}" == "deploy-media" || "${PLAYBOOK_KEY}" == "restart-servi
 fi
 
 # ── STEP 3: Authentication ────────────────────────────────────────────────────
-section "Authentication"
-echo ""
-echo "All RPi nodes use password authentication."
-echo "You will be prompted for the SSH password (and sudo password if needed)."
-echo ""
-
-# Decide whether this playbook needs privilege escalation (become/sudo).
-# Setup and restart playbooks do; media-only sync does not.
+# Credentials are loaded from group_vars/all/secrets.yml (gitignored).
+# --ask-pass / --ask-become-pass are only added as a fallback when that file
+# is missing, so the tool stays usable without the secrets file.
+SECRETS_FILE="${ANSIBLE_DIR}/inventory/group_vars/all/secrets.yml"
+ASK_PASS_FLAG="--ask-pass"
 BECOME_FLAG="--ask-become-pass"
+if [[ -f "${SECRETS_FILE}" ]]; then
+    ASK_PASS_FLAG=""
+    BECOME_FLAG=""
+fi
 if [[ "${PLAYBOOK_KEY}" == "deploy-media" ]]; then
     BECOME_FLAG=""
 fi
@@ -166,7 +167,7 @@ echo ""
 # shellcheck disable=SC2086
 "${ANSIBLE_BIN}" \
     "${PLAYBOOK}" \
-    --ask-pass \
+    ${ASK_PASS_FLAG} \
     ${BECOME_FLAG} \
     ${LIMIT_FLAG} \
     ${CHECK_FLAG} \

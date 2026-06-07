@@ -4,3 +4,4 @@ ssh
 .idea
 .venv
 .DS_Store* 2.*
+**/secrets.yml

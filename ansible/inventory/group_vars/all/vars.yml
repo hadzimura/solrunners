@@ -1,8 +1,7 @@
-# group_vars/all.yml — variables shared by every RPi node
+# group_vars/all/vars.yml — variables shared by every RPi node
 #
-# Sensitive values (ssh password, become password) are NOT stored here.
-# They are supplied interactively by deployment.sh via --ask-pass /
-# --ask-become-pass flags.
+# Sensitive values (ssh password, become password) live in secrets.yml
+# next to this file — that file is gitignored and never committed.
 
 # ── Remote user ──────────────────────────────────────────────────────────────
 ansible_user: zero
