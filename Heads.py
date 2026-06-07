@@ -138,7 +138,9 @@ def heads(bg_music, talking_head, total_playtime=None, face_detection=False):
     # Run audio track
     print("Initializing audio: '{}'".format(cfg.heads_audio))
 
-    bg_audio_frames = int(round(round(cfg.heads_overlays[0]['sample'][0].duration, 2) * 25, 0))
+    # Duration from the player's current source — avoids accessing heads_overlays[0] which
+    # required a special 0.*.wav file; bg_music is loaded directly from cfg.heads_audio now.
+    bg_audio_frames = int(round(bg_music.source.duration * 25, 0))
     bg_audio_compensation = 0
     # bg_music = cfg.heads_overlays[0]['sample'][0].play()
     # ↑ MOVED to __main__ — Player passed in as 'bg_music'; seek(0) used on cycle reset.
@@ -457,10 +459,26 @@ if __name__ == "__main__":
     # Previously: bg_music was created inside heads() on every call; talking_head was allocated
     # fresh on every overlay trigger (~every 40s). Both are now created here and passed in.
     # heads() loops internally (while True) and never returns.
-    _bg_source      = cfg.heads_overlays[0]['sample'][0]
-    _sample_source  = cfg.heads_overlays[1]['sample'][0]   # placeholder; seek(0) replaces content per trigger
-    bg_music_player     = _bg_source.play()
-    talking_head_player = _sample_source.play()
+
+    # Load background audio directly from cfg.heads_audio (silent_heads.wav) — previously this
+    # was accessed via heads_overlays[0]['sample'][0] which required a special 0.*.wav file.
+    # _bg_source = cfg.heads_overlays[0]['sample'][0]    # OLD: required 0.*.wav in samples dir
+    _bg_source = pyglet.media.StaticSource(pyglet.media.load(str(cfg.heads_audio), streaming=False))
+    bg_music_player = _bg_source.play()
+
+    # Find first available overlay sample as placeholder for the talking-head player.
+    # The actual sample is replaced via queue()+_playlists.clear() on each trigger.
+    # Previously this hardcoded heads_overlays[1] which had no sample file on the node.
+    # _sample_source = cfg.heads_overlays[1]['sample'][0]   # OLD: hardcoded sub_id 1
+    _first_sample = next(
+        (cfg.heads_overlays[sid]['sample'][0]
+         for sid in sorted(cfg.heads_overlays.keys())
+         if 'sample' in cfg.heads_overlays[sid]),
+        None
+    )
+    if _first_sample is None:
+        raise RuntimeError("No audio samples found — deploy media/heads/samples/ to node")
+    talking_head_player = _first_sample.play()
     talking_head_player.pause()   # start silent; activated by overlay triggers inside heads()
 
     # while cycle < 2:                                                               # OLD: ran exactly once, runtime exited

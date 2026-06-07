@@ -273,8 +273,14 @@ class Configuration(object):
         print('Importing HEADS overlays samples from: {}'.format(self.heads_samples))
         sample_count = 0
         for sample_file in glob(str(self.heads_samples)):
-            sub_id = int(sample_file.split('/')[-1].split('.')[0])
-            sample_author = sample_file.split('/')[-1].split('.')[1]
+            filename = sample_file.split('/')[-1]
+            try:
+                # Filename format: {sub_id}.{author}.wav  — skip malformed names (e.g. shell-expansion artefacts)
+                sub_id = int(filename.split('.')[0])
+                sample_author = filename.split('.')[1]
+            except (ValueError, IndexError):
+                print('Skipping malformed sample filename: {}'.format(filename))
+                continue
             print('Importing: {}'.format(sample_file))
             if 'sample' not in self.heads_overlays[sub_id]:
                 self.heads_overlays[sub_id]['sample'] = list()
