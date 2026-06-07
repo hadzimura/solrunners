@@ -25,7 +25,7 @@ from modules.Config import wait_for_storage
 from modules.Config import Configuration
 from pathlib import Path
 
-from threading import Thread
+from threading import Thread  # kept for potential future use
 from platform import node
 
 
@@ -511,7 +511,16 @@ if __name__ == "__main__":
     # while cycle < 2:                                                               # OLD: ran exactly once, runtime exited
     #     heads_thread = Thread(target=heads(total_playtime=None, ...))             # OLD: heads() took no audio args
     #     cycle += 1
+    # heads() loops internally forever via its own while True — it never returns.
+    # The outer while True is a safety net: if an unhandled exception escapes heads(),
+    # catch it here and restart heads() reusing the same Player objects (no new sources).
+    print('Start of heads runtime')
     while True:
-        # heads() loops forever internally — this outer loop is a safety restart only
-        print('Start of heads runtime')
-        heads_thread = Thread(target=heads(bg_music_player, talking_head_player, total_playtime=None, face_detection=arg.recognition))
+        try:
+            heads(bg_music_player, talking_head_player, total_playtime=None, face_detection=arg.recognition)
+        except Exception as runtime_error:
+            # heads() should never return; log the exception and restart without
+            # re-allocating Players — prevents OpenAL source pool exhaustion on restart.
+            print('heads() exited unexpectedly: {}'.format(runtime_error))
+            print('Restarting heads runtime...')
+            sleep(1)
