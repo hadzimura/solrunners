@@ -186,7 +186,7 @@ def heads(bg_music, talking_head, total_playtime=None, face_detection=False):
 
     current_head = None
 
-    talking_head = None
+    talking_head_active = False   # True while a voice sample is playing (replaces talking_head is not None)
     kill_splayer = 0
 
     volume_downer = False
@@ -260,9 +260,11 @@ def heads(bg_music, talking_head, total_playtime=None, face_detection=False):
                     # talking_head = audio_sample.play()
                     # ↑ OLD: allocated a new OpenAL source every ~40 seconds (each overlay trigger).
                     #   After ~256 triggers (~2.8 hours) the source pool was exhausted → audio crash.
-                    talking_head.seek(0)           # NEW: rewind the shared player to start
-                    talking_head.source = audio_sample  # swap the StaticSource on the reused player
-                    talking_head.play()
+                    talking_head.pause()
+                    talking_head._playlists.clear()   # drop any queued sources from last trigger
+                    talking_head.queue(audio_sample)  # NEW: queue the chosen sample on the shared player
+                    talking_head.play()               # reuse same OpenAL source slot
+                    talking_head_active = True        # mark player as active (replaces talking_head is not None)
                     kill_splayer = talking_head.time + audio_sample.duration - 0.2
 
                     # Set the timer for raising the Background Audio volume
@@ -306,12 +308,13 @@ def heads(bg_music, talking_head, total_playtime=None, face_detection=False):
                 blur_interval = 0
                 display_slide = None
 
-            if talking_head is not None:
+            if talking_head_active:
                 if talking_head.time > kill_splayer:
                     print('Disabling Head Samples Audio Player at: {}'.format(frame_counter))
                     talking_head.pause()
                     # talking_head = None  # OLD: set to None then re-assigned fresh at next trigger
-                    #                      #      → new source allocated; now we keep the player object
+                    #                      #      now we keep the player alive; next trigger re-queues it
+                    talking_head_active = False
 
 
             # Facial recognition for author's name
@@ -340,7 +343,7 @@ def heads(bg_music, talking_head, total_playtime=None, face_detection=False):
 
             # Blending Subtitle Overlay
             if display_slide is not None:
-                if talking_head is not None:
+                if talking_head_active:   # was: talking_head is not None
                     cv.addWeighted(src1=frame, alpha=1, src2=display_slide, beta=1, gamma=1, dst=frame)
                 else:
                     cv.blur(src=display_slide, dst=display_slide, ksize=(blur_value, blur_value))
