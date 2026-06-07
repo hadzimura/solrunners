@@ -116,8 +116,10 @@ def heads(bg_music, talking_head, total_playtime=None, face_detection=False):
 
     # Display setup
     # h_video.set(cv.CAP_PROP_POS_FRAMES, 0)
-    cv.namedWindow('heads', cv.WINDOW_NORMAL)
-    cv.namedWindow('heads', cv.WINDOW_FREERATIO)
+    # WINDOW_NORMAL allows resizing; WINDOW_FREERATIO allows non-native aspect ratio.
+    # Must be combined in a single call — two separate calls would let the second overwrite
+    # the first, leaving WINDOW_FREERATIO alone (=AUTOSIZE type) which ignores WINDOW_FULLSCREEN.
+    cv.namedWindow('heads', cv.WINDOW_NORMAL | cv.WINDOW_FREERATIO)
     if cfg.fullscreen is True:
         print('Running in fullscreen mode')
         cv.setWindowProperty('heads', cv.WND_PROP_FULLSCREEN, cv.WINDOW_FULLSCREEN)
