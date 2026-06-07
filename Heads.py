@@ -89,9 +89,22 @@ def detect_bounding_box(video_frame, head_name, still_name=None, sample_name=Non
                    2,
                    cv.LINE_AA)
 
-def heads(total_playtime=None, face_detection=False):
+def heads(bg_music, talking_head, total_playtime=None, face_detection=False):
+    """
+    Heads main playback loop. Loops internally (while True) — never returns.
 
-    playback = True
+    'bg_music'     — pyglet Player for background music, created once in __main__.
+                     Reused every loop via bg_music.seek(0)+play(); the audio duration
+                     timer also reuses it via seek(0) instead of delete()+play().
+    'talking_head' — pyglet Player for voice samples, created once in __main__.
+                     Reused for every overlay trigger via seek(0)+play() instead of
+                     fresh audio_sample.play(). Previously: a new OpenAL source was
+                     allocated every ~40 seconds (each overlay trigger), exhausting the
+                     256-source pool after ~2.8 hours.
+
+    Both players are passed in pre-created so the OpenAL source count stays at 2
+    for the entire runtime lifetime regardless of how many cycles play.
+    """
 
     print("Initializing video: '{}'".format(cfg.heads_video))
     h_video = cv.VideoCapture(str(cfg.heads_video))
@@ -127,7 +140,11 @@ def heads(total_playtime=None, face_detection=False):
 
     bg_audio_frames = int(round(round(cfg.heads_overlays[0]['sample'][0].duration, 2) * 25, 0))
     bg_audio_compensation = 0
-    bg_music = cfg.heads_overlays[0]['sample'][0].play()
+    # bg_music = cfg.heads_overlays[0]['sample'][0].play()
+    # ↑ MOVED to __main__ — Player passed in as 'bg_music'; seek(0) used on cycle reset.
+    #   Creating it here allocated a new OpenAL source on every heads() entry.
+    bg_music.seek(0)
+    bg_music.play()
 
     transition = False
     cuts = 14
@@ -194,7 +211,7 @@ def heads(total_playtime=None, face_detection=False):
     overlay = None
     display_slide = None
 
-    while playback is True:
+    while True:  # loop internally — heads() never returns (was: while playback is True)
 
         status, frame = h_video.read()
 
@@ -211,8 +228,10 @@ def heads(total_playtime=None, face_detection=False):
             # Monitor if the background audio track is still playing, re-enable if ain't
             if frame_counter % bg_audio_frames == 0:
                 print('Restarting Background Audio Player at: {}'.format(frame_counter))
-                bg_music.delete()
-                bg_music = cfg.heads_overlays[0]['sample'][0].play()
+                # bg_music.delete()                                    # OLD: freed source → new source on next .play()
+                # bg_music = cfg.heads_overlays[0]['sample'][0].play() # OLD: allocated new OpenAL source every loop
+                bg_music.seek(0)   # NEW: rewind to start — same source slot reused indefinitely
+                bg_music.play()
                 bg_audio_compensation += bg_audio_frames
 
             # Control the volume of background music
@@ -238,7 +257,12 @@ def heads(total_playtime=None, face_detection=False):
                     display_slide = overlay['subtitle'].copy()
                     audio_frames = int(audio_sample.duration * 25)
                     blur_vector = choice(overlay['placeholder'])
-                    talking_head = audio_sample.play()
+                    # talking_head = audio_sample.play()
+                    # ↑ OLD: allocated a new OpenAL source every ~40 seconds (each overlay trigger).
+                    #   After ~256 triggers (~2.8 hours) the source pool was exhausted → audio crash.
+                    talking_head.seek(0)           # NEW: rewind the shared player to start
+                    talking_head.source = audio_sample  # swap the StaticSource on the reused player
+                    talking_head.play()
                     kill_splayer = talking_head.time + audio_sample.duration - 0.2
 
                     # Set the timer for raising the Background Audio volume
@@ -286,7 +310,8 @@ def heads(total_playtime=None, face_detection=False):
                 if talking_head.time > kill_splayer:
                     print('Disabling Head Samples Audio Player at: {}'.format(frame_counter))
                     talking_head.pause()
-                    talking_head = None
+                    # talking_head = None  # OLD: set to None then re-assigned fresh at next trigger
+                    #                      #      → new source allocated; now we keep the player object
 
 
             # Facial recognition for author's name
@@ -372,18 +397,25 @@ def heads(total_playtime=None, face_detection=False):
 
         else:
             print('End of cycle')
-            print('Releasing AV media')
+            print('Resetting AV media for next cycle')
             try:
                 h_video.release()
-                cv.waitKey(1)
-                bg_music.delete()
-                print('AV media released')
-                h_video = None
-                bg_music = None
-                talking_head = None
+                # cv.waitKey(1)      # OLD: was needed after destroyAllWindows; not needed now
+                # bg_music.delete()  # OLD: freed the source → required a fresh .play() on re-entry
+                # h_video = None     # OLD: set to None; heads() exited and was never re-called anyway
+                # bg_music = None    # OLD: same
+                # talking_head = None
+                bg_music.seek(0)   # rewind bg music for next cycle
+                bg_music.play()
+                talking_head.pause()   # stop any playing voice sample cleanly
+                h_video = cv.VideoCapture(str(cfg.heads_video))   # reopen video from beginning
+                frame_counter = 1
+                bg_audio_compensation = 0
+                talking_head_active = False
+                print('AV media reset for next cycle')
             except Exception as av_error:
-                print('AV media releasing fail: {}'.format(av_error))
-            playback = False
+                print('AV media reset fail: {}'.format(av_error))
+            # playback = False  # OLD: exited inner loop; outer while cycle<2 only ran once anyway
 
         # cv.waitKey(0)
         if av_sync == 0:
@@ -416,10 +448,22 @@ if __name__ == "__main__":
 
     cfg = Configuration(runtime='heads', fullscreen=arg.fullscreen)
     # face_classifier = cv.CascadeClassifier(cfg.fr)
-    # face_classifier = cv.CascadeClassifier(cfg.fr)
     face_classifier = cv.CascadeClassifier(cfg.lbp)
-    cycle = 1
-    while cycle < 2:
-        print('Start of cycle: {}'.format(cycle))
-        heads_thread = Thread(target=heads(total_playtime=None, face_detection=arg.recognition))
-        cycle += 1
+
+    # Create both Players once for the entire runtime — prevents OpenAL source pool exhaustion.
+    # Previously: bg_music was created inside heads() on every call; talking_head was allocated
+    # fresh on every overlay trigger (~every 40s). Both are now created here and passed in.
+    # heads() loops internally (while True) and never returns.
+    _bg_source      = cfg.heads_overlays[0]['sample'][0]
+    _sample_source  = cfg.heads_overlays[1]['sample'][0]   # placeholder; seek(0) replaces content per trigger
+    bg_music_player     = _bg_source.play()
+    talking_head_player = _sample_source.play()
+    talking_head_player.pause()   # start silent; activated by overlay triggers inside heads()
+
+    # while cycle < 2:                                                               # OLD: ran exactly once, runtime exited
+    #     heads_thread = Thread(target=heads(total_playtime=None, ...))             # OLD: heads() took no audio args
+    #     cycle += 1
+    while True:
+        # heads() loops forever internally — this outer loop is a safety restart only
+        print('Start of heads runtime')
+        heads_thread = Thread(target=heads(bg_music_player, talking_head_player, total_playtime=None, face_detection=arg.recognition))
