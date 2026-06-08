@@ -5,3 +5,7 @@ ssh
 .venv
 .DS_Store* 2.*
 **/secrets.yml
+access_point/network.env
+ansible/inventory/hosts.deploy.yml
+ansible/inventory/.bootstrap-creds.yml
+ansible/inventory/.bootstrap-temp.yml

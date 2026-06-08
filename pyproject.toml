@@ -19,3 +19,15 @@ dependencies = [
     # On armv7l it also pulls cffi which requires libffi-dev to compile.
     "ansible-core ; platform_machine != 'armv7l'",
 ]
+
+# ── macOS-only tools — never installed on RPi nodes ──────────────────────────
+# Install explicitly: uv sync --group mac-tools
+# Run the monitor:   uv run --group mac-tools python access_point/monitor.py
+#
+# The sys_platform guard is a belt-and-suspenders safety net: even if someone
+# passes --all-groups on a Linux host (e.g. a Raspberry Pi), the package will
+# be skipped by the resolver.
+[dependency-groups]
+mac-tools = [
+    "customtkinter>=5.2.2 ; sys_platform == 'darwin'",
+]

@@ -14,3 +14,9 @@
     cmd: update-initramfs -u
   become: true
   changed_when: true
+
+- name: Restart avahi-daemon
+  ansible.builtin.systemd:
+    name:  avahi-daemon
+    state: restarted
+  become: true

@@ -425,3 +425,17 @@
   ignore_errors: true   # service may not exist on fresh install
   when: sol_skip_storage_tmpfs | default(false)
 
+
+# ── 11. mDNS — avahi-daemon ───────────────────────────────────────────────────
+- name: Install and enable avahi-daemon (mDNS discovery)
+  ansible.builtin.include_tasks: avahi.yml
+
+# ── 12. Post-setup verification ───────────────────────────────────────────────
+# Runs after every common setup to confirm the expected state.
+# Skip with --skip-tags verify.  Run standalone via verify-common.yml.
+- name: Run common verification assertions
+  ansible.builtin.include_tasks:
+    file: verify.yml
+    apply:
+      tags: [verify]
+  tags: [verify]
