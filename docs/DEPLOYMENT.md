@@ -1,14 +1,31 @@
 # Runners
 
-Image: `Raspberry PI OS (64 bit)`
+Image: `Raspberry PI OS Lite (64 bit)`
 
-| hostname | ip address | wlan0 MAC           |
-|----------|------------|---------------------|
-| room1    | 10.0.0.1   | `B8:27:EB:19:5D:5C` |
-| room2    | 10.0.0.2   | `1C:B7:2C:D5:0E:3D` |
-| room3    | 10.0.0.3   | `2C:CF:67:5B:80:DB` |
-| room4    | 10.0.0.4   | `2C:CF:67:AB:95:2A` |
-| room5    | 10.0.0.5   | `2C:CF:67:5B:7E:D2` |
+Deployment is fully automated via Ansible. See `ansible/` for playbooks and roles.
+
+## Exhibition network (legacy — 5-node full installation)
+
+| hostname | ip address | wlan0 MAC           | object |
+|----------|------------|---------------------|--------|
+| room1    | 10.0.0.1   | `B8:27:EB:19:5D:5C` | —      |
+| room2    | 10.0.0.2   | `1C:B7:2C:D5:0E:3D` | —      |
+| room3    | 10.0.0.3   | `2C:CF:67:5B:80:DB` | —      |
+| room4    | 10.0.0.4   | `2C:CF:67:AB:95:2A` | —      |
+| room5    | 10.0.0.5   | `2C:CF:67:5B:7E:D2` | —      |
+
+## Springs of Life — Ansible deployment network
+
+| ansible host  | object   | ip address    | wlan0 MAC           | RPi model | status    |
+|---------------|----------|---------------|---------------------|-----------|-----------|
+| tate-node     | Tate     | 192.168.0.192 | TBD                 | RPi 4     | active    |
+| fountain-node | Fountain | 192.168.0.191 | `E8:48:B8:C9:78:9E` | RPi 3 2GB | active    |
+| entropy-node  | Entropy  | 192.168.0.190 | `2C:CF:67:AB:95:2A` | RPi 5 8GB | active    |
+| heads-node    | Heads    | TBD           | TBD                 | RPi 5 8GB | pending   |
+
+> Update this table and `ansible/inventory/hosts.yml` when each node comes online.
+
+# Keys
 
 ``` shell
 mkdir /home/zero/.ssh

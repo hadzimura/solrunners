@@ -1,0 +1,73 @@
+---
+# playbooks/restart-services.yml
+# Restart (or check status of) the Springs of Life systemd service on a node.
+# Useful after a code update that does NOT require a full re-setup.
+#
+# Usage (via deployment.sh or directly):
+#   ansible-playbook playbooks/restart-services.yml --limit entropy-node --ask-pass --ask-become-pass
+
+- name: "Springs of Life — Restart runtime service"
+  hosts: runners
+  gather_facts: false
+
+  tasks:
+
+    # ── Git pull latest code ─────────────────────────────────────────────────
+    - name: Pull latest code from repository
+      ansible.builtin.git:
+        repo:    "https://github.com/hadzimura/solrunners.git"
+        dest:    "{{ sol_repo_path }}"
+        version: "{{ sol_git_branch }}"
+        force:   yes
+      become: false
+
+    # Pipelining with global ansible_become: true can cause git (and uv) to
+    # write files as root even when become: false is declared on the task.
+    # Explicitly re-assert ownership after every git pull so scripts keep
+    # their execute bits and the venv stays accessible to sol_user.
+    - name: Fix repo + venv ownership after git pull
+      ansible.builtin.file:
+        path:    "{{ sol_repo_path }}"
+        state:   directory
+        owner:   "{{ sol_user }}"
+        group:   "{{ sol_group }}"
+        recurse: yes
+      become: true
+
+    # ── Update Python dependencies via uv ────────────────────────────────────
+    - name: Update Python requirements via uv
+      ansible.builtin.command:
+        cmd: "{{ sol_uv_bin }} pip install --python {{ sol_venv_path }}/bin/python -r {{ sol_requirements_file }}"
+        chdir: "{{ sol_repo_path }}"
+      become: false
+      when: sol_dep_mode == "requirements"
+
+    - name: Update Python requirements via uv sync
+      ansible.builtin.command:
+        cmd: "{{ sol_uv_bin }} sync --project {{ sol_repo_path }}"
+        chdir: "{{ sol_repo_path }}"
+      become: false
+      environment:
+        HOME:                   "/home/{{ sol_user }}"
+        UV_PROJECT_ENVIRONMENT: "{{ sol_venv_path }}"
+      when: sol_dep_mode == "pyproject"
+
+    # ── Restart the per-node service ─────────────────────────────────────────
+    - name: Restart the SoL service for this node
+      ansible.builtin.systemd:
+        name:  "{{ sol_service_name }}.service"
+        state: restarted
+      become: true
+
+    # ── Show current service status ──────────────────────────────────────────
+    - name: Show service status
+      ansible.builtin.command:
+        cmd: "systemctl status {{ sol_service_name }}.service --no-pager"
+      become: true
+      register: svc_status
+      changed_when: false
+      failed_when:  false   # don't fail the play just because status is shown
+
+    - name: Print service status
+      ansible.builtin.debug:
+        msg: "{{ svc_status.stdout_lines }}"

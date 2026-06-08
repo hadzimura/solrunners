@@ -1,0 +1,427 @@
+---
+# roles/common/tasks/main.yml
+# Tasks run on EVERY RPi node regardless of role.
+# Establishes base OS state: hostname, packages, git repo, uv, venv, tmpfs.
+
+# ── 1. Set hostname ───────────────────────────────────────────────────────────
+# Each node gets a hostname matching its artistic role (fountain/entropy/heads).
+# hostnamectl writes /etc/hostname and informs the running kernel immediately.
+- name: Set hostname to {{ sol_hostname }}
+  ansible.builtin.hostname:
+    name: "{{ sol_hostname }}"
+  become: true
+
+- name: Ensure /etc/hostname contains the correct name
+  ansible.builtin.copy:
+    content: "{{ sol_hostname }}\n"
+    dest: /etc/hostname
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+
+- name: Update /etc/hosts with new hostname (127.0.1.1 entry)
+  ansible.builtin.lineinfile:
+    path:   /etc/hosts
+    regexp: "^127\\.0\\.1\\.1"
+    line:   "127.0.1.1\t{{ sol_hostname }}"
+    state:  present
+  become: true
+
+# ── 2. Boot splash (Plymouth) ────────────────────────────────────────────────
+# All nodes show the project boot logo instead of the default Raspberry Pi logo.
+# Plymouth is the boot splash daemon built into Raspberry Pi OS.
+# We use the bundled "pix" theme (full-screen PNG), replacing its splash image.
+
+- name: Install Plymouth splash packages
+  ansible.builtin.apt:
+    name:
+      - plymouth            # boot splash daemon
+      - rpd-plym-splash     # RPi Desktop pix theme — full-screen PNG splash
+      - plymouth-themes     # base theme support (dependency of rpd-plym-splash)
+    state: present
+  become: true
+
+- name: Set Plymouth default theme to pix
+  ansible.builtin.command:
+    cmd: plymouth-set-default-theme pix
+  become: true
+  changed_when: false    # command is idempotent by nature; don't mark changed
+
+- name: Copy project boot logo to Plymouth pix theme
+  ansible.builtin.copy:
+    src:   "{{ playbook_dir }}/../../media/boot_logo.png"   # from control node
+    dest:  /usr/share/plymouth/themes/pix/splash.png
+    owner: root
+    group: root
+    mode:  "0644"
+  become: true
+  notify: Rebuild initramfs
+
+# Ensure the kernel command line is configured for a silent graphical boot.
+# /boot/firmware/cmdline.txt is a single line — we append any missing flags.
+# Flags: quiet (no verbose messages), splash (enable Plymouth), loglevel=3
+# (only errors), logo.nologo (suppress Tux/RPi logo), vt.global_cursor_default=0
+# (no blinking cursor), plymouth.ignore-serial-consoles (TTY stability).
+- name: Ensure silent-splash kernel parameters are present in cmdline.txt
+  ansible.builtin.shell: |
+    CMDFILE=/boot/firmware/cmdline.txt
+    CMDLINE=$(cat "$CMDFILE")
+    CHANGED=0
+    for PARAM in quiet splash "loglevel=3" "logo.nologo" \
+                 "vt.global_cursor_default=0" \
+                 "plymouth.ignore-serial-consoles"; do
+      if ! echo "$CMDLINE" | grep -qw "$PARAM"; then
+        CMDLINE="$CMDLINE $PARAM"
+        CHANGED=1
+      fi
+    done
+    if [ "$CHANGED" -eq 1 ]; then
+      echo "$CMDLINE" > "$CMDFILE"
+      echo "changed"
+    fi
+  register:      _cmdline_result
+  changed_when:  "'changed' in _cmdline_result.stdout"
+  become:        true
+
+# ── 2b. System update ─────────────────────────────────────────────────────────
+# dist upgrade pulls new kernel/firmware packages; skip on nodes with small
+# SD cards (set sol_skip_upgrade: true in group_vars to disable).
+- name: Update apt cache and upgrade all packages
+  ansible.builtin.apt:
+    update_cache: yes
+    upgrade: dist
+    cache_valid_time: 3600
+  become: true
+  when: not (sol_skip_upgrade | default(false))
+
+- name: Update apt cache only (upgrade skipped for this node)
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  become: true
+  when: sol_skip_upgrade | default(false)
+
+# ── 3. Base packages ──────────────────────────────────────────────────────────
+- name: Install base system packages
+  ansible.builtin.apt:
+    name:
+      - git
+      - python3
+      - python3-dev       # headers needed by some native Python extensions
+      - curl              # used to download the uv installer
+      - rsync             # used by Ansible synchronize for media sync
+      - htop
+      - mc
+    state: present
+  become: true
+
+# Suppress the MOTD, "last login" banner and PAM login messages on the
+# auto-login console session — keeps the boot-to-playback experience clean.
+- name: Create ~/.hushlogin to suppress MOTD and login banners
+  ansible.builtin.file:
+    path:  "/home/{{ sol_user }}/.hushlogin"
+    state: touch
+    owner: "{{ sol_user }}"
+    group: "{{ sol_user }}"
+    mode:  "0644"
+  become: false
+
+# ── 4. Install uv ─────────────────────────────────────────────────────────────
+# uv is a fast Rust-based Python package/venv manager from Astral.
+# The official installer places the binary at ~/.local/bin/uv.
+# We use 'creates:' for idempotency: skip if the binary already exists.
+- name: Install uv via official installer script
+  ansible.builtin.shell:
+    cmd: "curl -LsSf https://astral.sh/uv/install.sh | sh"
+    creates: "{{ sol_uv_bin }}"
+  become: false
+  environment:
+    HOME: "/home/{{ sol_user }}"
+
+- name: Ensure ~/.local/bin is in PATH for subsequent tasks
+  ansible.builtin.lineinfile:
+    path:   "/home/{{ sol_user }}/.profile"
+    line:   'export PATH="$HOME/.local/bin:$PATH"'
+    regexp: 'HOME/.local/bin'
+    state:  present
+    create: yes
+  become: false
+
+# ── 5. Clone or update the solrunners repository ─────────────────────────────
+- name: Ensure repository directory exists
+  ansible.builtin.file:
+    path:  "{{ sol_repo_path }}"
+    state: directory
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0755"
+
+- name: Clone or pull solrunners repository
+  ansible.builtin.git:
+    repo:    "{{ sol_repo_url }}"
+    dest:    "{{ sol_repo_path }}"
+    version: "{{ sol_git_branch }}"
+    force:   yes
+  become: false
+
+# Fix ownership: previous runs (or manual root operations) may have left some
+# files root-owned inside the repo. Always enforce zero:zero on the entire tree.
+- name: Fix repository ownership (ensure {{ sol_user }}:{{ sol_group }} throughout)
+  ansible.builtin.file:
+    path:    "{{ sol_repo_path }}"
+    state:   directory
+    owner:   "{{ sol_user }}"
+    group:   "{{ sol_group }}"
+    recurse: yes
+  become: true
+
+# ── 6. Python virtual environment via uv ─────────────────────────────────────
+# Use the system Python (python3) — no uv-managed download, no version mismatch.
+# If the existing venv was built with a different Python (e.g. uv-downloaded 3.11),
+# detect and remove it so the next step recreates it cleanly.
+
+- name: Check Python version in existing venv
+  ansible.builtin.command:
+    cmd: "{{ sol_venv_path }}/bin/python --version"
+  register: _venv_python_ver
+  failed_when: false
+  changed_when: false
+  become: false
+
+- name: Remove stale venv if it is not using system Python ({{ sol_python_version }})
+  ansible.builtin.file:
+    path:  "{{ sol_venv_path }}"
+    state: absent
+  become: false
+  # Remove if: venv doesn't exist yet (rc!=0), or its Python is wrong version.
+  # Each node declares sol_venv_python_check in group_vars (e.g. "3.13", "3.11").
+  when: >
+    _venv_python_ver.rc != 0 or
+    (sol_venv_python_check | default('3.')) not in _venv_python_ver.stdout
+
+- name: Create venv using system Python ({{ sol_python_version }})
+  ansible.builtin.command:
+    # --system-site-packages on armv7l: exposes system python3-numpy (and other
+    # apt-installed packages) to the venv, avoiding source builds of packages
+    # that have no binary wheel for 32-bit ARM (numpy 2.x, scipy, etc.).
+    cmd: >
+      {{ sol_uv_bin }} venv --python {{ sol_python_version }}
+      {% if ansible_architecture == 'armv7l' %}--system-site-packages{% endif %}
+      {{ sol_venv_path }}
+    creates: "{{ sol_venv_path }}/bin/activate"
+  become: false
+  environment:
+    HOME: "/home/{{ sol_user }}"   # prevent uv from using /root/.local under sudo pipelining
+# ── 7. Install Python dependencies ───────────────────────────────────────────
+# Three modes controlled by sol_dep_mode in group_vars/all.yml:
+#   "requirements" → uv pip install -r requirements.txt  (proven-stable baseline)
+#   "pyproject"    → uv sync (uses pyproject.toml + uv.lock)
+#   "skip"         → no common-level install; the node role handles its own deps
+#                    (used by fountain: avoids building ruamel-yaml from source on armv7l)
+- name: Install Python deps via uv pip (requirements.txt mode)
+  ansible.builtin.command:
+    cmd: "{{ sol_uv_bin }} pip install --python {{ sol_venv_path }}/bin/python -r {{ sol_requirements_file }}"
+  become: false
+  environment:
+    HOME: "/home/{{ sol_user }}"
+  when: sol_dep_mode == "requirements"
+
+- name: Install Python deps via uv sync (pyproject.toml mode)
+  ansible.builtin.command:
+    cmd: "{{ sol_uv_bin }} sync --project {{ sol_repo_path }}"
+  become: false
+  environment:
+    HOME:                  "/home/{{ sol_user }}"
+    UV_PROJECT_ENVIRONMENT: "{{ sol_venv_path }}"
+  when: sol_dep_mode == "pyproject"
+
+# Fix venv ownership: uv creates files under the venv path; with global
+# ansible_become: true and SSH pipelining, files can end up root-owned even
+# when tasks declare become: false. Enforce zero:zero on the whole venv tree.
+- name: Fix venv ownership (ensure {{ sol_user }}:{{ sol_group }} throughout)
+  ansible.builtin.file:
+    path:    "{{ sol_venv_path }}"
+    state:   directory
+    owner:   "{{ sol_user }}"
+    group:   "{{ sol_group }}"
+    recurse: yes
+  become: true
+  when: sol_dep_mode != "skip"
+
+# ── 8. Deploy .bashrc ─────────────────────────────────────────────────────────
+# The template activates the venv for ALL interactive logins (SSH, TTY5, etc).
+# It does NOT call startx or launch any application — the systemd service owns
+# the app lifecycle and runs it on VT1 via xinit at boot.
+- name: Deploy .bashrc with venv auto-activation
+  ansible.builtin.template:
+    src:   bashrc.j2
+    dest:  "/home/{{ sol_user }}/.bashrc"
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0644"
+  become: false
+
+# ── 9. SD card wear reduction ─────────────────────────────────────────────────
+# SD card longevity strategy — three complementary layers:
+#
+# Layer A — noatime on all filesystems (this section)
+#   Every filesystem read normally triggers an atime (access time) metadata
+#   write-back on the SD card. On a gallery node that reads the same media
+#   files hundreds of times per day, this produces enormous unnecessary write
+#   amplification. noatime disables those write-backs.
+#
+#   • Root partition (/): RPi OS already sets 'noatime' by default in fstab.
+#   • /storage tmpfs: noatime is set in the fstab line added below (no-op for
+#     RAM, but consistent policy).
+#   • /boot/firmware: vfat — NOT set by default; we add it here so that the
+#     boot partition is also protected after the next remount.
+#
+# Layer B — tmpfs ramdisk for media (section 9b below)
+#   Media files are copied to /storage (tmpfs in RAM) at boot by storage.service.
+#   During playback mpv reads ONLY from RAM — the SD card receives zero reads.
+#   This makes Layer A redundant for media reads but it still protects the OS
+#   partition from other read-triggered atime writes (logs, apt, etc.).
+#
+# Layer C — noatime on kernel cmdline (complementary)
+#   Adding 'rootflags=noatime' to cmdline.txt ensures noatime is applied even
+#   before /etc/fstab is parsed (early boot). This is belt-and-suspenders.
+
+- name: Ensure /boot/firmware is mounted with noatime (SD card wear reduction)
+  ansible.builtin.replace:
+    path:    /etc/fstab
+    regexp:  '^(PARTUUID=\S+\s+/boot/firmware\s+vfat\s+)(defaults)(\s+.*)$'
+    replace: '\1defaults,noatime\3'
+  become: true
+
+- name: Add rootflags=noatime to kernel cmdline (early-boot SD protection)
+  ansible.builtin.shell: |
+    CMDFILE=/boot/firmware/cmdline.txt
+    CMDLINE=$(cat "$CMDFILE")
+    if ! echo "$CMDLINE" | grep -qw "rootflags=noatime"; then
+      echo "$CMDLINE rootflags=noatime" > "$CMDFILE"
+      echo "changed"
+    fi
+  register:     _noatime_result
+  changed_when: "'changed' in _noatime_result.stdout"
+  become:       true
+
+# Remove any hardcoded video= resolution injected by the RPi imager.
+# e.g. "video=HDMI-A-1:1440x900M@60" forces a specific output at a fixed
+# resolution, which breaks auto-negotiation when a different display (projector,
+# TV) is connected. Removing it lets the GPU driver negotiate the native mode
+# of whichever display is plugged in. Our xinit scripts and Config.py already
+# auto-detect the connected output and screen size at runtime via xrandr.
+- name: Remove imager-injected video= resolution from cmdline.txt
+  ansible.builtin.shell: |
+    CMDFILE=/boot/firmware/cmdline.txt
+    BEFORE=$(cat "$CMDFILE")
+    # Strip any "video=HDMI-*:..." token (imager artifact)
+    AFTER=$(echo "$BEFORE" | sed 's/video=HDMI-[^ ]* //g')
+    if [ "$BEFORE" != "$AFTER" ]; then
+      echo "$AFTER" > "$CMDFILE"
+      echo "changed"
+    fi
+  register:     _video_param_result
+  changed_when: "'changed' in _video_param_result.stdout"
+  become:       true
+
+# ── 9b. /storage — tmpfs ramdisk OR plain directory symlink ──────────────────
+# Controlled by sol_skip_storage_tmpfs (default: false).
+#
+# When false (default — tate, fountain, heads):
+#   /storage is a tmpfs ramdisk sized sol_storage_size_mb. Media is copied into
+#   it at boot by storage.service so the SD card is never read during playback.
+#
+# When true (entropy):
+#   No ramdisk. Media lives directly in the repo clone on the SD card.
+#   /storage is a plain directory; /storage/<subdir> is a symlink into the repo.
+#   This avoids the RAM cost for larger media that doesn't need read protection.
+
+- name: Create /storage mount point (tmpfs mode)
+  ansible.builtin.file:
+    path:  "{{ sol_storage_path }}"
+    state: directory
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0755"
+  become: true
+  when: not (sol_skip_storage_tmpfs | default(false))
+
+- name: Add /storage tmpfs to /etc/fstab
+  ansible.builtin.lineinfile:
+    path:   /etc/fstab
+    line:   "tmpfs {{ sol_storage_path }} tmpfs defaults,noatime,size={{ sol_storage_size_mb }}m 0 0"
+    regexp: "^tmpfs {{ sol_storage_path }}"
+    state:  present
+  become: true
+  when: not (sol_skip_storage_tmpfs | default(false))
+
+- name: Mount /storage tmpfs (if not already mounted)
+  ansible.posix.mount:
+    path:   "{{ sol_storage_path }}"
+    src:    tmpfs
+    fstype: tmpfs
+    opts:   "defaults,noatime,size={{ sol_storage_size_mb }}m"
+    state:  mounted
+  become: true
+  when: not (sol_skip_storage_tmpfs | default(false))
+
+# ── 9c. /storage plain directory + symlink (no-tmpfs mode) ───────────────────
+- name: Create /storage as plain directory (no-tmpfs mode)
+  ansible.builtin.file:
+    path:  "{{ sol_storage_path }}"
+    state: directory
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0755"
+  become: true
+  when: sol_skip_storage_tmpfs | default(false)
+
+- name: Remove any existing tmpfs entry for /storage from fstab (no-tmpfs mode)
+  ansible.builtin.lineinfile:
+    path:   /etc/fstab
+    regexp: "^tmpfs {{ sol_storage_path }}"
+    state:  absent
+  become: true
+  when: sol_skip_storage_tmpfs | default(false)
+
+- name: Create /storage/{{ sol_media_subdir }} symlink → repo media folder
+  ansible.builtin.file:
+    src:   "{{ sol_repo_path }}/media/{{ sol_media_subdir }}"
+    dest:  "{{ sol_storage_path }}/{{ sol_media_subdir }}"
+    state: link
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    force: true
+  become: true
+  when: sol_skip_storage_tmpfs | default(false)
+
+# ── 10. storage.service — copies media → /storage at boot ─────────────────────
+- name: Copy storage.service to systemd
+  ansible.builtin.copy:
+    src:        "{{ sol_repo_path }}/configurations/systemd/storage.service"
+    dest:       /etc/systemd/system/storage.service
+    remote_src: yes
+  become: true
+  notify: Reload systemd
+  when: not (sol_skip_storage_tmpfs | default(false))
+
+- name: Enable and start storage service
+  ansible.builtin.systemd:
+    name:          storage.service
+    enabled:       true
+    state:         started
+    daemon_reload: true
+  become: true
+  when: not (sol_skip_storage_tmpfs | default(false))
+
+- name: Disable and remove storage.service (no-tmpfs mode)
+  ansible.builtin.systemd:
+    name:    storage.service
+    enabled: false
+    state:   stopped
+  become: true
+  ignore_errors: true   # service may not exist on fresh install
+  when: sol_skip_storage_tmpfs | default(false)
+

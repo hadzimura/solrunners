@@ -1,0 +1,46 @@
+---
+# roles/heads/tasks/main.yml
+# Configures the Heads node: RPi 5, 8 GB RAM, 117 GB NVMe SSD.
+# Plays a 10:16 vertical video with face-detection + audio sample overlays.
+# Display: minimal X11 via xinit with xrandr left-rotation for portrait output.
+# Storage: NVMe SSD — no tmpfs. /storage/heads is a symlink to media/heads in repo.
+
+# ── Make xinit script executable ─────────────────────────────────────────────
+- name: Make xinit.heads.ai.sh executable
+  ansible.builtin.file:
+    path: "{{ sol_repo_path }}/configurations/xinit.heads.ai.sh"
+    mode: "0755"
+
+# ── Persistent .ready sentinel ────────────────────────────────────────────────
+# /storage is a plain dir on the NVMe SSD (sol_skip_storage_tmpfs: true).
+# The sentinel persists across reboots; this task ensures it exists after any
+# fresh deployment before the service starts.
+- name: Create persistent /storage/.ready sentinel
+  ansible.builtin.file:
+    path:  "{{ sol_storage_path }}/.ready"
+    state: touch
+    owner: "{{ sol_user }}"
+    group: "{{ sol_group }}"
+    mode:  "0644"
+  become: true
+
+# ── systemd service ───────────────────────────────────────────────────────────
+# sol.heads.ai.service calls:
+#   /usr/bin/xinit configurations/xinit.heads.ai.sh -- :0 -nocursor
+# xinit.heads.ai.sh then calls:
+#   python Heads.ai.py --system rpi --fullscreen
+- name: Copy sol.heads.ai.service to systemd
+  ansible.builtin.copy:
+    src:        "{{ sol_repo_path }}/configurations/systemd/sol.heads.ai.service"
+    dest:       /etc/systemd/system/sol.heads.ai.service
+    remote_src: yes
+  become: true
+  notify: Reload systemd and restart heads
+
+- name: Enable and start Heads service
+  ansible.builtin.systemd:
+    name:          sol.heads.ai.service
+    enabled:       true
+    state:         started
+    daemon_reload: true
+  become: true

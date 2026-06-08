@@ -1,0 +1,9 @@
+---
+# roles/tate/handlers/main.yml
+
+- name: Reload systemd and restart tate
+  ansible.builtin.systemd:
+    name:          sol.tate.service
+    daemon_reload: true
+    state:         restarted
+  become: true

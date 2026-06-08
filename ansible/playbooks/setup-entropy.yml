@@ -1,0 +1,26 @@
+---
+# playbooks/setup-entropy.yml
+# Full setup for the Entropy node (RPi 5, 29 GB SD card).
+# Run this after a fresh Raspberry Pi OS Lite installation.
+#
+# Usage (via deployment.sh or directly):
+#   ansible-playbook playbooks/setup-entropy.yml --ask-pass --ask-become-pass
+
+- name: "Springs of Life — Entropy node setup"
+  hosts: entropy
+  gather_facts: true
+
+  pre_tasks:
+    # ── Wipe home folder (preserve user account) ─────────────────────────────
+    # Remove all previous deployments/leftovers from /home/zero before fresh setup.
+    # The user account and its ownership are preserved; only contents are removed.
+    - name: Remove previous home folder contents
+      ansible.builtin.shell: |
+        find /home/{{ sol_user }} -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+      become: true
+      changed_when: true
+
+  roles:
+    - role: common     # base OS: packages, git clone, venv, /storage symlink
+    - role: display    # minimal X11 stack (xserver-xorg-core, xinit, libgtk-3)
+    - role: entropy    # systemd service deployment

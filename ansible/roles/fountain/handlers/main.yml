@@ -1,0 +1,9 @@
+---
+# roles/fountain/handlers/main.yml
+
+- name: Reload systemd and restart fountain
+  ansible.builtin.systemd:
+    name:          sol.fountain.service
+    daemon_reload: true
+    state:         restarted
+  become: true

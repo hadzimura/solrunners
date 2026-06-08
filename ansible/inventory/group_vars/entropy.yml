@@ -1,0 +1,36 @@
+# group_vars/entropy.yml — variables specific to the Entropy node
+#
+# Entropy plays a 16:9 horizontal video with per-frame OpenCV processing.
+# Display: minimal X11 via xinit (no window manager, no desktop environment).
+# Hardware: RPi 5 (rpi6), 29 GB SD card — no NVMe/SSD.
+#
+# Storage strategy: no tmpfs ramdisk. Media (~1 GB) lives in the repo clone
+# on the SD card. /storage/entropy is a symlink into the repo media folder.
+# noatime on root and /boot/firmware reduces SD write amplification.
+
+sol_hostname: "entropy"
+sol_media_subdir: "entropy"
+sol_service_name: "sol.entropy.ai"
+
+# xinit startup script that launches the Python app directly
+sol_xinit_script: "xinit.entropy.ai.sh"
+
+# Git branch for this deployment
+sol_git_branch: "main"
+
+# Python version check for stale-venv detection (RPi 5 Bookworm ships 3.13.5)
+sol_venv_python_check: "3.13"
+
+# aarch64 (RPi 5) — full PyPI binary wheels available, use pyproject.toml
+sol_dep_mode: "pyproject"
+
+# Skip tmpfs ramdisk — no SSD, media fits on SD card (total ~1 GB).
+# The common role will instead create /storage as a plain directory and
+# symlink /storage/entropy → sol_repo_path/media/entropy.
+sol_skip_storage_tmpfs: true
+
+# Display rotation — landscape, no rotation needed
+sol_display_rotate: "normal"
+
+# Screen resolution for reference
+sol_display_resolution: "1360x768"

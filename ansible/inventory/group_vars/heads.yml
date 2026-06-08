@@ -1,0 +1,26 @@
+# group_vars/heads.yml — variables specific to the Heads (RPi 5, NVMe SSD) node
+#
+# Heads plays a 10:16 vertical video with per-frame OpenCV processing,
+# face-detection overlays, and dynamic audio sample injection.
+# Display: minimal X11 via xinit with xrandr left-rotation for portrait output.
+# Storage: 117 GB NVMe SSD — media lives at /storage/heads symlink (no tmpfs).
+# Audio: HDMI output (default ALSA/PipeWire device).
+
+sol_hostname: "heads"
+sol_media_subdir:    "heads"
+sol_service_name:    "sol.heads.ai"
+
+# xinit startup script that launches the Python app directly
+sol_xinit_script:    "xinit.heads.ai.sh"
+
+# NVMe SSD — skip tmpfs ramdisk entirely (same pattern as entropy-dac)
+sol_skip_storage_tmpfs: true
+
+# Display rotation (portrait: physical display rotated 90°)
+sol_display_rotate:  "left"
+
+# Screen resolution for reference (EIZO 24", portrait)
+sol_display_resolution: "1050x1680"
+
+# Python version check for stale-venv detection (RPi 5 Bookworm ships 3.13)
+sol_venv_python_check: "3.13"

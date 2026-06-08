@@ -1,0 +1,20 @@
+[Unit]
+Description=Springs Of Life Entropy (AI, no WM)
+After=network.target
+
+[Service]
+Type=simple
+User=zero
+WorkingDirectory=/home/zero/solrunners
+Environment=PYTHONUNBUFFERED=1
+# XDG_RUNTIME_DIR: system services don't inherit user session env, so OpenAL/
+# PipeWire can't find the audio socket at /run/user/1000 without this.
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+ExecStart=/usr/bin/xinit /home/zero/solrunners/configurations/xinit.entropy.ai.sh -- :0 -nocursor
+Restart=always
+RestartSec=3
+StandardOutput=inherit
+StandardError=inherit
+
+[Install]
+WantedBy=multi-user.target

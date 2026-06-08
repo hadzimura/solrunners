@@ -1,0 +1,77 @@
+# roles/common/templates/bashrc.j2
+# ~/.bashrc deployed by Ansible to the zero user on each RPi node.
+#
+# ── Login / app-start design ──────────────────────────────────────────────────
+# The Springs of Life application is started EXCLUSIVELY by the systemd service
+# (sol.*.ai.service).  That service runs xinit on VT1 at boot time.
+# This file must NEVER launch startx or any application directly, because:
+#   • On SSH login:   $SSH_TTY is set → headless shell, no display available.
+#   • On VT5 login:   maintenance console, no second X server should start.
+#   • On VT1:         already taken by the systemd service.
+#
+# The venv IS activated for ALL logins so Python scripts run directly from
+# any shell without manually sourcing activate.
+
+# ── Interactive shell guard (standard Debian boilerplate) ─────────────────────
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# ── History ───────────────────────────────────────────────────────────────────
+HISTCONTROL=ignoreboth
+shopt -s histappend
+HISTSIZE=1000
+HISTFILESIZE=2000
+shopt -s checkwinsize
+
+# ── Fancy colour prompt ───────────────────────────────────────────────────────
+force_color_prompt=yes
+if [ -n "$force_color_prompt" ]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+        color_prompt=yes
+    fi
+fi
+if [ "$color_prompt" = yes ]; then
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w \$\[\033[00m\] '
+else
+    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+fi
+unset color_prompt force_color_prompt
+
+case "$TERM" in
+    xterm*|rxvt*) PS1="\[\e]0;\u@\h: \w\a\]$PS1" ;;
+esac
+
+# ── Colour aliases ────────────────────────────────────────────────────────────
+if [ -x /usr/bin/dircolors ]; then
+    eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    alias grep='grep --color=auto'
+fi
+
+# ── uv: add its install dir to PATH ──────────────────────────────────────────
+# uv places its binary in ~/.local/bin by default.
+export PATH="$HOME/.local/bin:$PATH"
+
+# ── Springs of Life: activate Python venv ────────────────────────────────────
+# Activated for every interactive session (SSH, VT5, etc.) so you can run
+# scripts and import project modules without extra steps.
+if [ -f "{{ sol_venv_path }}/bin/activate" ]; then
+    source "{{ sol_venv_path }}/bin/activate"
+fi
+
+# Make the solrunners package root importable without installing it as a package.
+export PYTHONPATH="{{ sol_repo_path }}:$PYTHONPATH"
+
+# Unbuffered output — shows Python print() in real time in journalctl logs.
+export PYTHONUNBUFFERED=1
+
+# ── Maintenance reminder ───────────────────────────────────────────────────────
+if [ -n "$SSH_TTY" ]; then
+    echo ""
+    echo "  Springs of Life — {{ sol_hostname }} node"
+    echo "  Service: systemctl status sol.{{ sol_hostname }}.ai.service"
+    echo "  Logs:    journalctl -u sol.{{ sol_hostname }}.ai.service -f"
+    echo ""
+fi

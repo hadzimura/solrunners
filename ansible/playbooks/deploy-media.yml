@@ -1,0 +1,21 @@
+---
+# playbooks/deploy-media.yml
+# Transfers media files from the control node (Mac) to the target RPi nodes.
+# Run this separately from the setup playbook — media files are large.
+#
+# Sync ALL available nodes (unreachable nodes are skipped gracefully):
+#   ansible-playbook playbooks/deploy-media.yml --ask-pass
+#
+# Sync a single node:
+#   ansible-playbook playbooks/deploy-media.yml --limit tate-node    --ask-pass
+#   ansible-playbook playbooks/deploy-media.yml --limit entropy-node --ask-pass
+#   ansible-playbook playbooks/deploy-media.yml --limit heads-node   --ask-pass
+#   ansible-playbook playbooks/deploy-media.yml --limit fountain-node --ask-pass
+
+- name: "Springs of Life — Media file sync"
+  hosts: runners
+  gather_facts: false          # no OS facts needed for a file transfer
+  ignore_unreachable: true     # skip nodes with TBD IPs or offline nodes gracefully
+
+  roles:
+    - role: media              # rsync from control node → RPi (uses sol_media_subdir)

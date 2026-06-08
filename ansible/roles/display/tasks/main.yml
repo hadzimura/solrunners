@@ -1,0 +1,102 @@
+---
+# roles/display/tasks/main.yml
+# Installs the minimal X11 stack required by Entropy and Heads.
+#
+# Design decision — why minimal X11 instead of full Xorg or Wayland:
+#   • Raspberry Pi OS Lite ships with NO display server by default.
+#   • OpenCV's imshow() requires a display surface (X11 or Wayland).
+#   • We use `xinit <script> -- :0 -nocursor` which starts the bare X server
+#     and immediately runs the Python application — NO window manager, NO
+#     desktop environment, NO compositor.
+#   • This is the lightest possible X11 configuration and was already proven
+#     to work with the existing .ai service files.
+#   • Wayland (labwc) is a viable future upgrade but needs OpenCV recompiled
+#     with Wayland GTK support and is not yet tested on this hardware.
+
+# ── X11 display stack ─────────────────────────────────────────────────────────
+- name: Install minimal X11 packages
+  ansible.builtin.apt:
+    name:
+      - xserver-xorg-core      # bare X server (no DE, no WM)
+      - xserver-xorg-legacy    # provides setuid Xorg.wrap; required to start X
+                               # from a systemd service (no active logind session)
+      - xinit                  # startx / xinit command
+      - x11-xserver-utils      # xrandr, xset (rotation + screensaver control)
+      - libgtk-3-0             # OpenCV GUI backend (cv2.imshow uses GTK3)
+      - libgl1                 # OpenGL stub (required by opencv-contrib-python wheel)
+      - unclutter              # hides the mouse cursor during kiosk playback
+    state: present
+  become: true
+
+# Allow any local user to start an X server (required when xinit is launched
+# from a systemd unit where there is no active logind/PAM session).
+# Xorg.wrap (from xserver-xorg-legacy) reads this file before exec-ing Xorg.
+- name: Configure Xwrapper to allow non-root X server start
+  ansible.builtin.copy:
+    dest:    /etc/X11/Xwrapper.config
+    content: |
+      allowed_users=anybody
+      needs_root_rights=yes
+    owner: root
+    group: root
+    mode:  "0644"
+  become: true
+
+# ── Disable screen blanking at OS level ───────────────────────────────────────
+# The xinit scripts also call xset, but setting it in the console-blanking
+# layer ensures the screen stays on even before X starts.
+- name: Disable console blanking in /etc/rc.local
+  ansible.builtin.lineinfile:
+    path:   /etc/rc.local
+    line:   "setterm -blank 0 -powersave off -powerdown 0"
+    insertbefore: "^exit 0"
+    create: yes
+  become: true
+
+# ── User group membership for X server access ────────────────────────────────
+# The Xorg server (started by xinit from systemd) needs the user to be in:
+#   tty   — access /dev/tty0 to allocate a virtual terminal
+#   video — access /dev/dri and /dev/fb (framebuffer / DRM device)
+#   render — access /dev/dri/renderD* (GPU render nodes)
+# Without these, Xorg exits immediately with "Permission denied on /dev/tty0".
+- name: Add sol_user to tty, video, render groups for X server access
+  ansible.builtin.user:
+    name:   "{{ sol_user }}"
+    groups: "tty,video,render"
+    append: true
+  become: true
+
+# ── Make xinit scripts executable ────────────────────────────────────────────
+# The scripts live in the repo; ensure they have the execute bit set.
+- name: Make xinit startup scripts executable
+  ansible.builtin.file:
+    path: "{{ sol_repo_path }}/configurations/{{ item }}"
+    mode: "0755"
+  loop:
+    - xinit.entropy.ai.sh
+    - xinit.heads.ai.sh
+    - xinit.tate.sh
+
+# ── RPi 5 (aarch64) xorg.conf — explicit modesetting on display card ─────────
+# RPi 5 exposes two DRM devices:
+#   card0 — V3D GPU (3D/compute)
+#   card1 — Display pipeline / HDMI output
+# Without explicit config X falls back to "old probe method" and fails with
+# "Cannot run in framebuffer mode". This snippet pins modesetting to card1.
+# Only deployed on aarch64 (RPi 5); RPi 3 (armv7l) auto-detects fine.
+- name: Deploy RPi5 xorg.conf (modesetting on card1) for aarch64
+  ansible.builtin.copy:
+    dest:  /etc/X11/xorg.conf.d/10-rpi5-modesetting.conf
+    content: |
+      # Springs of Life — RPi 5 X11 config
+      # card0=V3D (GPU), card1=display pipeline (HDMI) — pin to card1.
+      Section "Device"
+          Identifier  "RPi5 Display"
+          Driver      "modesetting"
+          Option      "kmsdev"  "/dev/dri/card1"
+      EndSection
+    owner: root
+    group: root
+    mode:  "0644"
+  become: true
+  when: ansible_architecture == 'aarch64'

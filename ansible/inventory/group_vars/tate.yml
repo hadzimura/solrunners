@@ -1,0 +1,32 @@
+# group_vars/tate.yml — variables specific to the Tate node
+#
+# Tate plays multiple short MP4 clips (with sound) in an endless random loop.
+# Player: mpv via python-mpv, rendering through DRM/KMS — NO Xorg required.
+# Hardware: Raspberry Pi (exact model TBD), user: zer
+
+# ── User / path settings ─────────────────────────────────────────────────────
+# Tate uses the same "zero" user as all other nodes; no overrides needed here.
+# (ansible_user, sol_user, sol_group and all paths are inherited from all.yml)
+
+# ── Node identity ─────────────────────────────────────────────────────────────
+sol_hostname:       "tate"
+sol_media_subdir:   "tate"
+sol_service_name:   "sol.tate"
+
+# ── Git branch ────────────────────────────────────────────────────────────────
+# Deploy from the active development branch; merge to main when stable.
+sol_git_branch: "main"
+# mpv video output backend — drm renders directly to the framebuffer (no Xorg)
+sol_mpv_vo:         "drm"
+# Audio output backend — ALSA is standard on RPi OS Lite (no PulseAudio needed)
+sol_mpv_ao:         "alsa"
+
+# How many recent picks to remember; the same video won't replay within this window
+sol_no_repeat_window: 5
+
+# ── Storage (tmpfs) ───────────────────────────────────────────────────────────
+# 35 × ~50 MB clips ≈ 1.7 GB; 2 GB tmpfs leaves room for growth
+sol_storage_size_mb: 2048
+
+# Expected Python version string in the venv (used for stale-venv detection)
+sol_venv_python_check: "3.13"
