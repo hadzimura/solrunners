@@ -7,3 +7,15 @@
     daemon_reload: true
     state:         restarted
   become: true
+
+- name: Restart NetworkManager
+  ansible.builtin.systemd:
+    name:  NetworkManager
+    state: restarted
+  become: true
+
+- name: Reboot heads node
+  ansible.builtin.reboot:
+    msg:              "Rebooting to apply PCIe Gen 2 cap (WiFi EMI mitigation)"
+    reboot_timeout:   120
+  become: true

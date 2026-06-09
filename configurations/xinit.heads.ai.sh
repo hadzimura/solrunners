@@ -4,11 +4,13 @@
 set -euo pipefail
 
 # Auto-detect connected HDMI output — handles HDMI-1 vs HDMI-2 across RPi models.
-# Force 1920x1080 mode so that after --rotate left the X session becomes 1080x1920,
-# filling the full portrait panel. --auto would pick the preferred 1440x900 mode
-# which only yields a 900x1440 framebuffer — smaller than the physical display.
+# Use --auto to select the display's native preferred mode from its EDID. This is
+# more portable than hardcoding 1920x1080: different TVs/monitors may only offer
+# 1280x720 progressive (1920x1080i interlaced does not work as an X framebuffer).
+# After --rotate left the session becomes portrait (e.g. 720x1280 for a 720p TV).
+# Config.py reads actual resolution at runtime via xrandr, so the app adapts.
 DISPLAY_OUTPUT=$(xrandr | awk '/ connected/ {print $1; exit}')
-xrandr --output "$DISPLAY_OUTPUT" --mode 1920x1080 --rotate left
+xrandr --output "$DISPLAY_OUTPUT" --auto --rotate left
 
 cd /home/zero/solrunners
 export PYTHONPATH="${PYTHONPATH:-}:/home/zero/solrunners"

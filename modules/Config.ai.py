@@ -23,19 +23,16 @@ def extract_system_arg(argv: Optional[List[str]] = None) -> Tuple[str, List[str]
 
 
 def configure_pyglet_for_system(system_name: str) -> None:
-    """Set pyglet headless mode for the selected runtime target.
+    """Configure pyglet options for the selected runtime target.
 
-    On RPi (system_name='rpi') headless=True so pyglet does not try to open
-    its own display window (OpenCV/xinit owns the display).
-    On macOS headless=False so pyglet can use the local display.
-
-    The monkey-patch guard that was here previously is removed: Python 3.12+
-    forbids setting __setitem__ on built-in dict subclasses (TypeError: cannot
-    set '__setitem__' attribute of immutable type). Plain assignment is enough.
+    headless must be False on RPi even though OpenCV owns the video output.
+    Setting headless=True disables pyglet's audio driver entirely (SilentDriver),
+    producing no sound.  Pyglet's OpenAL backend only needs DISPLAY=:0 (provided
+    by xinit) to initialise — it does NOT need to manage the display itself.
     """
     import pyglet
 
-    pyglet.options["headless"] = (system_name == "rpi")
+    pyglet.options["headless"] = False
 
 
 def run_original_script(original_script_name: str, argv: Optional[List[str]] = None) -> None:

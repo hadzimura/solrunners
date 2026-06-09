@@ -5,6 +5,38 @@
 # Display: minimal X11 via xinit with xrandr left-rotation for portrait output.
 # Storage: NVMe SSD — no tmpfs. /storage/heads is a symlink to media/heads in repo.
 
+# ── PCIe Gen 2 cap — WiFi interference mitigation ────────────────────────────
+# RPi 5 with M.2 HAT: the PCIe bus running at Gen 3 (5 GT/s) emits RF noise
+# that disrupts the onboard brcm80211 WiFi chip.  Capping the link to Gen 2
+# (2.5 GT/s) keeps NVMe usable while reducing EMI to a level the WiFi can
+# tolerate.  Requires a reboot to take effect.
+- name: Cap PCIe to Gen 2 in /boot/firmware/config.txt (WiFi EMI mitigation)
+  ansible.builtin.lineinfile:
+    path:   /boot/firmware/config.txt
+    line:   "dtparam=pciex1_gen=2"
+    regexp: "^#?\\s*dtparam=pciex1_gen"
+    state:  present
+  become: true
+  notify: Reboot heads node
+
+# ── Disable WiFi power-save ───────────────────────────────────────────────────
+# With power-save enabled the brcm driver aggressively idles the radio, which
+# combined with PCIe EMI causes intermittent disconnections.  Disabling it keeps
+# the radio always-on and dramatically improves stability over a hotspot link.
+- name: Disable WiFi power-save via NetworkManager config
+  ansible.builtin.copy:
+    dest:    /etc/NetworkManager/conf.d/wifi-powersave-off.conf
+    content: |
+      # Disable WiFi power management — prevents EMI-induced disconnections
+      # on RPi 5 with M.2 HAT (PCIe RF interference with brcm80211).
+      [connection]
+      wifi.powersave = 2
+    owner: root
+    group: root
+    mode:  "0644"
+  become: true
+  notify: Restart NetworkManager
+
 # ── Make xinit script executable ─────────────────────────────────────────────
 - name: Make xinit.heads.ai.sh executable
   ansible.builtin.file:
