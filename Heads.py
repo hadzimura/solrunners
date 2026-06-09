@@ -287,9 +287,17 @@ def heads(bg_music, talking_head, total_playtime=None, face_detection=False):
                     # ↑ OLD: allocated a new OpenAL source every ~40 seconds (each overlay trigger).
                     #   After ~256 triggers (~2.8 hours) the source pool was exhausted → audio crash.
                     talking_head.pause()
-                    talking_head._playlists.clear()   # drop any queued sources from last trigger
-                    talking_head.queue(audio_sample)  # NEW: queue the chosen sample on the shared player
-                    talking_head.play()               # reuse same OpenAL source slot
+                    # Reset player state so queue() sets _source immediately.
+                    # In pyglet 1.5.x, queue() only pops _playlists into _source when
+                    # _source is None — otherwise the new sample sits behind the stale
+                    # source and plays only after it ends, which kills kill_splayer early.
+                    if talking_head._audio_player:
+                        talking_head._audio_player.delete()
+                        talking_head._audio_player = None
+                    talking_head._playlists.clear()
+                    talking_head._source = None
+                    talking_head.queue(audio_sample)  # _source is None → popped immediately
+                    talking_head.play()               # plays audio_sample from t=0
                     talking_head_active = True        # mark player as active (replaces talking_head is not None)
                     kill_splayer = talking_head.time + audio_sample.duration - 0.2
 
@@ -490,20 +498,13 @@ if __name__ == "__main__":
     _bg_source = pyglet.media.StaticSource(pyglet.media.load(str(cfg.heads_audio), streaming=False))
     bg_music_player = _bg_source.play()
 
-    # Find first available overlay sample as placeholder for the talking-head player.
-    # The actual sample is replaced via queue()+_playlists.clear() on each trigger.
-    # Previously this hardcoded heads_overlays[1] which had no sample file on the node.
-    # _sample_source = cfg.heads_overlays[1]['sample'][0]   # OLD: hardcoded sub_id 1
-    _first_sample = next(
-        (cfg.heads_overlays[sid]['sample'][0]
-         for sid in sorted(cfg.heads_overlays.keys())
-         if 'sample' in cfg.heads_overlays[sid]),
-        None
-    )
-    if _first_sample is None:
-        raise RuntimeError("No audio samples found — deploy media/heads/samples/ to node")
-    talking_head_player = _first_sample.play()
-    talking_head_player.pause()   # start silent; activated by overlay triggers inside heads()
+    # Create a bare talking-head player with no initial source.
+    # On each overlay trigger inside heads(), the correct sample is injected via
+    # _source=None + queue(), which makes queue() pop the new sample immediately
+    # (pyglet only sets _source from the playlist when _source is None).
+    # Using _first_sample.play()+pause() as a placeholder causes the stale source
+    # to play first, exhausting kill_splayer before audio_sample ever starts.
+    talking_head_player = pyglet.media.Player()
 
     # while cycle < 2:                                                               # OLD: ran exactly once, runtime exited
     #     heads_thread = Thread(target=heads(total_playtime=None, ...))             # OLD: heads() took no audio args
