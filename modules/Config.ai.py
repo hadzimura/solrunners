@@ -34,6 +34,25 @@ def configure_pyglet_for_system(system_name: str) -> None:
 
     pyglet.options["headless"] = False
 
+    # Silence spurious OpenAL cleanup traceback.  When pyglet first probes for
+    # an audio device (before X/ALSA is fully ready) it can create an
+    # OpenALDriver whose __init__ raises before self.worker is assigned.  The
+    # GC then calls __del__ → delete() → self.worker.stop() → AttributeError,
+    # which Python prints as "Exception ignored in: __del__".  The successful
+    # driver created later by the runtime is unaffected.  Guard delete() so
+    # partial instances are cleaned up silently.
+    try:
+        from pyglet.media.drivers.openal.adaptation import OpenALDriver
+        _orig_delete = OpenALDriver.delete
+
+        def _safe_delete(self):  # type: ignore[override]
+            if hasattr(self, "worker"):
+                _orig_delete(self)
+
+        OpenALDriver.delete = _safe_delete  # type: ignore[method-assign]
+    except Exception:
+        pass
+
 
 def run_original_script(original_script_name: str, argv: Optional[List[str]] = None) -> None:
     """Run an original script with --system handled at wrapper level."""
