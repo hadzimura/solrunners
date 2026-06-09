@@ -11,10 +11,6 @@ from random import random, choice
 from scipy.io import wavfile
 import time
 
-# Run pyglet in headless mode
-pyglet.options['headless'] = True
-# pyglet.options['headless_device'] = 0
-# pyglet.options['audio'] = 'pulse'
 
 
 class Room(object):

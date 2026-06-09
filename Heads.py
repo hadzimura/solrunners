@@ -17,9 +17,6 @@ from glob import glob
 import platform
 from os.path import isfile
 
-# Run pyglet in headless mode
-pyglet.options['headless'] = True
-
 from modules.Config import arg_parser
 from modules.Config import wait_for_storage
 from modules.Config import Configuration

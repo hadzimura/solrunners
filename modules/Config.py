@@ -38,9 +38,7 @@ try:
 except ImportError:
     pass
 
-# Run pyglet in headless mode
 import pyglet
-pyglet.options['headless'] = True
 
 def get_display_resolution(display=':0'):
     """Return (width, height) of the connected display via xrandr.

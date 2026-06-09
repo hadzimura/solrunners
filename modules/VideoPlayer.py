@@ -22,8 +22,6 @@ from random import random, choice
 from scipy.io import wavfile
 import time
 
-# Run pyglet in headless mode
-pyglet.options['headless'] = True
 
 
 async def tate(config, aplayer):
